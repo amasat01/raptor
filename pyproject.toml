@@ -1,0 +1,93 @@
+# Copyright 2026 Alessandro Masat
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+# DIST name vs IMPORT name. The import name stays flat and unchanged
+# (`import raptor`); only the DISTRIBUTION name carries the `raptor-` family
+# namespace. `raptor` on PyPI is an unrelated py2 deploy tool
+# (2.15.2 -> Fabric==1.4.0) and a bare `pip install raptor` resolves to it —
+# measured. Renaming the import package was rejected: it would churn every
+# test, doc and example for a collision that only exists on the index.
+# The `raptor.pattern_loaders` entry-point GROUP (declared by a downstream
+# package) is a namespace string keyed to the IMPORT name — it is NOT a dist
+# name and must never gain the prefix.
+name = "raptor-core"
+# 0.2.0: the spine gained a PUBLIC runtime surface —
+# `raptor.schema.blocks.validate_neural_block_descriptor`, the one
+# implementation of the descriptor family's wire contract — and
+# `raptor.schema.manifest.check_schema_version`'s message became the family's
+# single corpus-pinned wording. eagle and downstream packages both import the
+# new seam, so both carry a `raptor-core>=0.2.0` floor pin: an old raptor
+# under a new eagle or downstream package would ImportError at the seam, and
+# that must resolve as a dependency constraint, never as a runtime surprise.
+version = "0.2.0"
+description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Alessandro Masat" }]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+]
+# raptor is the pure-contract package the whole family depends DOWN on — zero
+# hard deps, by design. numpy is imported function-local only, so the
+# package stays importable on a numpy-less interpreter.
+dependencies = []
+
+# The `examples/` scripts only. They are NOT part of the package and nothing
+# in `raptor/` imports them, so this group never widens the spine's own
+# dependency set (`dependencies = []`, above, is the claim that matters).
+# eagle and hawk install from PyPI as raptor-eagle / raptor-hawk — see the
+# README's Demo section.
+[project.optional-dependencies]
+demo = ["numpy", "torch"]
+
+[project.urls]
+Homepage = "https://github.com/amasat01/raptor"
+Documentation = "https://amasat01.github.io/raptor/"
+Repository = "https://github.com/amasat01/raptor"
+
+[tool.setuptools.packages.find]
+include = ["raptor*"]
+
+[tool.setuptools.package-data]
+raptor = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Makes `import raptor` work against the checked-out tree without an install —
+# this repo root, prepended to sys.path before collection.
+pythonpath = ["."]
+markers = [
+    "cross_repo: eagle conformance battery (deselect explicitly via -m 'not cross_repo'; the only sanctioned way these tests do not run — sibling absence is a HARD FAIL, never a skip)",
+    "repo_local: venv-gate guardrail — certifies the REPOSITORY (docs/pyproject/source-as-text, or a dev-env package-presence assumption), never the installed DISTRIBUTION, so a wheel legitimately cannot carry what it checks. Deselect only in the isolated-venv leg (-m 'not repo_local'); the repo-rooted suite (CI, dev runs) always runs these — never deselected there. The venv leg enumerates and pins the count by collection, never a hand list.",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "D"]
+ignore = [
+    "D102",
+    "D105",
+    "D107", # per-method / magic / __init__ docstrings optional
+    "D205",
+    "D209",
+    "D401", # docstring whitespace / imperative-mood pedantry
+    "E741", # single-letter loop vars (l/i) used deliberately
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "F841", "E501"]
+"__init__.py" = ["D104"]
+"tools/**" = ["D"]

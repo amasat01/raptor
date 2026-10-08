@@ -1,0 +1,55 @@
+# Copyright 2026 Alessandro Masat
+# SPDX-License-Identifier: Apache-2.0
+#
+# CI for raptor. raptor has zero hard dependencies,
+# so both jobs run unmodified on a plain GitHub-hosted runner — no CUDA, no
+# self-hosted anything.
+
+name: CI
+
+on: [push, pull_request]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-python:
+    # The test suite.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet -e . pytest
+      - run: python -m pytest -q -rs -m "not cross_repo"
+
+  test-portability:
+    # Portability: builds a wheel and
+    # proves a fresh, index-free venv can install this checkout and run the
+    # suite against it.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: |
+          set -o pipefail
+          python -m pip install --quiet pytest wheel
+          rm -rf wh pg && mkdir -p wh
+          python -m pip wheel --no-deps -w wh .
+          python -m pip wheel -w wh pytest
+          rm -rf ./*.egg-info
+          python tools/portability_check.py --wheelhouse wh --scratch pg \
+              --base-python "$(command -v python)" --tag ci \
+              --log-out portability_raptor.pytest.log > portability_raptor.json
+          python -c "import json,sys; v=json.load(open('portability_raptor.json'))['verdict']; print(v); sys.exit(0 if v.get('verdict')=='GREEN' else 1)"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: portability-raptor
+          path: |
+            portability_raptor.json
+            portability_raptor.pytest.log

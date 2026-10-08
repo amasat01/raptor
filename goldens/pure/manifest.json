@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/1",
+  "plugins": [
+    {
+      "id": "bump",
+      "order": 0,
+      "enabled": true,
+      "artifact": "bump.ptx",
+      "sidecar": "bump.json",
+      "format": "ptx"
+    }
+  ]
+}

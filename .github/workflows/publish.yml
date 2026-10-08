@@ -1,0 +1,138 @@
+# Copyright 2026 Alessandro Masat
+# SPDX-License-Identifier: Apache-2.0
+#
+# Publish raptor-core to PyPI through a Trusted Publisher (PyPI pending
+# publisher: owner amasat01, GitHub environment "pypi"). No tokens, no
+# secrets: the `publish` job authenticates with the environment's OIDC
+# token (`permissions: id-token: write`).
+#
+# Trigger: pushing a tag `v*` builds, checks, tests AND publishes.
+# `workflow_dispatch` builds, checks and tests the same artifact but never
+# publishes (no tag => the `publish` job's `if:` below never runs it) — a
+# dry run of this whole workflow on demand.
+#
+# raptor-core is pure Python (setuptools): one sdist + one py3-none-any
+# wheel cover every supported interpreter, so there is no cibuildwheel here.
+#
+# Release order across the family: raptor-core and aether-dsc publish FIRST
+# (hawk depends on aether-dsc; eagle depends on raptor-core) — see each
+# repo's CONTRIBUTING.md "Releasing" section.
+
+name: Publish
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet build
+      - run: python -m build --outdir dist
+      - uses: actions/upload-artifact@v7
+        with:
+          name: raptor-core-dist
+          path: dist/
+
+  check:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: raptor-core-dist
+          path: dist
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --quiet "twine>=6" packaging
+      - run: python -m twine check --strict dist/*
+      - name: tag == version guard
+        if: github.ref_type == 'tag'
+        run: |
+          python - <<'EOF'
+          import glob, os
+          from packaging.utils import parse_wheel_filename
+          whl = glob.glob("dist/*.whl")[0]
+          _, version, _, _ = parse_wheel_filename(os.path.basename(whl))
+          tag = os.environ["GITHUB_REF_NAME"]
+          assert tag.startswith("v"), f"tag {tag!r} does not start with 'v'"
+          want = tag[1:]
+          got = str(version)
+          assert got == want, f"tag v{want} != package version {got} ({whl})"
+          print(f"OK: tag v{want} == package version {got}")
+          EOF
+
+  test-wheel:
+    needs: check
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # requires-python = ">=3.9" (pyproject.toml); 3.9 is excluded here as
+        # it is past upstream security-fix EOL — bump this list, not
+        # requires-python, if a newco supported floor changes.
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: raptor-core-dist
+          path: dist
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      # The gate installs into its venv with `pip --no-index --find-links
+      # <wheelhouse>`, so the wheelhouse must carry pytest's wheels too, not
+      # only the release wheel (ci.yml's test-portability does the same).
+      # Without them the venv has no pytest, pytest prints nothing on stdout,
+      # and the summary parser refuses the empty output.
+      - name: Wheelhouse = the release wheel + pytest's wheels
+        run: |
+          python -m pip install --quiet wheel
+          rm -rf wh && mkdir -p wh
+          cp dist/*.whl wh/
+          python -m pip wheel --quiet -w wh pytest
+      - name: Isolated-venv portability gate against the RELEASE wheel (raptor's own CI leg)
+        run: |
+          set -o pipefail
+          rm -rf pg
+          python tools/portability_check.py --wheelhouse wh --scratch pg \
+              --base-python "$(command -v python)" --tag "publish-${{ matrix.python-version }}" \
+              --log-out "portability_raptor_${{ matrix.python-version }}.pytest.log" \
+              > "portability_raptor_${{ matrix.python-version }}.json"
+          python -c "import json,sys; v=json.load(open('portability_raptor_${{ matrix.python-version }}.json'))['verdict']; print(v); sys.exit(0 if v.get('verdict')=='GREEN' else 1)"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: portability-raptor-${{ matrix.python-version }}
+          path: |
+            portability_raptor_${{ matrix.python-version }}.json
+            portability_raptor_${{ matrix.python-version }}.pytest.log
+
+  publish:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: [check, test-wheel]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/raptor-core
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: raptor-core-dist
+          path: dist
+      - uses: pypa/gh-action-pypi-publish@v1.14.2
+        with:
+          packages-dir: dist/

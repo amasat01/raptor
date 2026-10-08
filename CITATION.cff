@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use raptor, please cite it using the metadata below."
+type: software
+title: "raptor"
+abstract: "The protocol spine of the family: manifest schema, engine/launcher/provider contracts, and the interop certification matrix."
+authors:
+  - family-names: "Masat"
+    given-names: "Alessandro"
+version: "0.2.0"
+date-released: "2026-10-02"
+license: Apache-2.0
+repository-code: "https://github.com/amasat01/raptor"
+# doi: "10.5281/zenodo.XXXXXXX"   # filled in after the first Zenodo archive of the tagged release
+keywords:
+  - protocol
+  - schema
+  - interoperability
+  - certification
+  - Python

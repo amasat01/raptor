@@ -23,8 +23,8 @@ author = 'Alessandro Masat'
 
 # Read version from pyproject.toml (the single source of truth). raptor is a
 # pure-Python package, so there is no CMakeLists.txt to read (unlike the CUDA
-# libraries in the ecosystem); fall back to a hardcoded 0.2.0 if it can't be read.
-_version = "0.2.0"
+# libraries in the ecosystem); fall back to a hardcoded 0.3.0 if it can't be read.
+_version = "0.3.0"
 _pyproject = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
 _pattern = re.compile(r'^\s*version\s*=\s*["\'](\d+\.\d+\.\d+)["\']')
 try:

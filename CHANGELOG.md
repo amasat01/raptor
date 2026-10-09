@@ -11,6 +11,19 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
+## 0.3.0
+
+**Free-threaded CPython support, and the harness that certifies it
+(2026-10-09).** The family now states one threading contract (README
+"Threading", `docs/threading.md`) and raptor hosts the harness every package
+tests it with: `raptor.conformance.freethreading` offers
+`require_free_threaded()`, `hammer()`, `assert_gil_free()` and a planted-race
+canary that turns a run which cannot expose a known race into a red, vacuous
+result instead of a green one. The gate refuses to run under `-X gil=...` or
+`PYTHON_GIL`, because forcing the GIL state hides a missing declaration. raptor
+itself is pure Python and needs no declaration. Additive; the harness is
+standard library only and `dependencies` stays empty.
+
 ## 0.2.0 (first public release)
 
 raptor is the RAPTOR family's protocol spine: the manifest schema, the

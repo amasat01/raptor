@@ -120,6 +120,7 @@ content/examples
 
 content/interop_protocols
 content/concepts
+threading
 ```
 
 ```{toctree}

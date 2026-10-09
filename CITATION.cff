@@ -6,7 +6,7 @@ abstract: "The protocol spine of the family: manifest schema, engine/launcher/pr
 authors:
   - family-names: "Masat"
     given-names: "Alessandro"
-version: "0.2.0"
+version: "0.3.0"
 date-released: "2026-10-08"
 license: Apache-2.0
 repository-code: "https://github.com/amasat01/raptor"

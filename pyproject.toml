@@ -16,6 +16,9 @@ build-backend = "setuptools.build_meta"
 # package) is a namespace string keyed to the IMPORT name — it is NOT a dist
 # name and must never gain the prefix.
 name = "raptor-core"
+# 0.3.0: the family's free-threading harness (`raptor.conformance.freethreading`)
+# and the written threading contract. Additive; no schema or protocol change.
+#
 # 0.2.0: the spine gained a PUBLIC runtime surface —
 # `raptor.schema.blocks.validate_neural_block_descriptor`, the one
 # implementation of the descriptor family's wire contract — and
@@ -24,7 +27,7 @@ name = "raptor-core"
 # new seam, so both carry a `raptor-core>=0.2.0` floor pin: an old raptor
 # under a new eagle or downstream package would ImportError at the seam, and
 # that must resolve as a dependency constraint, never as a runtime surprise.
-version = "0.2.0"
+version = "0.3.0"
 description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -64,6 +67,7 @@ testpaths = ["tests"]
 # this repo root, prepended to sys.path before collection.
 pythonpath = ["."]
 markers = [
+    "ft: free-threading rows (raptor.conformance.freethreading) -- skip on a GIL build; select with -m ft on 3.13t/3.14t. Never run them under -X gil=... or PYTHON_GIL (the gate fails if you do).",
     "cross_repo: eagle conformance battery (deselect explicitly via -m 'not cross_repo'; the only sanctioned way these tests do not run — sibling absence is a HARD FAIL, never a skip)",
     "repo_local: venv-gate guardrail — certifies the REPOSITORY (docs/pyproject/source-as-text, or a dev-env package-presence assumption), never the installed DISTRIBUTION, so a wheel legitimately cannot carry what it checks. Deselect only in the isolated-venv leg (-m 'not repo_local'); the repo-rooted suite (CI, dev runs) always runs these — never deselected there. The venv leg enumerates and pins the count by collection, never a hand list.",
 ]

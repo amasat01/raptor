@@ -218,14 +218,26 @@ def measure_loss(
     return CanaryResult(threads * iterations, read() - before)
 
 
+#: Busy-loop steps between the canary's read and its write. A bare
+#: ``d[k] += 1`` races in a window a few bytecodes wide, so how much it loses
+#: depends on interpreter speed and machine load (measured 3-84 % on one
+#: machine); widening the window makes the planted race visible everywhere.
+CANARY_GAP = 16
+
+
 def canary_python(
-    threads: int = CANARY_THREADS, iterations: int = CANARY_ITERATIONS
+    threads: int = CANARY_THREADS, iterations: int = CANARY_ITERATIONS,
+    gap: int = CANARY_GAP,
 ) -> CanaryResult:
-    """FT-2 canary: a plain ``d[k] += 1`` shared by every thread."""
+    """FT-2 canary: an unsynchronised read-modify-write of one shared value,
+    with ``gap`` busy steps between the read and the write."""
     d = {"k": 0}
 
     def _unsynchronised_bump() -> None:
-        d["k"] += 1
+        v = d["k"]
+        for _ in range(gap):
+            pass
+        d["k"] = v + 1
 
     return measure_loss(_unsynchronised_bump, lambda: d["k"], threads, iterations)
 

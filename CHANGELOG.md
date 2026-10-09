@@ -11,7 +11,7 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
-## 0.3.0
+## 0.3.0 (2026-10-09)
 
 **Free-threaded CPython support, and the harness that certifies it
 (2026-10-09).** The family now states one threading contract (README

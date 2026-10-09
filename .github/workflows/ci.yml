@@ -22,6 +22,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - run: python -m pip install --quiet -e . pytest
       - run: python -m pytest -q -rs -m "not cross_repo"
 
@@ -39,7 +41,10 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
-      - run: python -m pip install --quiet -e . pytest
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      # free-threaded: newest NumPy/SciPy ship no cp313t wheel: prefer a wheel over an sdist build
+      - run: python -m pip install --quiet --prefer-binary -e . pytest
       - name: The interpreter runs without the GIL
         run: |
           test -z "${PYTHON_GIL:-}" || { echo "PYTHON_GIL is set"; exit 1; }
@@ -62,6 +67,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - run: |
           set -o pipefail
           python -m pip install --quiet pytest wheel
@@ -77,6 +84,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: portability-raptor
+          retention-days: 7
           path: |
             portability_raptor.json
             portability_raptor.pytest.log

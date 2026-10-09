@@ -61,7 +61,7 @@ hawk ([kernel authoring](https://github.com/amasat01/hawk)) pulls `aether-dsc`, 
 sealed C++ headers it compiles against, automatically, and needs a host `g++` 11 or
 newer. eagle ([execution](https://github.com/amasat01/eagle)) runs the kernels on the
 GPU. No `nvcc` or CUDA toolkit is needed. hawk and eagle need Python 3.10 or newer
-(hawk: Linux x86_64, CPython 3.10-3.13).
+(hawk: Linux x86_64, CPython 3.9-3.14 including free-threaded 3.13t and 3.14t).
 
 ```{admonition} NVIDIA packages come only through the extras
 :class: important
@@ -73,6 +73,6 @@ suffix); `raptor-eagle[cuda12]` / `[cuda13]` pull CuPy (`cupy-cuda12x` /
 matching the CUDA version your driver reports (`nvidia-smi`, top right).
 ```
 
-**Platforms:** built and tested on Linux x86_64 only so far (CPython 3.10–3.13), on NVIDIA GPUs from Pascal (Quadro P2000) and Turing (Tesla T4). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere.
+**Platforms:** built and tested on Linux x86_64 only so far (CPython 3.9–3.14, including free-threaded 3.13t and 3.14t), on NVIDIA GPUs from Pascal (Quadro P2000) and Turing (Tesla T4). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. Free-threaded builds (3.13t, 3.14t) currently re-enable the GIL when `hawk` or `eagle` is imported and print a RuntimeWarning; results are correct, just not parallel.
 
 See [Examples](/content/examples) for what the three pieces look like together.

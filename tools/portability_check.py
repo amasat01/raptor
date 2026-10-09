@@ -60,7 +60,7 @@ PACKAGE_NAME = "raptor"
 # resolve to an unrelated py2 package on any index.
 DEFAULT_TARGET_SPEC = "raptor-core"
 LEAK_VARS = ["PYTHONPATH", "EAGLE_PYTHON", "RAPTOR_PATH", "RAPTOR_ROOT"]
-DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local"
+DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # Pinned by commissioning measurement (venv leg): 20 passed, 0 failed,
 # 0 skipped, 0 errors, 28 deselected (18 cross_repo + 10 repo_local).
 #
@@ -79,6 +79,10 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local"
 # RE-MINTED 2026-10-02 (venv leg): 58 passed, 0 failed, 0 skipped, 0 errors,
 # 46 deselected. The +1 pass is test_warp_rows_declared_exactly (the NVIDIA Warp
 # rows of the interop matrix), a declaration check with no framework import.
+# 2026-10-09 (venv leg): still 58 passed, 0 skipped. tests/test_freethreading.py
+# is marked `ft` throughout; its rows need a free-threaded interpreter and skip
+# on a GIL build, so this leg deselects `ft` (DEFAULT_MARKER_EXPR) and ci.yml's
+# ft-stress job runs them on 3.13t and 3.14t.
 DEFAULT_EXPECTED_PASS_COUNT = 58
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --

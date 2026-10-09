@@ -25,6 +25,33 @@ jobs:
       - run: python -m pip install --quiet -e . pytest
       - run: python -m pytest -q -rs -m "not cross_repo"
 
+  ft-stress:
+    # The free-threading rows (pytest marker `ft`), which skip on a GIL build:
+    # run them on both free-threaded interpreters, with the GIL left off.
+    runs-on: ubuntu-latest
+    strategy:
+      # both free-threaded interpreters report, even when one fails
+      fail-fast: false
+      matrix:
+        python-version: ["3.13t", "3.14t"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install --quiet -e . pytest
+      - name: The interpreter runs without the GIL
+        run: |
+          test -z "${PYTHON_GIL:-}" || { echo "PYTHON_GIL is set"; exit 1; }
+          python -c "import sys; assert not sys._is_gil_enabled(), 'the GIL is on'"
+      - name: Free-threading rows (never zero)
+        run: |
+          n=$(python -m pytest -m ft --collect-only -q | grep -c '::' || true)
+          echo "ft rows collected: $n"
+          test "$n" -gt 0
+          python -m pytest -q -rs -p no:cacheprovider -W error::RuntimeWarning -m ft
+      - run: python -m pytest -q -rs -p no:cacheprovider -W error::RuntimeWarning -m "not cross_repo"
+
   test-portability:
     # Portability: builds a wheel and
     # proves a fresh, index-free venv can install this checkout and run the

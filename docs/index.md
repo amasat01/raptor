@@ -9,19 +9,9 @@
 raptor describes a compiled GPU function (a "kernel") in a small dict, so
 one package can build it and another can run it.
 
-```{image} _static/ecosystem/ecosystem_raptor_light.svg
-:alt: The RAPTOR family: hawk (write it), eagle (run it), aether (the C++/CUDA numerics underneath) and raptor (the shared contract); you are looking at raptor.
-:class: only-light
-:align: center
+```{raw} html
+:file: _static/ecosystem/ecosystem_cards_raptor.html
 ```
-
-```{image} _static/ecosystem/ecosystem_raptor_dark.svg
-:alt: The RAPTOR family: hawk (write it), eagle (run it), aether (the C++/CUDA numerics underneath) and raptor (the shared contract); you are looking at raptor.
-:class: only-dark
-:align: center
-```
-
-[aether](https://amasat01.github.io/aether/) · [hawk](https://amasat01.github.io/hawk/) · [eagle](https://amasat01.github.io/eagle/) · [raptor](https://amasat01.github.io/raptor/) · [the family](https://amasat01.github.io/)
 
 It is pure Python with **zero hard dependencies**, so a kernel producer such
 as [hawk](https://github.com/amasat01/hawk) and an executor such as

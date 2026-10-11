@@ -1,6 +1,6 @@
 # Concepts
 
-A short map of why raptor is shaped the way it is.
+A short map of why raptor is shaped the way it is. Unfamiliar words (manifest, sidecar, kernel, capability and so on) are explained in the [glossary](/content/glossary).
 
 ## Three modules, one direction of dependency
 
@@ -56,5 +56,6 @@ exact rules.
   the conformance matrix hands-on.
 - [Interoperability](/content/interop_protocols) is the family's reference
   interop page — the row-by-row certification matrix lives there, not here.
+- [Glossary](/content/glossary) explains the family's shared words.
 - [API reference](/content/api/index) is the generated signature-level detail
   for everything mentioned above.

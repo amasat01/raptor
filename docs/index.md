@@ -139,6 +139,7 @@ threading
 
 content/devguide/plugin_schema
 content/api/index
+content/glossary
 ```
 
 ```{toctree}
@@ -147,5 +148,4 @@ content/api/index
 :hidden:
 
 content/contributing
-content/devguide/contributing_a_certification_row
 ```

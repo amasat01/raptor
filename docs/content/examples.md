@@ -31,6 +31,11 @@ checkout — see each notebook's first cell for the equivalent command line.
   than executing a separate tape, checked against `torch.autograd` and a
   float64 finite-difference Jacobian.
 
+And one how-to for contributors:
+
+- [Contribute a certification row](/content/devguide/contributing_a_certification_row)
+  — add a new crossing to the interop matrix, step by step.
+
 ```{toctree}
 :maxdepth: 1
 :hidden:
@@ -39,4 +44,5 @@ examples/two_body_hybrid
 examples/early_termination
 examples/zero_copy_interop
 examples/autodiff_vs_torch
+devguide/contributing_a_certification_row
 ```

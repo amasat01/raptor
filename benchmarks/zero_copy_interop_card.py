@@ -102,14 +102,7 @@ def _copy_cost_host(size_mb: float, k: float, reps: int, seed: int = 0) -> dict:
 
 
 def _facts() -> dict:
-    device, peak = None, None
-    if cc.gpu_available():
-        try:
-            from eagle.benchmarks import _card_common as eagle_cc  # type: ignore
-        except Exception:
-            eagle_cc = None
-        if eagle_cc is not None:
-            device, peak, _slug, _bus = eagle_cc.device_facts()
+    device, peak = cc.device_facts()
     return {
         "device": device, "peak": peak, "software": cc.software(),
         "script_md5": cc.md5(__file__),

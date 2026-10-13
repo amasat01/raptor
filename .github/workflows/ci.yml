@@ -49,6 +49,12 @@ jobs:
             echo "::error::The documented performance numbers are out of date with the committed cards. Regenerate them locally with: python tools/sync_readme_perf.py --eagle-root <path to an eagle checkout> -- then commit the result."
             exit 1
           fi
+      - name: raptor's own numbers match its committed cards
+        run: |
+          if ! python raptor/benchmarks/sync_readme_cards.py --check; then
+            echo "::error::The README numbers are out of date with the committed cards. Regenerate them locally with: python benchmarks/sync_readme_cards.py -- then commit the result."
+            exit 1
+          fi
   test-python:
     needs: docs-fresh
     # The test suite.

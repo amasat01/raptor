@@ -283,6 +283,18 @@ Quadro P2000, using **3.8×–5.2× less GPU memory** than CuPy and PyTorch (a m
 bare minimum state; CuPy 5.1×, PyTorch 6.9×; NVIDIA Warp 64 MiB, 1.7×)
 <!-- hero:end -->
 
+<!-- cards:begin -->
+
+Measured on the machine that built this page, from the committed cards under `benchmarks/`:
+
+- **Guarded graph**: 1,000,000 samples over 4,000 steps, the last one stopping at step 285; 13.8x faster per step than the unguarded control and 1.01x the speed of the eager loop.
+- **Zero-copy alias**: a 256 MB buffer crosses 114x faster as an alias than through the copying round-trip.
+- **hawk vjp / jvp vs torch**: across a batch sweep from 1 to 1,048,576 samples, hawk's vjp measured 90.6-550x faster per call than `torch.autograd.grad` and its jvp 63.3-781x faster than `torch.func.jvp`; at 1,048,576 samples 90.6x and 63.3x. hawk's derivatives cost 0.98-1.54x their own primal.
+
+Script md5s: `early_termination_card.py`=`e069faf8b647a5975698ef24960ac023`, `zero_copy_interop_card.py`=`11040c48d22965d4831ef0556f954d5e`, `autodiff_vs_torch_card.py`=`fe142b72439cfe6da04aa0cc3f67a64d`
+
+<!-- cards:end -->
+
 CPU mode (`--host`) needs no GPU or cupy; its reference is the float64
 finite difference alone, with torch (if installed) added as an optional CPU
 cross-check.

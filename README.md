@@ -129,7 +129,6 @@ batch x steps     : 1024 x 200 at dt = 0.01
 training loss     : 1.230e-06
 (a) max |compiled - torch eager| : 1.788e-06 (tolerance 1e-04)
 (b) final-state error vs truth   : corrected 6.491e-03 vs two-body only 1.930e-01
-(c) wall per step (demo measurement, not a benchmark): compiled 1.306 ms, torch eager 0.612 ms
 ```
 
 ## Going deeper (optional)
@@ -272,16 +271,18 @@ not rest on torch alone; every plane (one array per sample) in and out — the
 state, the cotangent, the tangent, both derivative outputs — is a torch CUDA
 tensor crossing through eagle's zero-copy `to_cupy` view, read back from
 torch's own storage. It also times hawk's vjp/jvp kernels against torch's,
-and each side's primal alone so the derivative's own overhead is visible —
-**this script's own sweep, on the machine that built this page
-(`benchmarks/autodiff_vs_torch_card.md`): across a batch sweep from 1 to a
-million samples, hawk's vjp measured roughly 90-550x faster per call than
-`torch.autograd.grad`, and hawk's jvp roughly 60-780x faster than
-`torch.func.jvp`.** At small batch those ratios are
-mostly torch's own per-call overhead; at a million samples (about 90x and
-60x) they are memory traffic — one fused kernel against every intermediate
-written out. hawk's derivatives cost about 1.0-1.5x their own primal, where
-torch's forward-plus-backward pass costs several times its primal alone.
+and each side's primal alone so the derivative's own overhead is visible.
+The measured headline, generated from the committed performance cards (details on the
+[performance page](https://amasat01.github.io/eagle/content/performance.html)):
+
+<!-- hero:begin -->
+hawk + eagle (`eagle.simulate`) is
+**3.9×–47× faster** than NVIDIA Warp (3.9×), JAX (8.7×), CuPy and PyTorch (47×) at 1,000,000 RK4
+oscillators finishing at different times — **156 ms** on a
+Quadro P2000, using **3.8×–5.2× less GPU memory** than CuPy and PyTorch (a million samples in 50 MiB, 1.31× the
+bare minimum state; CuPy 5.1×, PyTorch 6.9×; NVIDIA Warp 64 MiB, 1.7×)
+<!-- hero:end -->
+
 CPU mode (`--host`) needs no GPU or cupy; its reference is the float64
 finite difference alone, with torch (if installed) added as an optional CPU
 cross-check.

@@ -26,6 +26,8 @@ cd raptor
 pip install -e .
 ```
 
+For building every repo from source and the supported-version table, see [build from source](https://amasat01.github.io/build_from_source.html).
+
 ## Requirements
 
 - Python 3.9 or newer

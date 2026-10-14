@@ -85,18 +85,7 @@ Free-threaded CPython (3.13t/3.14t) is supported: the compiled modules declare G
 pip install raptor-core      # Python 3.9+, no dependencies
 ```
 
-The import name is `raptor`. The rest of the family installs the same way: `pip install raptor-hawk` for the CPU
-route (Linux x86_64, CPython 3.9-3.14 including free-threaded 3.13t and 3.14t, a host `g++` 11 or newer; it brings `aether-dsc`, the sealed C++ headers it
-compiles against, automatically), and for the GPU route
-`pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"` (use `[cuda13]` on both for CUDA 13; no `nvcc` needed).
-
-> **NVIDIA packages come only through the extras.** `raptor-hawk[cuda12]` pulls `cuda-bindings` 12,
-> `nvidia-cuda-nvrtc-cu12` and `nvidia-cuda-cccl-cu12`; `raptor-hawk[cuda13]` pulls `cuda-bindings` 13,
-> `nvidia-cuda-nvrtc` 13 and `nvidia-cuda-cccl` 13; `raptor-eagle[cuda12]` / `[cuda13]` pull CuPy
-> (`cupy-cuda12x` / `cupy-cuda13x`, with the CUDA headers CuPy compiles against). Without an extra pip installs no NVIDIA package: you get the CPU route, or the GPU route through a CUDA setup you already have. Pick the extra matching the CUDA
-> version your driver reports (`nvidia-smi`, top right).
-
-**Platforms:** the wheels are built for Linux x86_64 (CPython versions as listed in `pyproject.toml`, including the free-threaded builds). Measured on the Quadro P2000, T4, A100, L4, H100 and RTX PRO 6000 Blackwell (sm_120), plus x86-64 and aarch64 CPUs ([performance page](https://amasat01.github.io/eagle/content/performance.html)); sm_100, sm_103 and sm_121 are shipped but not yet run on hardware. There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
+The import name is `raptor`. The rest of the family (hawk, eagle) and the GPU extras: [installation](https://amasat01.github.io/raptor/content/installation.html).
 
 To work on the code, from a clone: `git clone https://github.com/amasat01/raptor.git`, then `pip install -e .`. Test with `pip install pytest && pytest tests -m "not
 cross_repo"` (`-m "not cross_repo"` leaves out the tests that check eagle against raptor's contracts — they need
@@ -139,13 +128,7 @@ training loss     : 1.230e-06
 (b) final-state error vs truth   : corrected 6.491e-03 vs two-body only 1.930e-01
 ```
 
-Lines (a) and (b) show the run is right. The speed win is on GPU (the `--device` run). Line `(c)` compares wall per step on CPU, where **the compiled step is the slower one at this batch**, as expected: the compiled kernel evaluates the 4 → 32 → 2 network sample by sample, scalar, four
-times per RK4 step, while torch eager runs it as one matrix multiply through an optimised BLAS on a single copy of the
-weights. What the compiled step removes is per-operation Python overhead and, on a GPU, per-step launches, so it wins
-where those dominate: a small batch on the host, or the `--device` run. Measured on an 8-core development box under
-other load (`--host`, the same script; wall per step, compiled vs torch eager): batch 16: 0.07 ms vs 0.29 ms; batch 100:
-0.63 ms vs 0.43 ms; batch 1,024: 1.7 ms vs 0.62 ms; batch 65,536: 89 ms vs 15 ms. Raising the host batch therefore widens
-the gap instead of closing it; the comparison that favours the compiled step is the GPU one.
+Lines (a) and (b) show the run is right. Line (c) compares time per step; at this batch on CPU threads, torch eager is the faster one, and the compiled step pays off on a GPU (the `--device` run). To see which is faster on your machine, run `python examples/two_body_hybrid.py --host --batch 1024` and read line (c); change `--batch` to try other sizes.
 
 ## Going deeper (optional)
 

@@ -28,6 +28,12 @@ shape-checking contracts fit together.
 </figure>
 ```
 
+```{raw} html
+:file: _static/family_visuals/fragments/map.html
+```
+
+*Where each tool covers the work, drawn from eagle's committed performance cards; the table behind the chart lists every value. [The radar](https://amasat01.github.io/eagle/content/performance.html) is on eagle's performance page.*
+
 ```python
 from raptor.schema import validate_manifest
 

@@ -31,13 +31,17 @@ pytestmark = pytest.mark.repo_local
 
 _REPO = pathlib.Path(__file__).resolve().parents[1]
 _GEN = _REPO / "docs" / "_scripts" / "nb_colab_setup.py"
-if not _GEN.is_file():  # the suite also runs from a copy of tests/ outside the repository
-    pytest.skip("needs the repository's docs scripts", allow_module_level=True)
-_spec = importlib.util.spec_from_file_location("nb_colab_setup", _GEN)
-gen = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(gen)
+# The suite also runs from a copy of tests/ outside the repository; there the module must still collect, so the
+# repo_local marker deselects these tests instead of a skip or an import error.
+gen = None
+if _GEN.is_file():
+    _spec = importlib.util.spec_from_file_location("nb_colab_setup", _GEN)
+    gen = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(gen)
 
-_NOTEBOOKS = sorted(p for p in (_REPO / gen.CONTENT).rglob("*.ipynb") if ".ipynb_checkpoints" not in p.parts)
+_NOTEBOOKS = sorted(
+    p for p in (_REPO / gen.CONTENT).rglob("*.ipynb") if ".ipynb_checkpoints" not in p.parts
+) if gen else []
 _ids = [p.relative_to(_REPO).as_posix() for p in _NOTEBOOKS]
 
 

@@ -273,7 +273,7 @@ The measured headline, generated from the committed performance cards (details o
 [performance page](https://amasat01.github.io/eagle/content/performance.html)):
 
 <!-- hero:begin -->
-hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on a NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch (540×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
+hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on a NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch with torch.compile (130×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
 <!-- hero:end -->
 
 <!-- cards:begin -->

@@ -31,8 +31,7 @@ contracts that let a kernel built once work with the code you already have. See
 |:---:|:---:|:---:|
 | hard dependencies (pure Python) | array libraries certified: NumPy, CuPy, PyTorch, Warp | JSON manifest per kernel bundle (a kernel's compiled artifact(s) plus its manifest) |
 
-**See it working**: a batch of orbits, one kernel, run on CPU threads — [Demo](#demo) below has the commands
-and what each printed line means.
+**See it working**: orbits from hand-written physics plus a small learned drag correction, trained in torch and compiled into one kernel — [Demo](#demo) has the commands and output.
 
 [Docs](https://amasat01.github.io/raptor/) · [the family site](https://amasat01.github.io/)
 
@@ -97,7 +96,7 @@ compiles against, automatically), and for the GPU route
 > (`cupy-cuda12x` / `cupy-cuda13x`, with the CUDA headers CuPy compiles against). Without an extra pip installs no NVIDIA package: you get the CPU route, or the GPU route through a CUDA setup you already have. Pick the extra matching the CUDA
 > version your driver reports (`nvidia-smi`, top right).
 
-**Platforms:** the wheels are built for Linux x86_64 (CPython versions as listed in `pyproject.toml`, including the free-threaded builds). The family is tested on NVIDIA GPUs from Pascal to Hopper and on x86-64 and aarch64 CPUs; the devices measured are listed on the [performance page](https://amasat01.github.io/eagle/content/performance.html). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
+**Platforms:** the wheels are built for Linux x86_64 (CPython versions as listed in `pyproject.toml`, including the free-threaded builds). Measured on the Quadro P2000, T4, A100, L4, H100 and RTX PRO 6000 Blackwell (sm_120), plus x86-64 and aarch64 CPUs ([performance page](https://amasat01.github.io/eagle/content/performance.html)); sm_100, sm_103 and sm_121 are shipped but not yet run on hardware. There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
 
 To work on the code, from a clone: `git clone https://github.com/amasat01/raptor.git`, then `pip install -e .`. Test with `pip install pytest && pytest tests -m "not
 cross_repo"` (`-m "not cross_repo"` leaves out the tests that check eagle against raptor's contracts — they need
@@ -113,12 +112,19 @@ describes. See [Going deeper](#going-deeper-optional) below for exactly
 what it computes and prints.
 
 ```bash
-# hawk and eagle come from PyPI (no nvcc needed); [demo] adds numpy and torch.
+# CPU route: hawk and eagle come from PyPI (no extras, no nvcc); [demo] adds numpy and torch.
 # The default Linux torch wheel bundles the CUDA libraries (several GB); for a small CPU-only install run
 #   pip install torch --index-url https://download.pytorch.org/whl/cpu      first, then the lines below
-pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"   # or [cuda13] on both
-pip install -e .[demo]                                     # from a clone of this repository
+git clone https://github.com/amasat01/raptor.git && cd raptor
+pip install raptor-hawk raptor-eagle
+pip install -e ".[demo]"
 python examples/two_body_hybrid.py --host
+```
+
+On a GPU, install the CUDA extras instead of the plain hawk and eagle line and run the device comparison:
+
+```bash
+pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"   # or [cuda13] on both
 python examples/two_body_hybrid.py --device --steps 400 --batch 65536
 ```
 
@@ -133,8 +139,7 @@ training loss     : 1.230e-06
 (b) final-state error vs truth   : corrected 6.491e-03 vs two-body only 1.930e-01
 ```
 
-The last line, `(c)`, also prints a wall-per-step comparison. **On CPU threads the compiled step is the slower one at
-this batch**, and that is expected: the compiled kernel evaluates the 4 → 32 → 2 network sample by sample, scalar, four
+Lines (a) and (b) show the run is right. The speed win is on GPU (the `--device` run). Line `(c)` compares wall per step on CPU, where **the compiled step is the slower one at this batch**, as expected: the compiled kernel evaluates the 4 → 32 → 2 network sample by sample, scalar, four
 times per RK4 step, while torch eager runs it as one matrix multiply through an optimised BLAS on a single copy of the
 weights. What the compiled step removes is per-operation Python overhead and, on a GPU, per-step launches, so it wins
 where those dominate: a small batch on the host, or the `--device` run. Measured on an 8-core development box under
@@ -284,7 +289,7 @@ The measured headline, generated from the committed performance cards (details o
 [performance page](https://amasat01.github.io/eagle/content/performance.html)):
 
 <!-- hero:begin -->
-hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on a NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch with torch.compile (130×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
+hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on an NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch with torch.compile (130×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
 <!-- hero:end -->
 
 <!-- cards:begin -->

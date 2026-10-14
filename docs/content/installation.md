@@ -73,6 +73,6 @@ suffix); `raptor-eagle[cuda12]` / `[cuda13]` pull CuPy (`cupy-cuda12x` /
 matching the CUDA version your driver reports (`nvidia-smi`, top right).
 ```
 
-**Platforms:** the wheels are built for Linux x86_64 (CPython versions as listed in `pyproject.toml`, including the free-threaded builds). The family is tested on NVIDIA GPUs from Pascal to Hopper and on x86-64 and aarch64 CPUs; the devices measured are listed on the [performance page](https://amasat01.github.io/eagle/content/performance.html). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
+**Platforms:** the wheels are built for Linux x86_64 (CPython versions as listed in `pyproject.toml`, including the free-threaded builds). Measured on the Quadro P2000, T4, A100, L4, H100 and RTX PRO 6000 Blackwell (sm_120), plus x86-64 and aarch64 CPUs ([performance page](https://amasat01.github.io/eagle/content/performance.html)); sm_100, sm_103 and sm_121 are shipped but not yet run on hardware. There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
 
 See [Examples](/content/examples) for what the three pieces look like together.

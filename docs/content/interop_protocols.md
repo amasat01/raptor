@@ -83,7 +83,7 @@ A **wired training program** — a training loop assembled once from a backend
 and then run many times, as opposed to one rebuilt from scratch on every call —
 binds to a backend by name.
 
-Three backends exist:
+Three backends are described here. They belong to a downstream training package that is not part of this repository, so no row of this matrix certifies a backend class (UNCERTIFIED here; the rows named below are the certified parts):
 
 - `eagle` — compiled kernels and **captured graphs** (a GPU's sequence of
   launches recorded once, then replayed without re-issuing each one); the
@@ -122,7 +122,7 @@ rather than by a matrix row; it is executable and it runs, but it is a suite gat
 not a row-level certificate, and this page does not pretend otherwise.
 
 Forward-mode differentiation (JVP) through the backend protocol is **ROADMAP**.
-No row certifies it.
+No row certifies it. (This is separate from `hawk.diff.jvp`, which differentiates at the kernel level and does not go through the backend protocol.)
 
 (certified-frameworks)=
 ## Certified frameworks, and what "roadmap" means mechanically
@@ -191,10 +191,11 @@ exists — a round-trip row and two reference-comparison rows (below).
 Every row on this page is **declared before the code it certifies is
 built**: the `execution_*` rows are declared here — like `CP-CAPTURE-REJECT`
 and every other eagle-owned row above them — ahead of the eagle-side work
-(`exec/`, `eagle.plan`, the loader) that will implement and collect them, and
-the `HAWK-*` rows the same way, `owner=hawk`, ahead of hawk's own consumer
-implementation. That is the family's **declare-before-build** convention: a
-row may describe a capability that does not exist yet.
+(`eagle.exec`, `eagle.plan`, the loader `eagle.registry.load_manifest`) that
+implements and collects them, and the `HAWK-*` rows the same way,
+`owner=hawk`, ahead of hawk's own consumers, which hawk now ships. That is the
+family's **declare-before-build** convention, and it stays the rule for new
+rows: a row may be declared before the capability it describes exists.
 
 `HostTeam`, `DeviceKernel` and `RankPartition` below are eagle's names for
 its three execution structures: a team of CPU threads, a single GPU, and a
@@ -352,7 +353,7 @@ fine print — none of it needed to read the matrix above, all of it real.
 
 ### Row ownership, in transition
 
-The numpy/cupy/torch crossing rows hawk will eventually own stay under their
+The numpy/cupy/torch crossing rows that may move to hawk stay under their
 current owner (above) until that migration happens, then are re-owned in one
 move — nothing duplicated here for them in the meantime.
 

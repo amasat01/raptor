@@ -97,7 +97,7 @@ compiles against, automatically), and for the GPU route
 > (`cupy-cuda12x` / `cupy-cuda13x`, with the CUDA headers CuPy compiles against). Without an extra pip installs no NVIDIA package: you get the CPU route, or the GPU route through a CUDA setup you already have. Pick the extra matching the CUDA
 > version your driver reports (`nvidia-smi`, top right).
 
-**Platforms:** built and tested on Linux x86_64 only so far (CPython 3.9–3.14, including free-threaded 3.13t and 3.14t), on NVIDIA GPUs from Pascal (Quadro P2000) and Turing (Tesla T4). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
+**Platforms:** the wheels are built for Linux x86_64 (CPython versions as listed in `pyproject.toml`, including the free-threaded builds). The family is tested on NVIDIA GPUs from Pascal to Hopper and on x86-64 and aarch64 CPUs; the devices measured are listed on the [performance page](https://amasat01.github.io/eagle/content/performance.html). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
 
 To work on the code, from a clone: `git clone https://github.com/amasat01/raptor.git`, then `pip install -e .`. Test with `pip install pytest && pytest tests -m "not
 cross_repo"` (`-m "not cross_repo"` leaves out the tests that check eagle against raptor's contracts — they need
@@ -168,7 +168,7 @@ machine-local measurements — none of it needed to install or use raptor.
   and failing rather than skipping when a sibling checkout is absent —
   deselected here only via `-m "not cross_repo"`, run for real by the local
   gate and a downstream package's own CI. `raptor.schema.manifest.SCHEMA_VERSION`
-  is the version of record; `eagle.roles.SCHEMA_VERSION` derives from it
+  is the cross-repo pin (1; the highest accepted version is `MAX_SCHEMA_VERSION`, 2); `eagle.roles.SCHEMA_VERSION` derives from it
   directly, so no standalone text-scan cross-check is kept as a redundant leg.
 </details>
 
@@ -202,10 +202,9 @@ until every sample is done — later replays then do no work at all. Measured
 against the identical captured graph with the guard removed (so the guard
 is the only difference), the skip is a real wall-clock saving that scales
 with how much of the horizon runs past the last termination — **this
-script's own measurement, on the machine that built this page: over 13x at
-a million samples over 4000 steps (13.8x in the committed card).** The script also runs
+script's own measurement, on your machine; the card below records the figure from the machine that built this page, for a million samples over 4000 steps.** The script also runs
 the same kernel eagerly, host-side guard check and all: at a million samples the
-guarded graph and this host-guarded eager loop tie (1.01x in the card; the kernel itself
+guarded graph and this host-guarded eager loop are about equal on the Quadro P2000 (see the card below; the kernel itself
 dominates there); at the smallest batches (1, 32 samples) the skip does not
 pay for itself — the conditional node's own fixed cost exceeds a tiny
 kernel's, so the unguarded graph is the fastest arm. The eager loop also
@@ -241,9 +240,7 @@ identity next to the row that covers it, and a behavioural proof for the
 input alias: mutating the torch tensor in place and replaying the same
 kernel with no rebind shows the output tracking the change. `--device` also
 times that alias path against the copying round-trip a caller without this
-protocol would naturally write — **this script's own measurement, on the
-machine that built this page: at 256 MB, the copies cost over 100x the alias
-path (113.6x in the committed card).** CPU mode (`--host`) needs neither a GPU nor torch: it runs the same
+protocol would naturally write — **this script's own measurement, on your machine; the card below records the figure from the machine that built this page, at 256 MB.** CPU mode (`--host`) needs neither a GPU nor torch: it runs the same
 kernel on CPU threads with plain numpy in and out.
 
 ```bash
@@ -276,20 +273,16 @@ The measured headline, generated from the committed performance cards (details o
 [performance page](https://amasat01.github.io/eagle/content/performance.html)):
 
 <!-- hero:begin -->
-hawk + eagle (`eagle.simulate`) is
-**3.9×–47× faster** than NVIDIA Warp (3.9×), JAX (8.7×), CuPy and PyTorch (47×) at 1,000,000 RK4
-oscillators finishing at different times — **156 ms** on a
-Quadro P2000, using **3.8×–5.2× less GPU memory** than CuPy and PyTorch (a million samples in 50 MiB, 1.31× the
-bare minimum state; CuPy 5.1×, PyTorch 6.9×; NVIDIA Warp 64 MiB, 1.7×)
+hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on a NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch (540×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
 <!-- hero:end -->
 
 <!-- cards:begin -->
 
 Measured on the machine that built this page, from the committed cards under `benchmarks/`:
 
-- **Guarded graph** (Quadro P2000): 1,000,000 samples over 4,000 steps, the last one stopping at step 285; 13.8x faster per step than the unguarded control and 1.01x the speed of the eager loop.
-- **Zero-copy alias** (Quadro P2000): a 256 MB buffer crosses 101x faster as an alias than through the copying round-trip.
-- **hawk vjp / jvp vs torch** (Quadro P2000): across a batch sweep from 1 to 1,048,576 samples, hawk's vjp measured 78.3-244x faster per call than `torch.autograd.grad` and its jvp 63.5-655x faster than `torch.func.jvp`; at 1,048,576 samples 91.4x and 63.5x. hawk's derivatives cost 0.946-1.52x their own primal.
+- **Guarded graph** (Quadro P2000): 1,000,000 samples over 4,000 steps, the last one stopping at step 285; 13.8x faster per step than the unguarded control and 1.02x the speed of the eager loop.
+- **Zero-copy alias** (Quadro P2000): a 256 MB buffer crosses 155x faster as an alias than through the copying round-trip.
+- **hawk vjp / jvp vs torch** (Quadro P2000): across a batch sweep from 1 to 1,048,576 samples, hawk's vjp measured 67.2-179x faster per call than `torch.autograd.grad` and its jvp 63.3-578x faster than `torch.func.jvp`; at 1,048,576 samples 91.2x and 63.3x. hawk's derivatives cost 0.952-1.52x their own primal.
 
 Script md5s: `early_termination_card.py`=`da8723e95522e5806d722c7bd55d25f4`, `zero_copy_interop_card.py`=`3d2ced36cc2fa0236ca980e15bc77792`, `autodiff_vs_torch_card.py`=`a917a7b2f5f77a3b3594255d90fa9515`
 

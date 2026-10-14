@@ -23,8 +23,8 @@ shape-checking contracts fit together.
 
 ```{raw} html
 <figure class="perf-glimpse">
-<a href="https://amasat01.github.io/eagle/content/performance.html"><img src="https://raw.githubusercontent.com/amasat01/eagle/main/docs/_static/perf/readme_gpu.svg" alt="Bar chart of wall time per tool for a million RK4 oscillators on one GPU, log scale: eagle.simulate, NVIDIA Warp, JAX, CuPy and PyTorch; the numbers are on eagle's performance page." style="max-width:100%;height:auto"></a>
-<figcaption>raptor has no benchmarks of its own. This is eagle running hawk kernels that follow raptor's manifest: a million RK4 oscillators, each stopping at its own step, wall time per tool, log scale. Measured by eagle's committed performance cards. <a href="https://amasat01.github.io/eagle/content/performance.html">Every device, workload and arm</a>.</figcaption>
+<a href="https://amasat01.github.io/eagle/content/performance.html"><img src="https://raw.githubusercontent.com/amasat01/eagle/main/docs/_static/perf/readme_gpu.svg" alt="Bar chart of wall time per tool for a million RK4 oscillators, log scale; the device, tools and numbers are on eagle's performance page." style="max-width:100%;height:auto"></a>
+<figcaption>raptor has no benchmarks of its own. This is eagle running hawk kernels that follow raptor's manifest: a million RK4 oscillators, each stopping at its own step, wall time per tool, log scale. Measured by eagle's committed performance cards; the device is named on the performance page. <a href="https://amasat01.github.io/eagle/content/performance.html">Every device, workload and arm</a>.</figcaption>
 </figure>
 ```
 
@@ -63,8 +63,8 @@ eagle runs on; raptor depends on nothing in the family, and hawk and eagle
 both declare it instead. hawk authors and compiles kernels; eagle launches,
 captures and **marshals** them (marshals = converts an array into exactly
 the layout a compiled call expects). Downstream packages wire kernels into
-trainable programs. Each works alone — adding a companion buys speed or a
-deployment option, never a new capability.
+trainable programs. Each works alone; a companion adds speed, derivatives or a
+deployment route (hawk's kernels and manifest loading need eagle to run).
 
 ::::{grid} 2
 :gutter: 3

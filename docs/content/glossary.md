@@ -55,7 +55,7 @@ plan
   A kernel body bound to an execution structure and, optionally, a split of its samples into partitions, ready to run. Splitting a sample-local body into partitions never changes any sample's answer. In eagle, `eagle.plan` makes one and `eagle.deploy` returns one; see {doc}`devguide/plugin_schema/execution_axis`.
 
 exec
-  Short for execution structure: how a plan's body runs, such as one GPU kernel, a team of host threads, a set of MPI ranks or a group of devices. A schema v2 manifest lists the ones a body allows (`exec_targets`); eagle names them in `eagle.exec`.
+  Short for execution structure: how a plan's body runs, such as one GPU kernel, a team of host threads, a set of MPI ranks or a group of devices (`eagle.exec` names them; the device-group structure is planned). A schema v2 manifest lists the ones a body allows (`exec_targets`).
 
 capability
   A feature a consumer may or may not support, named in the schema so a missing one is a clear refusal, never a silent fallback.

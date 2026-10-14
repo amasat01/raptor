@@ -113,7 +113,9 @@ describes. See [Going deeper](#going-deeper-optional) below for exactly
 what it computes and prints.
 
 ```bash
-# hawk and eagle come from PyPI (no nvcc needed); [demo] adds numpy and torch
+# hawk and eagle come from PyPI (no nvcc needed); [demo] adds numpy and torch.
+# The default Linux torch wheel bundles the CUDA libraries (several GB); for a small CPU-only install run
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu      first, then the lines below
 pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"   # or [cuda13] on both
 pip install -e .[demo]                                     # from a clone of this repository
 python examples/two_body_hybrid.py --host
@@ -130,6 +132,15 @@ training loss     : 1.230e-06
 (a) max |compiled - torch eager| : 1.788e-06 (tolerance 1e-04)
 (b) final-state error vs truth   : corrected 6.491e-03 vs two-body only 1.930e-01
 ```
+
+The last line, `(c)`, also prints a wall-per-step comparison. **On CPU threads the compiled step is the slower one at
+this batch**, and that is expected: the compiled kernel evaluates the 4 → 32 → 2 network sample by sample, scalar, four
+times per RK4 step, while torch eager runs it as one matrix multiply through an optimised BLAS on a single copy of the
+weights. What the compiled step removes is per-operation Python overhead and, on a GPU, per-step launches, so it wins
+where those dominate: a small batch on the host, or the `--device` run. Measured on an 8-core development box under
+other load (`--host`, the same script; wall per step, compiled vs torch eager): batch 16: 0.07 ms vs 0.29 ms; batch 100:
+0.63 ms vs 0.43 ms; batch 1,024: 1.7 ms vs 0.62 ms; batch 65,536: 89 ms vs 15 ms. Raising the host batch therefore widens
+the gap instead of closing it; the comparison that favours the compiled step is the GPU one.
 
 ## Going deeper (optional)
 

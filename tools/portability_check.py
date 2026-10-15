@@ -83,7 +83,9 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # is marked `ft` throughout; its rows need a free-threaded interpreter and skip
 # on a GIL build, so this leg deselects `ft` (DEFAULT_MARKER_EXPR) and ci.yml's
 # ft-stress job runs them on 3.13t and 3.14t.
-DEFAULT_EXPECTED_PASS_COUNT = 58
+# 2026-10-15 (venv leg): 59 passed. The +1 pass is test_jax_rows_declared_exactly (the JAX rows
+# of the interop matrix), a declaration check with no framework import.
+DEFAULT_EXPECTED_PASS_COUNT = 59
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --
 # test_pyproject_declares_zero_hard_deps_and_name_raptor,

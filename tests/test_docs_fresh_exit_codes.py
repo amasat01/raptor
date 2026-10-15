@@ -5,8 +5,8 @@
 
 0 fresh, 1 stale, 3 a card the docs cite is missing, 4 the eagle checkout or its
 claim engine is missing, 2 usage only. Each case runs a temporary copy of the
-generator and README. The eagle-backed cases need ``RAPTOR_EAGLE_ROOT`` and skip
-without it. A grep test keeps the workflows from reporting every failure as
+generator and README. The eagle-backed cases are ``cross_repo``: they need an eagle
+checkout (``RAPTOR_EAGLE_ROOT`` or a sibling) and fail without one. A grep test keeps the workflows from reporting every failure as
 "out of date".
 """
 
@@ -20,12 +20,12 @@ import sys
 
 import pytest
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from _eagle_helpers import eagle_root  # noqa: E402
+
 pytestmark = pytest.mark.repo_local
 
 _REPO = pathlib.Path(__file__).resolve().parent.parent
-if not (_REPO / "tools" / "sync_readme_perf.py").is_file():  # the suite also runs from a copy of tests/ outside the repository
-    pytest.skip("needs the repository's tools/", allow_module_level=True)
-_EAGLE = os.environ.get("RAPTOR_EAGLE_ROOT")
 
 
 def _run(script, *args, cwd, env=None):
@@ -47,12 +47,13 @@ def copy(tmp_path):
 
 @pytest.fixture()
 def eagle(tmp_path):
-    if not _EAGLE or not (pathlib.Path(_EAGLE) / "tools" / "prose_claims.py").is_file():
-        pytest.skip("needs RAPTOR_EAGLE_ROOT pointing at an eagle checkout")
+    found = eagle_root()
+    if found is None or not (found / "tools" / "prose_claims.py").is_file():
+        pytest.fail("eagle checkout not found (set RAPTOR_EAGLE_ROOT or check out eagle next to raptor)")
     root = tmp_path / "eagle"
     (root / "tools").mkdir(parents=True)
-    shutil.copy2(pathlib.Path(_EAGLE) / "tools" / "prose_claims.py", root / "tools")
-    shutil.copytree(pathlib.Path(_EAGLE) / "benchmarks", root / "benchmarks",
+    shutil.copy2(found / "tools" / "prose_claims.py", root / "tools")
+    shutil.copytree(found / "benchmarks", root / "benchmarks",
                     ignore=shutil.ignore_patterns("__pycache__"))
     return root
 
@@ -92,10 +93,12 @@ def test_cards_block_usage_error_exits_2(copy):
 
 
 # README's headline (tools/sync_readme_perf.py)
+@pytest.mark.cross_repo
 def test_headline_fresh_exits_0(copy, eagle):
     assert _perf(copy, "--eagle-root", str(eagle)).returncode == 0
 
 
+@pytest.mark.cross_repo
 def test_headline_stale_exits_1_and_names_the_file(copy, eagle):
     readme = copy / "README.md"
     text = readme.read_text()
@@ -106,6 +109,7 @@ def test_headline_stale_exits_1_and_names_the_file(copy, eagle):
     assert "README.md" in res.stdout
 
 
+@pytest.mark.cross_repo
 def test_headline_missing_card_exits_3_and_names_it(copy, eagle):
     (eagle / "benchmarks" / "perf_card" / "card_nvidia-h100-80gb-hbm3.json").unlink()
     res = _perf(copy, "--eagle-root", str(eagle))

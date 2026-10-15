@@ -103,7 +103,9 @@ DEFAULT_EXPECTED_PASS_COUNT = 59
 # test_nb_colab_setup (checks the docs notebooks' setup cell); both read docs/ files that are not in the wheel.
 # 2026-10-15: 21 -- +2 test_nb_colab_setup (the setup cell's CUDA-major pick and its release-candidate switches),
 # same docs/ reason.
-EXPECTED_REPO_LOCAL_COUNT = 21
+# 2026-10-15: 32 -- +11 test_docs_fresh_exit_codes (the docs-fresh generators' exit codes run against
+# copies of the repository's tools/, README and cards), same docs/ reason.
+EXPECTED_REPO_LOCAL_COUNT = 32
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

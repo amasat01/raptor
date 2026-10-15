@@ -4,10 +4,9 @@
 
 """Card writer: hawk's vjp/jvp vs torch's ``autograd.grad``/``torch.func.jvp``.
 
-Backs the README claim ("hawk's vjp measured roughly 90-250x faster per call
-than torch.autograd.grad, and hawk's jvp roughly 60-700x faster than
-torch.func.jvp") with a committed, reproducible measurement instead of prose
-alone.
+Backs the README's hawk-vs-torch speed-up statement with a committed,
+reproducible measurement instead of prose alone; the README's numbers are
+rendered from this card by ``sync_readme_cards.py``.
 
 Real run (GPU, done separately from this script's ``--dry`` path, never on this check's own machine time):
 wraps ``examples/autodiff_vs_torch.py``'s own ``run_sweep`` -- the hawk-vs-
@@ -136,14 +135,7 @@ def _time_derivatives_host(bundle, batch: int, dt: float, reps: int, seed: int =
 
 
 def _facts() -> dict:
-    device, peak = None, None
-    if cc.gpu_available():
-        try:
-            from eagle.benchmarks import _card_common as eagle_cc  # type: ignore
-        except Exception:
-            eagle_cc = None
-        if eagle_cc is not None:
-            device, peak, _slug, _bus = eagle_cc.device_facts()
+    device, peak = cc.device_facts()
     return {
         "device": device, "peak": peak, "software": cc.software(),
         "script_md5": cc.md5(__file__),

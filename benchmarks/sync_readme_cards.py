@@ -10,19 +10,13 @@ between ``<!-- cards:begin -->`` / ``<!-- cards:end -->`` markers in
 README.md -- a reader never hand-edits either the markers' content or the
 prose around them.
 
-The three numbers currently quoted in README.md's prose (the guarded-graph
-skip, the guarded-graph-vs-eager-loop ratio, the zero-copy-vs-copy ratio,
-hawk's vjp/jvp speed against torch) are NOT backed by a committed card yet
--- ``early_termination_card.py``, ``zero_copy_interop_card.py`` and
+Every number in the block is rendered from a committed card
+(``early_termination_card.py``, ``zero_copy_interop_card.py`` and
 ``autodiff_vs_torch_card.py`` are the writers; a real run needs a visible
-GPU (each writer's own ``--device`` mode, never ``--dry``). Until a card
-exists, this script does not touch README.md: ``main()`` refuses (exit 1,
-no write) when any of the three expected card files is absent, so a
-careless run never prints a block full of blanks. README.md itself carries
-no ``<!-- cards:begin -->`` marker yet either (deliberately -- its text
-stays unchanged until the cards exist); this script will not invent a
-place to insert one. Add the markers by hand at the point in README.md
-where the numbers block belongs, THEN run this script to fill it.
+GPU, each writer's own ``--device`` mode, never ``--dry``). ``main()``
+refuses (exit 1, no write) when any of the three card files is absent or
+README.md lacks the markers, and ``--check`` exits 1 when the committed
+block differs from what the cards render today (CI runs it).
 
 Usage::
 
@@ -67,16 +61,44 @@ def _load_card(name: str) -> dict | None:
     return card
 
 
+def _x(value: float) -> str:
+    return f"{value:.3g}x"
+
+
+def _range(values) -> str:
+    lo, hi = min(values), max(values)
+    return _x(lo) if f"{lo:.3g}" == f"{hi:.3g}" else f"{lo:.3g}-{hi:.3g}x"
+
+
+def _where(card: dict) -> str:
+    device = (card["facts"].get("device") or {}).get("name")
+    return f" ({device})" if device else ""
+
+
 def render_block() -> str:
-    lines = [BEGIN, "", "Measured on the machine that built this page:", ""]
-    for label, filename in CARDS.items():
-        card = _load_card(filename)
-        assert card is not None, filename  # main() already checked every card exists
-        device = (card["facts"].get("device") or {}).get("name", "unknown device")
-        lines.append(f"- **{label}** ({device}):")
-        lines.append(f"  ```json")
-        lines.append(f"  {json.dumps(card['results'], sort_keys=True)}")
-        lines.append(f"  ```")
+    cards = {name: _load_card(name) for name in CARDS.values()}
+    assert all(c is not None for c in cards.values())  # main() checked every card exists
+    et = cards["early_termination_card.json"]["results"]
+    zc = cards["zero_copy_interop_card.json"]["results"]
+    ad_card = cards["autodiff_vs_torch_card.json"]
+    ad = sorted(ad_card["results"], key=lambda r: r["batch"])
+    big = ad[-1]
+    lines = [BEGIN, "", "Measured on the machine that built this page, from the committed cards "
+             "under `benchmarks/`:", ""]
+    lines.append(f"- **Guarded graph**{_where(cards['early_termination_card.json'])}: "
+                 f"{et['batch']:,} samples over {et['steps']:,} steps, the last one stopping at step "
+                 f"{et['last_termination']:,}; {_x(et['ratio_unguarded_over_guarded'])} faster per step than "
+                 f"the unguarded control and {_x(et['ratio_eager_over_guarded'])} the speed of the eager loop.")
+    lines.append(f"- **Zero-copy alias**{_where(cards['zero_copy_interop_card.json'])}: "
+                 f"a {zc['size_mb']:g} MB buffer crosses {_x(zc['ratio'])} faster as an alias than "
+                 "through the copying round-trip.")
+    lines.append(f"- **hawk vjp / jvp vs torch**{_where(ad_card)}: across a batch sweep from "
+                 f"{ad[0]['batch']:,} to {big['batch']:,} samples, hawk's vjp measured "
+                 f"{_range([r['ratio_vjp'] for r in ad])} faster per call than `torch.autograd.grad` and its jvp "
+                 f"{_range([r['ratio_jvp'] for r in ad])} faster than `torch.func.jvp`; at {big['batch']:,} samples "
+                 f"{_x(big['ratio_vjp'])} and {_x(big['ratio_jvp'])}. hawk's derivatives cost "
+                 f"{_range([r['hawk_vjp'] / r['hawk_primal'] for r in ad] + [r['hawk_jvp'] / r['hawk_primal'] for r in ad])}"
+                 " their own primal.")
     lines += ["", "Script md5s: " + ", ".join(
         f"`{name.replace('_card.json', '_card.py')}`="
         f"`{cc.md5(_HERE / name.replace('_card.json', '_card.py'))}`"
@@ -114,7 +136,7 @@ def main(argv=None) -> int:
     if args.check:
         if updated != text:
             print("sync_readme_cards: README.md's cards block is stale "
-                 "-- re-run without --check and commit the diff.", file=sys.stderr)
+                 "-- run `python benchmarks/sync_readme_cards.py` and commit the diff.", file=sys.stderr)
             return 1
         print("sync_readme_cards: README.md's cards block matches the committed cards.")
         return 0

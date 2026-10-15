@@ -251,6 +251,21 @@ def utc_now_iso():
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def device_facts():
+    """``({"name": ...}, peak)`` of the visible CUDA device through cupy, or
+    ``(None, None)`` with no GPU or no cupy. Peak figures are not derived
+    here: these cards report walls and ratios, not a fraction of peak."""
+    try:
+        import cupy as cp
+
+        if cp.cuda.runtime.getDeviceCount() == 0:
+            return None, None
+        name = cp.cuda.runtime.getDeviceProperties(cp.cuda.Device().id)["name"]
+    except Exception:
+        return None, None
+    return {"name": name.decode() if isinstance(name, bytes) else str(name)}, None
+
+
 def gpu_available():
     """Best-effort, import-light check: a visible CUDA device through cupy.
     Never raises -- a card script's ``--dry`` path must work with no GPU and

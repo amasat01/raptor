@@ -37,6 +37,7 @@ nbexec:
 # Refuse to proceed unless every notebook under NBROOTS was actually executed
 # (every non-blank code cell carries an execution count).
 nbcheck:
+	python _scripts/nb_colab_setup.py --check
 	python _scripts/nb_check_filled.py $(NBROOTS)
 
 # Execute every tutorial/example notebook and fail on any error, via nbval —

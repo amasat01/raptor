@@ -1,17 +1,19 @@
 # autodiff_vs_torch card
 
-Schema: `raptor-perf-card/1`  ·  generated 2026-10-05T16:14:44Z
+Schema: `raptor-perf-card/1`  ·  generated 2026-10-14T08:24:01Z
 
 ## Facts
 
 ```json
 {
-  "device": null,
+  "device": {
+    "name": "Quadro P2000"
+  },
   "example_script": "examples/autodiff_vs_torch.py",
-  "example_script_md5": "620f0087b44d52b3519a6181480f81af",
-  "generated_utc": "2026-10-05T16:14:44Z",
+  "example_script_md5": "55c125efbca1039f9714a220c842f429",
+  "generated_utc": "2026-10-14T08:24:01Z",
   "peak": null,
-  "script_md5": "a88e9c626fdae545d246ddfb54f37b21",
+  "script_md5": "a917a7b2f5f77a3b3594255d90fa9515",
   "software": {
     "compile": {
       "device_flags_note": "hawk.compile.toolchain.device_flags now carries the same opt_level explicitly: -O3 for nvcc's own host-side code generation and -Xptxas -O3 for ptxas; NVRTC device compiles always optimise and ignore opt_level",
@@ -28,9 +30,9 @@ Schema: `raptor-perf-card/1`  ·  generated 2026-10-05T16:14:44Z
     },
     "cpu": "Intel(R) Xeon(R) W-2125 CPU @ 4.00GHz",
     "cupy": "14.2.0",
-    "eagle_commit": "7e445717a3e0e2ce81e2d26e44da9bde34ff73c4-dirty",
-    "hawk": "0.3.0",
-    "hawk_commit": "6a9b724cc889401bdb550b42f6206b15d34cc899-dirty",
+    "eagle_commit": "a6c663c9f3d0f92c7731272c3922fdb8cd2ac039-dirty",
+    "hawk": "0.5.0",
+    "hawk_commit": "efaed2cd9e04c71c2647007aa54f907db69c7aa7",
     "numpy": "2.5.3",
     "omp_num_threads": null,
     "platform": "Linux-6.12.0-100.28.2.el9uek.x86_64-x86_64-with-glibc2.34",
@@ -46,58 +48,58 @@ Schema: `raptor-perf-card/1`  ·  generated 2026-10-05T16:14:44Z
 [
   {
     "batch": 1,
-    "hawk_jvp": 8.764513768255711e-06,
-    "hawk_primal": 8.531007915735245e-06,
-    "hawk_vjp": 8.361507207155228e-06,
-    "ratio_jvp": 724.9246771669859,
-    "ratio_vjp": 549.9620938728684,
-    "torch_jvp": 0.006353612313978374,
-    "torch_primal": 0.00040780541021376846,
-    "torch_vjp": 0.004598512011580169
+    "hawk_jvp": 1.0845204815268517e-05,
+    "hawk_primal": 1.129999291151762e-05,
+    "hawk_vjp": 1.0760407894849777e-05,
+    "ratio_jvp": 519.0661488456369,
+    "ratio_vjp": 179.10444741602404,
+    "torch_jvp": 0.005629378696903586,
+    "torch_primal": 0.00037604440003633497,
+    "torch_vjp": 0.0019272369099780917
   },
   {
     "batch": 32,
-    "hawk_jvp": 8.750683628022671e-06,
-    "hawk_primal": 8.704210631549359e-06,
-    "hawk_vjp": 8.694687858223915e-06,
-    "ratio_jvp": 761.1690910203571,
-    "ratio_vjp": 529.8917425836962,
-    "torch_jvp": 0.006660749902948737,
-    "torch_primal": 0.0003881924087181687,
-    "torch_vjp": 0.004607243300415576
+    "hawk_jvp": 1.1188816279172897e-05,
+    "hawk_primal": 1.1591799557209015e-05,
+    "hawk_vjp": 1.1876202188432217e-05,
+    "ratio_jvp": 578.3104965914482,
+    "ratio_vjp": 173.6356427141678,
+    "torch_jvp": 0.006470609898678958,
+    "torch_primal": 0.000385903287678957,
+    "torch_vjp": 0.002062131999991834
   },
   {
     "batch": 4096,
-    "hawk_jvp": 9.070313535630702e-06,
-    "hawk_primal": 8.889287710189819e-06,
-    "hawk_vjp": 9.11140814423561e-06,
-    "ratio_jvp": 780.9518568051195,
-    "ratio_vjp": 505.8127600094038,
-    "torch_jvp": 0.007083478197455406,
-    "torch_primal": 0.0003769082017242908,
-    "torch_vjp": 0.004608666501007974
+    "hawk_jvp": 1.917639747262001e-05,
+    "hawk_primal": 1.2703798711299897e-05,
+    "hawk_vjp": 1.9025080837309362e-05,
+    "ratio_jvp": 323.7404264102377,
+    "ratio_vjp": 111.25444456818514,
+    "torch_jvp": 0.006208175094798207,
+    "torch_primal": 0.0003944491036236286,
+    "torch_vjp": 0.0021166248014196755
   },
   {
     "batch": 65536,
-    "hawk_jvp": 3.763390704989433e-05,
-    "hawk_primal": 2.6723602786660194e-05,
-    "hawk_vjp": 4.0573393926024436e-05,
-    "ratio_jvp": 177.6862074384235,
-    "ratio_vjp": 103.5995068328385,
-    "torch_jvp": 0.0066870262147858735,
-    "torch_primal": 0.0005805598106235266,
-    "torch_vjp": 0.004203383601270616
+    "hawk_jvp": 3.766519948840141e-05,
+    "hawk_primal": 3.212851006537676e-05,
+    "hawk_vjp": 3.9733410812914374e-05,
+    "ratio_jvp": 177.8259160491263,
+    "ratio_vjp": 67.20777691898857,
+    "torch_jvp": 0.006697848602198064,
+    "torch_primal": 0.000547284004278481,
+    "torch_vjp": 0.0026703942101448776
   },
   {
     "batch": 1048576,
-    "hawk_jvp": 0.00041452629957348106,
-    "hawk_primal": 0.0002807494020089507,
-    "hawk_vjp": 0.00043368719052523376,
-    "ratio_jvp": 63.29814108462091,
-    "ratio_vjp": 90.60238427339044,
-    "torch_jvp": 0.026238744193688036,
-    "torch_primal": 0.008923653094097973,
-    "torch_vjp": 0.03929309349041432
+    "hawk_jvp": 0.0004158449824899435,
+    "hawk_primal": 0.00028373610693961383,
+    "hawk_vjp": 0.00043188608251512053,
+    "ratio_jvp": 63.28080487084112,
+    "ratio_vjp": 91.18141660475081,
+    "torch_jvp": 0.02631500519346446,
+    "torch_primal": 0.008950226218439638,
+    "torch_vjp": 0.039379984815604986
   }
 ]
 ```

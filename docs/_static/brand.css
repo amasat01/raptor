@@ -76,3 +76,10 @@ img.sidebar-logo,
     margin: 1rem auto;
     display: block;
 }
+
+/* Narrow screens: code blocks and wide tables (the interop matrix has unbreakable row ids) scroll
+ * inside their own box; the page itself never scrolls sideways. */
+.bd-article pre,
+.bd-article div.highlight { max-width: 100%; overflow-x: auto; }
+.bd-article table.table,
+.bd-article table.docutils { display: block; max-width: 100%; overflow-x: auto; }

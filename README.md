@@ -31,8 +31,7 @@ contracts that let a kernel built once work with the code you already have. See
 |:---:|:---:|:---:|
 | hard dependencies (pure Python) | array libraries certified: NumPy, CuPy, PyTorch, Warp | JSON manifest per kernel bundle (a kernel's compiled artifact(s) plus its manifest) |
 
-**See it working**: a batch of orbits, one kernel, run on CPU threads — [Demo](#demo) below has the commands
-and what each printed line means.
+**See it working**: orbits from hand-written physics plus a small learned drag correction, trained in torch and compiled into one kernel — [Demo](#demo) has the commands and output.
 
 [Docs](https://amasat01.github.io/raptor/) · [the family site](https://amasat01.github.io/)
 
@@ -86,18 +85,7 @@ Free-threaded CPython (3.13t/3.14t) is supported: the compiled modules declare G
 pip install raptor-core      # Python 3.9+, no dependencies
 ```
 
-The import name is `raptor`. The rest of the family installs the same way: `pip install raptor-hawk` for the CPU
-route (Linux x86_64, CPython 3.9-3.14 including free-threaded 3.13t and 3.14t, a host `g++` 11 or newer; it brings `aether-dsc`, the sealed C++ headers it
-compiles against, automatically), and for the GPU route
-`pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"` (use `[cuda13]` on both for CUDA 13; no `nvcc` needed).
-
-> **NVIDIA packages come only through the extras.** `raptor-hawk[cuda12]` pulls `cuda-bindings` 12,
-> `nvidia-cuda-nvrtc-cu12` and `nvidia-cuda-cccl-cu12`; `raptor-hawk[cuda13]` pulls `cuda-bindings` 13,
-> `nvidia-cuda-nvrtc` 13 and `nvidia-cuda-cccl` 13; `raptor-eagle[cuda12]` / `[cuda13]` pull CuPy
-> (`cupy-cuda12x` / `cupy-cuda13x`, with the CUDA headers CuPy compiles against). Without an extra pip installs no NVIDIA package: you get the CPU route, or the GPU route through a CUDA setup you already have. Pick the extra matching the CUDA
-> version your driver reports (`nvidia-smi`, top right).
-
-**Platforms:** built and tested on Linux x86_64 only so far (CPython 3.9–3.14, including free-threaded 3.13t and 3.14t), on NVIDIA GPUs from Pascal (Quadro P2000) and Turing (Tesla T4). There are no wheels for macOS, Windows or ARM yet, and WSL2 is untested. `raptor-core` and `aether-dsc` are pure Python and install anywhere. On free-threaded 3.13t and 3.14t, `hawk` and `eagle` run GIL-free.
+The import name is `raptor`. The rest of the family (hawk, eagle) and the GPU extras: [installation](https://amasat01.github.io/raptor/content/installation.html).
 
 To work on the code, from a clone: `git clone https://github.com/amasat01/raptor.git`, then `pip install -e .`. Test with `pip install pytest && pytest tests -m "not
 cross_repo"` (`-m "not cross_repo"` leaves out the tests that check eagle against raptor's contracts — they need
@@ -113,10 +101,19 @@ describes. See [Going deeper](#going-deeper-optional) below for exactly
 what it computes and prints.
 
 ```bash
-# hawk and eagle come from PyPI (no nvcc needed); [demo] adds numpy and torch
-pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"   # or [cuda13] on both
-pip install -e .[demo]                                     # from a clone of this repository
+# CPU route: hawk and eagle come from PyPI (no extras, no nvcc); [demo] adds numpy and torch.
+# The default Linux torch wheel bundles the CUDA libraries (several GB); for a small CPU-only install run
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu      first, then the lines below
+git clone https://github.com/amasat01/raptor.git && cd raptor
+pip install raptor-hawk raptor-eagle
+pip install -e ".[demo]"
 python examples/two_body_hybrid.py --host
+```
+
+On a GPU, install the CUDA extras instead of the plain hawk and eagle line and run the device comparison:
+
+```bash
+pip install "raptor-hawk[cuda12]" "raptor-eagle[cuda12]"   # or [cuda13] on both
 python examples/two_body_hybrid.py --device --steps 400 --batch 65536
 ```
 
@@ -129,8 +126,9 @@ batch x steps     : 1024 x 200 at dt = 0.01
 training loss     : 1.230e-06
 (a) max |compiled - torch eager| : 1.788e-06 (tolerance 1e-04)
 (b) final-state error vs truth   : corrected 6.491e-03 vs two-body only 1.930e-01
-(c) wall per step (demo measurement, not a benchmark): compiled 1.306 ms, torch eager 0.612 ms
 ```
+
+Lines (a) and (b) show the run is right. Line (c) compares time per step; at this batch on CPU threads, torch eager is the faster one, and the compiled step pays off on a GPU (the `--device` run). To see which is faster on your machine, run `python examples/two_body_hybrid.py --host --batch 1024` and read line (c); change `--batch` to try other sizes.
 
 ## Going deeper (optional)
 
@@ -169,7 +167,7 @@ machine-local measurements — none of it needed to install or use raptor.
   and failing rather than skipping when a sibling checkout is absent —
   deselected here only via `-m "not cross_repo"`, run for real by the local
   gate and a downstream package's own CI. `raptor.schema.manifest.SCHEMA_VERSION`
-  is the version of record; `eagle.roles.SCHEMA_VERSION` derives from it
+  is the cross-repo pin (1; the highest accepted version is `MAX_SCHEMA_VERSION`, 2); `eagle.roles.SCHEMA_VERSION` derives from it
   directly, so no standalone text-scan cross-check is kept as a redundant leg.
 </details>
 
@@ -203,10 +201,9 @@ until every sample is done — later replays then do no work at all. Measured
 against the identical captured graph with the guard removed (so the guard
 is the only difference), the skip is a real wall-clock saving that scales
 with how much of the horizon runs past the last termination — **this
-script's own measurement, on the machine that built this page: over 13x at
-a million samples over 4000 steps (13.8x in the committed card).** The script also runs
+script's own measurement, on your machine; the card below records the figure from the machine that built this page, for a million samples over 4000 steps.** The script also runs
 the same kernel eagerly, host-side guard check and all: at a million samples the
-guarded graph and this host-guarded eager loop tie (1.01x in the card; the kernel itself
+guarded graph and this host-guarded eager loop are about equal on the Quadro P2000 (see the card below; the kernel itself
 dominates there); at the smallest batches (1, 32 samples) the skip does not
 pay for itself — the conditional node's own fixed cost exceeds a tiny
 kernel's, so the unguarded graph is the fastest arm. The eager loop also
@@ -242,9 +239,7 @@ identity next to the row that covers it, and a behavioural proof for the
 input alias: mutating the torch tensor in place and replaying the same
 kernel with no rebind shows the output tracking the change. `--device` also
 times that alias path against the copying round-trip a caller without this
-protocol would naturally write — **this script's own measurement, on the
-machine that built this page: at 256 MB, the copies cost over 100x the alias
-path (113.6x in the committed card).** CPU mode (`--host`) needs neither a GPU nor torch: it runs the same
+protocol would naturally write — **this script's own measurement, on your machine; the card below records the figure from the machine that built this page, at 256 MB.** CPU mode (`--host`) needs neither a GPU nor torch: it runs the same
 kernel on CPU threads with plain numpy in and out.
 
 ```bash
@@ -272,16 +267,26 @@ not rest on torch alone; every plane (one array per sample) in and out — the
 state, the cotangent, the tangent, both derivative outputs — is a torch CUDA
 tensor crossing through eagle's zero-copy `to_cupy` view, read back from
 torch's own storage. It also times hawk's vjp/jvp kernels against torch's,
-and each side's primal alone so the derivative's own overhead is visible —
-**this script's own sweep, on the machine that built this page
-(`benchmarks/autodiff_vs_torch_card.md`): across a batch sweep from 1 to a
-million samples, hawk's vjp measured roughly 90-550x faster per call than
-`torch.autograd.grad`, and hawk's jvp roughly 60-780x faster than
-`torch.func.jvp`.** At small batch those ratios are
-mostly torch's own per-call overhead; at a million samples (about 90x and
-60x) they are memory traffic — one fused kernel against every intermediate
-written out. hawk's derivatives cost about 1.0-1.5x their own primal, where
-torch's forward-plus-backward pass costs several times its primal alone.
+and each side's primal alone so the derivative's own overhead is visible.
+The measured headline, generated from the committed performance cards (details on the
+[performance page](https://amasat01.github.io/eagle/content/performance.html)):
+
+<!-- hero:begin -->
+hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on an NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch with torch.compile (130×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
+<!-- hero:end -->
+
+<!-- cards:begin -->
+
+Measured on the machine that built this page, from the committed cards under `benchmarks/`:
+
+- **Guarded graph** (Quadro P2000): 1,000,000 samples over 4,000 steps, the last one stopping at step 285; 13.8x faster per step than the unguarded control and 1.02x the speed of the eager loop.
+- **Zero-copy alias** (Quadro P2000): a 256 MB buffer crosses 155x faster as an alias than through the copying round-trip.
+- **hawk vjp / jvp vs torch** (Quadro P2000): across a batch sweep from 1 to 1,048,576 samples, hawk's vjp measured 67.2-179x faster per call than `torch.autograd.grad` and its jvp 63.3-578x faster than `torch.func.jvp`; at 1,048,576 samples 91.2x and 63.3x. hawk's derivatives cost 0.952-1.52x their own primal.
+
+Script md5s: `early_termination_card.py`=`da8723e95522e5806d722c7bd55d25f4`, `zero_copy_interop_card.py`=`3d2ced36cc2fa0236ca980e15bc77792`, `autodiff_vs_torch_card.py`=`a917a7b2f5f77a3b3594255d90fa9515`
+
+<!-- cards:end -->
+
 CPU mode (`--host`) needs no GPU or cupy; its reference is the float64
 finite difference alone, with torch (if installed) added as an optional CPU
 cross-check.

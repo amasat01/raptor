@@ -14,7 +14,74 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  docs-fresh:
+    # Freshness check, never a commit: the generator re-renders the headline and fails on any difference.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: raptor
+      # companion eagle: same-named branch if it exists there, else main
+      - id: ref_eagle
+        env:
+          COMPANION_REPO: eagle
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          GH_TOKEN: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+        run: |
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN:-none}" | base64 -w0)"
+          [ -n "${GH_TOKEN:-}" ] || auth="X-Unauthenticated: 1"
+          found="$(git -c http.extraHeader="$auth" ls-remote --heads "https://github.com/amasat01/${COMPANION_REPO}" "refs/heads/${BRANCH_NAME}" | awk '{print $2}')"
+          if [ "$found" = "refs/heads/${BRANCH_NAME}" ]; then ref="$BRANCH_NAME"; else ref=main; fi
+          echo "companion ${COMPANION_REPO} @ ${ref}"
+          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: amasat01/eagle
+          ref: ${{ steps.ref_eagle.outputs.ref }}
+          path: eagle
+          token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: documented numbers match the committed cards
+        run: |
+          if ! python raptor/tools/sync_readme_perf.py --eagle-root eagle --check; then
+            echo "::error::The documented performance numbers are out of date with the committed cards. Regenerate them locally with: python tools/sync_readme_perf.py --eagle-root <path to an eagle checkout> -- then commit the result."
+            exit 1
+          fi
+      - name: raptor's own numbers match its committed cards
+        run: |
+          if ! python raptor/benchmarks/sync_readme_cards.py --check; then
+            echo "::error::The README numbers are out of date with the committed cards. Regenerate them locally with: python benchmarks/sync_readme_cards.py -- then commit the result."
+            exit 1
+          fi
+      # companion site (amasat01.github.io): same-named branch if it exists there, else main
+      - id: ref_site
+        env:
+          COMPANION_REPO: amasat01.github.io
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+          GH_TOKEN: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+        run: |
+          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN:-none}" | base64 -w0)"
+          [ -n "${GH_TOKEN:-}" ] || auth="X-Unauthenticated: 1"
+          found="$(git -c http.extraHeader="$auth" ls-remote --heads "https://github.com/amasat01/${COMPANION_REPO}" "refs/heads/${BRANCH_NAME}" | awk '{print $2}')"
+          if [ "$found" = "refs/heads/${BRANCH_NAME}" ]; then ref="$BRANCH_NAME"; else ref=main; fi
+          echo "companion ${COMPANION_REPO} @ ${ref}"
+          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          repository: amasat01/amasat01.github.io
+          ref: ${{ steps.ref_site.outputs.ref }}
+          path: site
+          token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+      - name: family visuals match the landing site and the cards
+        run: |
+          if ! python site/tools/sync_family_visuals.py --check --site-root site --eagle-root eagle --target raptor=raptor; then
+            echo "::error::The family visuals bundle is out of date with the landing site or the cards. Regenerate it locally with: python tools/sync_family_visuals.py --site-root <path to the site checkout> --eagle-root <path to an eagle checkout> --target raptor=<this repo> -- then commit docs/_static/family_visuals."
+            exit 1
+          fi
   test-python:
+    needs: docs-fresh
     # The test suite.
     runs-on: ubuntu-latest
     steps:
@@ -28,6 +95,7 @@ jobs:
       - run: python -m pytest -q -rs -m "not cross_repo"
 
   ft-stress:
+    needs: docs-fresh
     # The free-threading rows (pytest marker `ft`), which skip on a GIL build:
     # run them on both free-threaded interpreters, with the GIL left off.
     runs-on: ubuntu-latest
@@ -58,6 +126,7 @@ jobs:
       - run: python -m pytest -q -rs -p no:cacheprovider -W error::RuntimeWarning -m "not cross_repo"
 
   test-portability:
+    needs: docs-fresh
     # Portability: builds a wheel and
     # proves a fresh, index-free venv can install this checkout and run the
     # suite against it.

@@ -97,7 +97,9 @@ DEFAULT_EXPECTED_PASS_COUNT = 58
 # probes pytest now, not torch).
 # A drift in this count (either direction) REDs -- update ONLY with a
 # reviewed reason, never to silence a RED.
-EXPECTED_REPO_LOCAL_COUNT = 9
+# 2026-10-14: 19 -- +5 test_family_visuals (checks the vendored docs bundle against its lock) and +5
+# test_nb_colab_setup (checks the docs notebooks' setup cell); both read docs/ files that are not in the wheel.
+EXPECTED_REPO_LOCAL_COUNT = 19
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

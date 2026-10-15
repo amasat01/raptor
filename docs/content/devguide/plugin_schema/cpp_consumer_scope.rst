@@ -57,7 +57,7 @@ the bound-buffer struct's data pointer (``VecBinding::data``), ``bind_vector``,
 (``plugin/plugin_registry/registry.h``). ``PluginRegistry::from_manifest``
 therefore rejects any sidecar with ``scalar_type == "float32"`` before it ever
 loads the artifact. **That rejection is correct fail-fast, not a bug** — the
-guard has been present since eagle's initial commit (``fa6bf85``) and is not a
+guard has been there from the start and is not a
 regression.
 
 It is deliberately a *different* shape of gap from the guard sitting right next
@@ -81,18 +81,6 @@ Nothing here blocks float32 *users* today — eagle's Python/torch device path
 float32 and is the current answer for an f32 consumer. What is deferred is
 specifically *this* C++ registry's own binding surface.
 
-**Trigger.** Build float-typed buffers and 4-byte uniform packing for
-``eagle::cuda::PluginRegistry`` when the first genuine C++ consumer of an f32
-artifact appears — foreseeably a future neural-engine deployment that reaches
-the C++ embedding path rather than the Python/torch one. Until that trigger
-fires this stays a recorded, deliberate deferral, not an oversight: the
-trigger above is the condition for closing it.
-
-**Rough size.** A float-typed twin of the ``double``-typed binding surface —
-the bound-buffer struct, ``bind_vector`` / ``bind_uniform`` / ``consolidate``,
-and 4-byte uniform packing through the per-plugin argument-packing path in
-``inject()`` — plus tests. Small-to-medium: on the order of the existing
-``double`` surface it would mirror (that surface, header comments and
-``inject()`` included, is a few hundred lines), not a one-line relaxation,
-because the packed-argument layout ``inject()`` builds per plugin is
-width-specific end to end, not just pointer-typed.
+**Scope.** Float32 on the C++ registry is not supported: it would need
+float-typed buffers and 4-byte uniform packing in ``eagle::cuda::PluginRegistry``.
+The Python path supports float32 today.

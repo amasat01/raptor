@@ -28,10 +28,10 @@ from pathlib import Path
 UNIVERSE = ("numpy", "cupy", "torch", "warp", "jax", "tensorflow")
 
 #: frameworks with an executable, certified round-trip today.
-CERTIFIED = ("numpy", "cupy", "torch", "warp")
+CERTIFIED = ("numpy", "cupy", "torch", "warp", "jax")
 
 #: frameworks declared absent-by-design — no row certifies them yet.
-ROADMAP = ("jax", "tensorflow")
+ROADMAP = ("tensorflow",)
 
 #: the vocabulary a :class:`RowDecl` may declare for how a row moves data.
 #: ``ALIAS`` — the crossing shares the same underlying buffer, no copy (e.g.
@@ -56,7 +56,7 @@ class RowDecl:
 
     ``framework`` must be a member of :data:`CERTIFIED`, OR ``None`` for a row
     that bridges to no array framework at all — an execution-structure
-    invariant internal to eagle rather than a numpy/cupy/torch crossing.
+    invariant internal to eagle rather than a crossing to one of those.
     Every prior row, even ``CP-CAPTURE-REJECT``/``T-DEVICE-FAILLOUD``, still
     names the framework whose crossing it guards; widening ``framework`` to
     ``Optional[str]`` — rather than inventing a sixth pseudo-framework entry
@@ -129,6 +129,21 @@ ROWS: dict[str, RowDecl] = {
     "WP-IN-CUDA-ALIAS": RowDecl("warp", "eagle", "ALIAS"),
     "WP-OUT-CUDA-ALIAS": RowDecl("warp", "eagle", "ALIAS"),
     "STREAM-WARP-PRODUCER-ORDER": RowDecl("warp", "eagle", "STREAM"),
+    # jax — also crosses through eagle's generic DLPack layer, no dedicated
+    # array code. Contract: a jax array in a read-only role is aliased on
+    # CUDA (uploaded on CPU); the jax result IS eagle's fresh result buffer
+    # and eagle never writes it again; a jax array in a role the kernel
+    # writes (out=, terminated, a Mutable plane) is refused by name, because
+    # jax arrays are immutable and a silent copy would drop the update. jax
+    # speaks legacy DLPack, so its access flag is "unknown" (or "read-only"
+    # once it ships versioned capsules). jax rows run where jax is installed
+    # (Python 3.12 or newer); every other environment deselects
+    # ``-m "not interop_matrix"``.
+    "JX-IN-CUDA-ALIAS": RowDecl("jax", "eagle", "ALIAS"),
+    "JX-IN-WRITE-REFUSED": RowDecl("jax", "eagle", "ENV"),
+    "JX-OUT-CUDA-ALIAS": RowDecl("jax", "eagle", "ALIAS"),
+    "JX-IN-CPU-COPY": RowDecl("jax", "eagle", "COPY"),
+    "STREAM-JAX-PRODUCER-ORDER": RowDecl("jax", "eagle", "STREAM"),
     # execution rows: the closed RowDecl framework/kind sets extended (above)
     # so these four can be declared here, ahead of their eagle-owned consumer
     # implementation — the same declare-before-build convention every other

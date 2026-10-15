@@ -14,7 +14,7 @@ never a new ability the family did not already have.
 
 **DLPack** is a standard, framework-neutral way for one library to hand
 another an array — CPU or GPU — without copying it. Every crossing on this
-page is, mechanically, a DLPack exchange: `cupy`, `torch` and NVIDIA Warp
+page is, mechanically, a DLPack exchange: `cupy`, `torch`, NVIDIA Warp and JAX
 arrays all expose `__dlpack__`/`__dlpack_device__`, and the family reads or
 writes through that protocol rather than through a framework-specific code
 path. That is what lets the same kernel accept a `numpy`, `cupy`, `torch` or
@@ -32,11 +32,11 @@ between the two frameworks on the device side.
 :::{admonition} Roadmap
 :class: note
 
-`jax` and `tensorflow`/`keras` are both DLPack-capable and both foreseen —
-see {ref}`Certified frameworks <certified-frameworks>` below. Neither is
-certified today. Treat any claim that one of them works
+`tensorflow`/`keras` is DLPack-capable and foreseen —
+see {ref}`Certified frameworks <certified-frameworks>` below. It is not
+certified today. Treat any claim that it works
 now as a documentation bug, not a feature: this page cites a row for every
-capability it claims, and no row names either framework. NVIDIA Warp is no
+capability it claims, and no row names it. NVIDIA Warp and JAX are no
 longer in this category: see the certified rows below.
 :::
 
@@ -127,9 +127,9 @@ No row certifies it. (This is separate from `hawk.diff.jvp`, which differentiate
 (certified-frameworks)=
 ## Certified frameworks, and what "roadmap" means mechanically
 
-The certified set is **numpy, cupy, torch and NVIDIA Warp**. **jax and
-tensorflow/keras are ROADMAP, absent by declaration.** The family's stated
-horizon includes them; no row certifies them and none pretends to.
+The certified set is **numpy, cupy, torch, NVIDIA Warp and JAX**.
+**tensorflow/keras is ROADMAP, absent by declaration.** The family's stated
+horizon includes it; no row certifies it and none pretends to.
 
 "Absent by declaration" is enforced in both directions, and neither direction is
 ever a skip:
@@ -146,10 +146,30 @@ be structurally incapable of skipping: a scanner discovers every file containing
 a registered row and rejects skip machinery — skip tokens and availability
 markers alike — on the registered functions themselves.
 
+### Where the rows run
+
+JAX has its own installation limits, which decide where its rows can run.
+JAX publishes wheels for Python 3.12 and newer, and no 3.13 free-threaded
+build; its CUDA 12 build supports Pascal and newer, and its CUDA 13 build
+supports newer GPUs only (CUDA 13 dropped Pascal). So the five `JX-*` and
+`STREAM-JAX-*` rows run where JAX is installed, and every other
+environment deselects them with `-m "not interop_matrix"`, the one
+sanctioned way a row may not run:
+
+| environment | rows run |
+|---|---|
+| Quadro P2000 (Pascal), CUDA 12, Python 3.12 | the local gate |
+| Kaggle T4, CUDA 12 and CUDA 13 | the hosted GPU job (Python 3.12 or newer) |
+| any other environment | `-m "not interop_matrix"` |
+
+A certified framework missing from a gate environment is still a failure,
+never a skip: the table says where the gate is run, not where it may be
+skipped.
+
 (reading-the-matrix)=
 ## Reading the matrix, in miniature
 
-Before the full 23-row table below, here is how to read any one row. These
+Before the full 28-row table below, here is how to read any one row. These
 three all share one crossing class, **ALIAS** — pointer identity plus
 write-through: the two sides report the same address, and a write on one
 is visible on the other:
@@ -167,14 +187,14 @@ environment — what is absent, or what is refused), and **INVARIANCE**
 (the same eagle execution body agrees across different execution
 structures — no framework on either side, because there is no crossing).
 {ref}`The full certification matrix <certification-matrix>` below defines
-each in full and lists every one of the 23 rows; the acronyms
+each in full and lists every one of the 28 rows; the acronyms
 (ALIAS/COPY/STREAM/ENV/INVARIANCE) are each defined again, in depth, in
 {ref}`The two transfer laws <two-transfer-laws>` further down this page.
 
 (certification-matrix)=
 ## The certification matrix
 
-Twenty-three rows. `framework` is what the row bridges to; `owner` is the
+Twenty-eight rows. `framework` is what the row bridges to; `owner` is the
 repository whose suite carries the assertion; `class` is how data crosses, in
 the vocabulary defined in the next section.
 
@@ -219,6 +239,11 @@ them.
 | `WP-IN-CUDA-ALIAS` | warp | eagle | ALIAS | a `wp.array` becomes a zero-copy device view via `eagle.interop.import_buffer`: pointer identity, the legacy-DLPack access flag (`"unknown"`), and write-through |
 | `WP-OUT-CUDA-ALIAS` | warp | eagle | ALIAS | the reverse crossing, `wp.from_dlpack` of an eagle-side buffer: pointer-equal and write-through in both directions |
 | `STREAM-WARP-PRODUCER-ORDER` | warp | eagle | STREAM | a device write enqueued on a dedicated `wp.Stream` before a consumer import, with no synchronisation, is seen by the consumer exactly when `import_buffer` is told that consumer's stream (the DLPack stream-code contract) |
+| `JX-IN-CUDA-ALIAS` | jax | eagle | ALIAS | a CUDA jax array in a read-only role imports pointer-equal on the same device, reports the legacy-DLPack access flag (`"unknown"`), gives the analytic result, and is left byte-unchanged |
+| `JX-IN-WRITE-REFUSED` | jax | eagle | ENV | a jax array in a role the kernel writes (`out=`, `terminated`, a mutable plane, a written host buffer) is refused by name, because jax arrays are immutable, and is left byte-unchanged |
+| `JX-OUT-CUDA-ALIAS` | jax | eagle | ALIAS | the jax result is eagle's own fresh result buffer, complete at return and never written again; a second call returns a distinct buffer |
+| `JX-IN-CPU-COPY` | jax | eagle | COPY | a CPU jax array comes back as a CPU jax array via a copy, with correct values and no aliasing of the input |
+| `STREAM-JAX-PRODUCER-ORDER` | jax | eagle | STREAM | a jax operation still running on the GPU is waited for on the device, with no host block, when eagle imports its result on its own stream |
 | `execution_partition_identity` | — | eagle | INVARIANCE | the same `sample_local`/`cross_sample_read` body produces bit-identical results under `DeviceKernel` (whole) vs. a 2-way partition vs. a 2-rank `RankPartition` |
 | `execution_host_device_twin` | — | eagle | INVARIANCE | the same body's `HostTeam` and `DeviceKernel` results agree within a fixed host/device tolerance band — the band this row's own test defines |
 | `execution_illegal_placement_refused` | — | eagle | ENV | a plan placing a body on a structure its declared `exec_access` class forbids is refused at plan time, naming the violated rule |

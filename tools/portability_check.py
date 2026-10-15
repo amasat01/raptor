@@ -99,7 +99,9 @@ DEFAULT_EXPECTED_PASS_COUNT = 58
 # reviewed reason, never to silence a RED.
 # 2026-10-14: 19 -- +5 test_family_visuals (checks the vendored docs bundle against its lock) and +5
 # test_nb_colab_setup (checks the docs notebooks' setup cell); both read docs/ files that are not in the wheel.
-EXPECTED_REPO_LOCAL_COUNT = 19
+# 2026-10-15: 21 -- +2 test_nb_colab_setup (the setup cell's CUDA-major pick and its release-candidate switches),
+# same docs/ reason.
+EXPECTED_REPO_LOCAL_COUNT = 21
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

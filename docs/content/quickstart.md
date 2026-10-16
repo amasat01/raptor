@@ -69,8 +69,8 @@ today:
 ```python
 from raptor.conformance import interop
 
-interop.CERTIFIED   # ('numpy', 'cupy', 'torch', 'warp')
-interop.ROADMAP      # ('jax', 'tensorflow') — declared, not yet built
+interop.CERTIFIED   # ('numpy', 'cupy', 'torch', 'warp', 'jax')
+interop.ROADMAP      # ('tensorflow',) — declared, not yet built
 ```
 
 See {ref}`Reading the matrix <reading-the-matrix>` in

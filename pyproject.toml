@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [build-system]
-requires = ["setuptools>=61"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -27,14 +27,14 @@ name = "raptor-core"
 # new seam, so both carry a `raptor-core>=0.2.0` floor pin: an old raptor
 # under a new eagle or downstream package would ImportError at the seam, and
 # that must resolve as a dependency constraint, never as a runtime surprise.
-version = "0.3.0"
+version = "0.3.1"
 description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 authors = [{ name = "Alessandro Masat" }]
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
 ]
 # raptor is the pure-contract package the whole family depends DOWN on — zero

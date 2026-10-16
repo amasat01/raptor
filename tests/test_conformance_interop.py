@@ -70,7 +70,7 @@ def test_t_in_cpu_host_alias_row_declared_exactly():
     row) must still be present and unchanged alongside it — this is a NEW
     row, not a flip of that one."""
     assert ROWS["T-IN-CPU-COPY"] == RowDecl("torch", "eagle", "COPY")
-    assert len(ROWS) == 23, sorted(ROWS)
+    assert len(ROWS) == 28, sorted(ROWS)
 
 
 def test_warp_rows_declared_exactly():
@@ -81,6 +81,18 @@ def test_warp_rows_declared_exactly():
     assert ROWS["WP-IN-CUDA-ALIAS"] == RowDecl("warp", "eagle", "ALIAS")
     assert ROWS["WP-OUT-CUDA-ALIAS"] == RowDecl("warp", "eagle", "ALIAS")
     assert ROWS["STREAM-WARP-PRODUCER-ORDER"] == RowDecl("warp", "eagle", "STREAM")
+
+
+def test_jax_rows_declared_exactly():
+    """The five jax rows, pinned exactly. jax crosses through eagle's generic
+    DLPack layer, so all five are owner=eagle; jax is certified, so it is no
+    longer on the roadmap."""
+    assert ROWS["JX-IN-CUDA-ALIAS"] == RowDecl("jax", "eagle", "ALIAS")
+    assert ROWS["JX-IN-WRITE-REFUSED"] == RowDecl("jax", "eagle", "ENV")
+    assert ROWS["JX-OUT-CUDA-ALIAS"] == RowDecl("jax", "eagle", "ALIAS")
+    assert ROWS["JX-IN-CPU-COPY"] == RowDecl("jax", "eagle", "COPY")
+    assert ROWS["STREAM-JAX-PRODUCER-ORDER"] == RowDecl("jax", "eagle", "STREAM")
+    assert "jax" in CERTIFIED and "jax" not in ROADMAP
 
 
 def test_execution_rows_declared_exactly():

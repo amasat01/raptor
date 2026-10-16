@@ -83,7 +83,9 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # is marked `ft` throughout; its rows need a free-threaded interpreter and skip
 # on a GIL build, so this leg deselects `ft` (DEFAULT_MARKER_EXPR) and ci.yml's
 # ft-stress job runs them on 3.13t and 3.14t.
-DEFAULT_EXPECTED_PASS_COUNT = 58
+# 2026-10-15 (venv leg): 59 passed. The +1 pass is test_jax_rows_declared_exactly (the JAX rows
+# of the interop matrix), a declaration check with no framework import.
+DEFAULT_EXPECTED_PASS_COUNT = 59
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --
 # test_pyproject_declares_zero_hard_deps_and_name_raptor,
@@ -101,7 +103,9 @@ DEFAULT_EXPECTED_PASS_COUNT = 58
 # test_nb_colab_setup (checks the docs notebooks' setup cell); both read docs/ files that are not in the wheel.
 # 2026-10-15: 21 -- +2 test_nb_colab_setup (the setup cell's CUDA-major pick and its release-candidate switches),
 # same docs/ reason.
-EXPECTED_REPO_LOCAL_COUNT = 21
+# 2026-10-15: 32 -- +11 test_docs_fresh_exit_codes (the docs-fresh generators' exit codes run against
+# copies of the repository's tools/, README and cards), same docs/ reason.
+EXPECTED_REPO_LOCAL_COUNT = 32
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

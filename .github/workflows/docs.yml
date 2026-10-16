@@ -36,7 +36,7 @@ jobs:
             sphinx-copybutton==0.5.2 sphinx-autodoc-typehints==3.5.2
       - run: make -C docs nbcheck
       - run: make -C docs strict
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: docs/_build/html
           retention-days: 7
@@ -53,4 +53,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

@@ -14,14 +14,14 @@ Every number in the block is rendered from a committed card
 (``early_termination_card.py``, ``zero_copy_interop_card.py`` and
 ``autodiff_vs_torch_card.py`` are the writers; a real run needs a visible
 GPU, each writer's own ``--device`` mode, never ``--dry``). ``main()``
-refuses (exit 1, no write) when any of the three card files is absent or
-README.md lacks the markers, and ``--check`` exits 1 when the committed
+refuses (exit 3, no write) when any of the three card files is absent, exits 5
+when README.md lacks the markers, and ``--check`` exits 1 when the committed
 block differs from what the cards render today (CI runs it).
 
 Usage::
 
     python sync_readme_cards.py              # write README.md in place
-    python sync_readme_cards.py --check       # exit 1 on a diff, write nothing
+    python sync_readme_cards.py --check       # write nothing; exit 1 on a diff, 3 on a missing card
 """
 
 from __future__ import annotations
@@ -38,6 +38,11 @@ import _card_common as cc  # noqa: E402
 
 README = _RAPTOR_ROOT / "README.md"
 BEGIN, END = "<!-- cards:begin -->", "<!-- cards:end -->"
+
+# Exit codes shared by the docs-fresh generators (0 fresh, 2 is argparse's).
+EXIT_STALE = 1
+EXIT_MISSING_CARD = 3
+EXIT_NO_MARKERS = 5
 
 #: {label: card filename}, in the order the block renders them.
 CARDS = {
@@ -118,7 +123,7 @@ def main(argv=None) -> int:
              f"{', '.join(missing)} -- run the matching *_card.py --device "
              "on a GPU first (never --dry). README.md is left untouched.",
              file=sys.stderr)
-        return 1
+        return EXIT_MISSING_CARD
 
     new_block = render_block()
     text = README.read_text()
@@ -127,7 +132,7 @@ def main(argv=None) -> int:
              "markers yet -- add them by hand at the point the numbers "
              "block belongs, then re-run. README.md is left untouched.",
              file=sys.stderr)
-        return 1
+        return EXIT_NO_MARKERS
 
     before, _, rest = text.partition(BEGIN)
     _, _, after = rest.partition(END)
@@ -137,7 +142,7 @@ def main(argv=None) -> int:
         if updated != text:
             print("sync_readme_cards: README.md's cards block is stale "
                  "-- run `python benchmarks/sync_readme_cards.py` and commit the diff.", file=sys.stderr)
-            return 1
+            return EXIT_STALE
         print("sync_readme_cards: README.md's cards block matches the committed cards.")
         return 0
 

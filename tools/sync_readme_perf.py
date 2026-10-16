@@ -29,12 +29,25 @@ README = pathlib.Path(__file__).resolve().parent.parent / "README.md"
 HERO = re.compile(r"(<!-- hero:begin -->\n)(.*?)(\n<!-- hero:end -->)", re.DOTALL)
 SUBJECT = "hawk + eagle (`eagle.simulate`)"
 
+# Exit codes shared by the docs-fresh generators.
+EXIT_STALE = 1
+EXIT_USAGE = 2  # argparse only
+EXIT_MISSING_CARD = 3
+EXIT_MISSING_TOOL = 4
+
+
+class MissingTool(Exception):
+    """The eagle checkout has no claim engine."""
+
 
 def load_eagle(root: pathlib.Path):
     """Import eagle's claim engine from an eagle checkout."""
     path = root / "tools" / "prose_claims.py"
     if not path.is_file():
-        raise SystemExit(f"{path} not found: pass --eagle-root of an eagle checkout")
+        raise MissingTool(
+            f"{path} not found: pass --eagle-root of an eagle checkout "
+            "(its branch must have tools/prose_claims.py)"
+        )
     spec = importlib.util.spec_from_file_location("eagle_prose_claims", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -49,14 +62,18 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
     if not args.eagle_root:
         print("pass --eagle-root (or set RAPTOR_EAGLE_ROOT) to an eagle checkout", file=sys.stderr)
-        return 2
+        return EXIT_MISSING_TOOL
     root = pathlib.Path(args.eagle_root).resolve()
-    pcl = load_eagle(root)
+    try:
+        pcl = load_eagle(root)
+    except MissingTool as exc:
+        print(str(exc), file=sys.stderr)
+        return EXIT_MISSING_TOOL
     try:
         hero = pcl.render_hero_sentence(pcl.headline_facts(pcl.Cards(root)), SUBJECT)
     except pcl.ClaimError as exc:
         print(f"headline card missing, nothing written: {exc}", file=sys.stderr)
-        return 2
+        return EXIT_MISSING_CARD
     old = README.read_text()
     new = HERO.sub(lambda m: m.group(1) + hero + m.group(3), old)
     if new == old:
@@ -64,7 +81,7 @@ def main(argv=None) -> int:
         return 0
     if args.check:
         print("stale (run tools/sync_readme_perf.py --eagle-root <eagle checkout>): README.md")
-        return 1
+        return EXIT_STALE
     README.write_text(new)
     print("wrote README.md")
     return 0

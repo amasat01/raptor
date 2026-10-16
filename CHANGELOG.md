@@ -11,6 +11,18 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
+## 0.3.1 (unreleased)
+
+**JAX is certified.** Five rows cover JAX arrays in the interop matrix: `JX-IN-CUDA-ALIAS`, `JX-IN-WRITE-REFUSED`, `JX-OUT-CUDA-ALIAS`, `JX-IN-CPU-COPY` and `STREAM-JAX-PRODUCER-ORDER`. JAX moves from the roadmap to the certified list in the docs, and eagle registers against the rows.
+
+**SPDX licence metadata.** `pyproject.toml` declares `license = "Apache-2.0"` and `license-files`, the form current packaging tools expect.
+
+**docs-fresh tells its failures apart.** `tools/docs_fresh.sh` exits with a different code for stale docs, a missing card and a missing tool, so a CI log says which one went wrong. Tests that need eagle are marked `cross_repo`, and the wheel leg of the docs-fresh tests runs without skips.
+
+**Portability check.** Test markers are registered for the out-of-repo copy of the suite, and the check pins its pass count at 59.
+
+**Docs.** The pages are regrouped into shorter sections, with a family glossary. The Colab and Kaggle setup cell installs the CUDA 12 or 13 extras, can test a release candidate and upgrades the family's own packages. Pages actions moved to the Node 24 releases.
+
 ## 0.3.0 (2026-10-09)
 
 **Free-threaded CPython support, and the harness that certifies it

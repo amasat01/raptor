@@ -1,52 +1,43 @@
 # Contributing
 
-Contributions — issues and pull requests — are welcome on GitHub, under the
-terms below.
+Read [How we build](https://amasat01.github.io/raptor/content/principles.html) first: the twelve rules every pull request in the
+family is read against, plus the style, release and license terms.
 
-## Terms
+**This repo:** the dependency-free protocol spine. The manifest schema, the engine and provider contracts, and the interop
+certification matrix. Every other repo declares raptor; raptor declares nothing.
 
-Contributions are accepted under the Apache License 2.0, the license this
-project ships under (inbound = outbound). Every contribution must carry a
-Developer Certificate of Origin sign-off (`git commit -s`); see
-https://developercertificate.org/ for what that certifies. There is no
-Contributor License Agreement and no relicensing right.
+## Build and run the gate
 
-## Using the code
+```bash
+pip install -e . pytest
+python -m pytest -q -rs -m "not cross_repo"      # the suite gate (.github/workflows/ci.yml)
+```
 
-The code is available under the Apache License 2.0 (see `LICENSE`).
-Contributions are accepted under the same terms (inbound = outbound).
+`cross_repo` selects the eagle conformance battery. It needs an `eagle` checkout next to this one and fails, not skips, without it.
+The free-threading rows run with `python -m pytest -m ft -W error::RuntimeWarning` on a free-threaded build.
 
-## Checking the notebooks as a hosted user runs them
+Docs (`cd docs`; the packages are listed in `.github/workflows/docs.yml`):
 
-`make nbcheck` runs the docs notebooks in your own environment against source checkouts. `make nbcheck-hosted` (in `docs/`) runs
-them the way a Colab user does: it builds CPU-only wheels of `aether-dsc`, `raptor-core`, `raptor-eagle` and `raptor-hawk` from the
-four checkouts (side by side, or given as `AETHER_ROOT`, `EAGLE_ROOT`, `HAWK_ROOT`, `RAPTOR_ROOT`), installs them into a fresh venv
-pinned to Colab's CPU runtime (`docs/_tools/hosted_env/colab-cpu.txt`, generated from Google's published package list by
-`refresh_colab_lock.py`; refresh it each release), and executes every notebook of this repository from a copy in an empty directory
-with a stand-in `google.colab` module, so the generated setup cell takes its hosted branch (pip from the local wheels, helper files
-from a local mirror). `make nbcheck-floor` does the same with the oldest numpy and torch that have Python 3.13 wheels
-(`floor-cpu.txt`). Needs `uv`, a Python 3.13 (`NBH_PYTHON=...`), a C++23 compiler (`CXX=...`) and network access to the package indexes; one
-PASS, FAIL or SKIP line per notebook, exit 1 on a FAIL. `NBH_ARGS="--work DIR --keep"` keeps the wheelhouse between runs.
-`make nbcheck-hosted-gpu` runs the same on a GPU: Colab's GPU-runtime lock with CUDA 12 builds (`colab-gpu.txt`), eagle's CUDA plugin built for
-`NBH_GPU_ARCH`, and the GPU-only notebooks run too, on GPU `NBH_GPU_INDEX` (under the `flock` file `NBH_GPU_LOCK`, if set). It needs about 5 GB of disk.
+```bash
+make strict     # zero warnings
+make linkcheck
+make nbexec     # run the tutorial notebooks in place; outputs are committed
+make nbcheck    # fail on an unexecuted notebook
+```
 
-## Releasing
+`make nbcheck-hosted` runs the notebooks the way a Colab user does; read the comments above the target in `docs/Makefile` for what it
+needs.
 
-`raptor-core` publishes to PyPI through `.github/workflows/publish.yml`,
-triggered by pushing a tag `v<version>` that matches `pyproject.toml`'s
-`project.version` (a mismatch fails the `check` job before anything is
-published). `workflow_dispatch` runs the same build, check and test-wheel
-steps without publishing — use it to dry-run a release.
+## What a PR here must show
 
-1. Bump `version` in `pyproject.toml`, update `CHANGELOG.md`.
-2. `git tag vX.Y.Z && git push origin vX.Y.Z`.
-3. The workflow builds the sdist + wheel, runs `twine check --strict`, runs
-   the isolated-venv portability gate against the built wheel on every
-   supported CPython, then publishes via a PyPI Trusted Publisher
-   (environment `pypi`; no token in this repository).
+- `dependencies = []` in `pyproject.toml` stays empty. A new import is function-local and optional, or it does not land.
+- A new framework or crossing is a certification row, declared here first and registered by the owning repo second:
+  [Contributing a certification row](https://amasat01.github.io/raptor/content/devguide/contributing_a_certification_row.html).
+- `tests/test_packaging.py` and `tests/test_docs_interop_protocols_sync.py` stay green: they keep package metadata and the published
+  matrix in step with the code.
+- The family checklist from [How we build](https://amasat01.github.io/raptor/content/principles.html), nothing more.
 
-**Publish order across the family:** `raptor-core` and `aether-dsc` (in the
-`aether` repo) have no family dependencies and publish first, in either
-order. `raptor-hawk` (depends on `aether-dsc`) and `raptor-eagle` (depends
-on `raptor-core`) publish after — they may publish in either order relative
-to each other.
+## Release
+
+Bump `version` in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`. `.github/workflows/publish.yml` does the rest; use
+`workflow_dispatch` to dry-run. Publish order is in the family guide.

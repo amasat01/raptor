@@ -153,5 +153,6 @@ content/glossary
 :maxdepth: 1
 :hidden:
 
+content/principles
 content/contributing
 ```

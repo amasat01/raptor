@@ -85,7 +85,10 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # ft-stress job runs them on 3.13t and 3.14t.
 # 2026-10-15 (venv leg): 59 passed. The +1 pass is test_jax_rows_declared_exactly (the JAX rows
 # of the interop matrix), a declaration check with no framework import.
-DEFAULT_EXPECTED_PASS_COUNT = 59
+# 2026-10-16: 70 passed. +8 test_rows_ran (the rows-ran gate, run in subprocesses) and +3 in
+# test_conformance_interop (the four JAX FFI rows' declaration, the legs vocabulary, the leg check in register_row).
+# 2026-10-16: 71 passed. +1 test_inject_rows_declared_exactly (the ten inject rows' declaration).
+DEFAULT_EXPECTED_PASS_COUNT = 71
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --
 # test_pyproject_declares_zero_hard_deps_and_name_raptor,
@@ -105,7 +108,9 @@ DEFAULT_EXPECTED_PASS_COUNT = 59
 # same docs/ reason.
 # 2026-10-15: 32 -- +11 test_docs_fresh_exit_codes (the docs-fresh generators' exit codes run against
 # copies of the repository's tools/, README and cards), same docs/ reason.
-EXPECTED_REPO_LOCAL_COUNT = 32
+# 2026-10-16: 33 -- +1 test_docs_interop_protocols_sync (the legs table in docs/), same docs/ reason.
+# 2026-10-16: 29 -- -4 test_docs_fresh_exit_codes (the cards block left with the demos, which moved to eagle and hawk).
+EXPECTED_REPO_LOCAL_COUNT = 29
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

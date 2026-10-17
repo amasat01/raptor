@@ -8,7 +8,7 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= python -m sphinx
 SOURCEDIR     = .
 BUILDDIR      = _build
-NBROOTS       = content/tutorials content/examples
+NBROOTS       = content/tutorials
 
 .PHONY: help Makefile clean livehtml strict linkcheck nbexec nbcheck nbcheck-hosted nbcheck-floor nbcheck-hosted-gpu nbtest
 

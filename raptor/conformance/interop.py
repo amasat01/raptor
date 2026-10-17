@@ -49,6 +49,10 @@ ROADMAP = ("tensorflow",)
 #: framework crossing's pointer semantics) and from STREAM (ordering).
 ROW_KINDS = frozenset({"ALIAS", "COPY", "STREAM", "ENV", "INVARIANCE"})
 
+#: the platforms a row can be certified on. Both are legs of ONE GPU-capable
+#: job (a GPU-less job deselects the whole matrix), so a row never skips a leg.
+LEGS = ("cpu", "cuda")
+
 
 @dataclass(frozen=True)
 class RowDecl:
@@ -63,17 +67,24 @@ class RowDecl:
     in :data:`CERTIFIED`/:data:`UNIVERSE` — keeps that vocabulary honestly
     scoped to actual array frameworks. ``owner_repo`` is the repo whose test
     suite carries the executable assertion, so the matrix rows live with the
-    seam they certify; ``kind`` is one of :data:`ROW_KINDS`.
+    seam they certify; ``kind`` is one of :data:`ROW_KINDS`. ``legs`` names
+    the platforms the row must pass on (a subset of :data:`LEGS`, default
+    both): :func:`assert_rows_complete` needs a passing test on every one.
     """
 
     framework: str | None
     owner_repo: str
     kind: str
+    legs: tuple[str, ...] = LEGS
 
     def __post_init__(self) -> None:
         if self.kind not in ROW_KINDS:
             raise ValueError(
                 f"RowDecl.kind={self.kind!r} not in {sorted(ROW_KINDS)}"
+            )
+        if not self.legs or not set(self.legs) <= set(LEGS):
+            raise ValueError(
+                f"RowDecl.legs={self.legs!r} not a non-empty subset of {LEGS}"
             )
 
 
@@ -144,6 +155,34 @@ ROWS: dict[str, RowDecl] = {
     "JX-OUT-CUDA-ALIAS": RowDecl("jax", "eagle", "ALIAS"),
     "JX-IN-CPU-COPY": RowDecl("jax", "eagle", "COPY"),
     "STREAM-JAX-PRODUCER-ORDER": RowDecl("jax", "eagle", "STREAM"),
+    # jax — the FFI bridge (``eagle.frameworks.jax``): a hawk kernel run as an
+    # XLA custom call on XLA's own buffers and stream. Legs are platforms.
+    # CPU: XLA's host buffers are read in place and the result is XLA's own.
+    "JX-FFI-CPU-ALIAS": RowDecl("jax", "eagle", "ALIAS", ("cpu",)),
+    # Outputs are XLA-allocated and zero where the kernel writes nothing, on a
+    # reused (dirty) allocator, except carried-state planes and the mask, which
+    # alias their operand; a donated mask comes back in place.
+    "JX-OUT-XLA-OWNED": RowDecl("jax", "eagle", "ALIAS", ("cpu", "cuda")),
+    # Eager, jit, a vmap-folded batch and a scan of steps give one answer.
+    "JX-JIT-INVARIANCE": RowDecl("jax", "eagle", "INVARIANCE", ("cpu", "cuda")),
+    # In one jit, a kernel launched after another XLA op rides XLA's stream:
+    # no host wait, and it reads the finished values.
+    "STREAM-JAX-FFI-ORDER": RowDecl("jax", "eagle", "STREAM", ("cuda",)),
+    # the reader's own framework code inside an eagle graph: one seam, three
+    # tiers (captured, stream-ordered, host-synchronized), a framework-captured
+    # graph as a child node, per-step hooks, gradients through the reader's
+    # model and weights bound live.
+    "INJ-TIER-NAMED": RowDecl(None, "eagle", "ENV", ("cpu", "cuda")),
+    "STREAM-INJECT-STREAM-ORDER": RowDecl("torch", "eagle", "STREAM", ("cuda",)),
+    "STREAM-INJECT-HOST-ORDER": RowDecl("torch", "eagle", "STREAM", ("cuda",)),
+    "T-CHILD-OWNED": RowDecl("torch", "eagle", "ALIAS", ("cuda",)),
+    "INJ-LOOP-HOOK": RowDecl("torch", "eagle", "INVARIANCE", ("cpu", "cuda")),
+    "INJ-VJP-CHAIN": RowDecl("torch", "eagle", "INVARIANCE", ("cpu", "cuda")),
+    "INJ-RUN-VJP": RowDecl("torch", "eagle", "INVARIANCE", ("cpu", "cuda")),
+    "INJ-TABLE-LIVE": RowDecl("torch", "eagle", "ALIAS", ("cuda",)),
+    "STREAM-JAX-INJECT-ORDER": RowDecl("jax", "eagle", "STREAM", ("cuda",)),
+    "JX-INJECT-HOST": RowDecl("jax", "eagle", "STREAM", ("cuda",)),
+    "JX-LOOP-INVARIANCE": RowDecl("jax", "eagle", "INVARIANCE", ("cpu", "cuda")),
     # execution rows: the closed RowDecl framework/kind sets extended (above)
     # so these four can be declared here, ahead of their eagle-owned consumer
     # implementation — the same declare-before-build convention every other
@@ -203,38 +242,65 @@ def roadmap_framework(fw: str) -> None:
 
 
 #: row IDs actually collected this pytest session (populated by
-#: :func:`register_row` at collection time).
+#: :func:`register_row` at decoration time, i.e. on import).
 _COLLECTED_ROWS: set[str] = set()
 
 
-def register_row(row_id: str):
+def register_row(row_id: str, leg: str | None = None):
     """Decorator marking a matrix test as covering declared row ``row_id``.
+
+    ``leg`` (one of the row's :attr:`RowDecl.legs`) says which platform this
+    test certifies; ``None`` means the test covers every declared leg.
 
     Raises :class:`KeyError` immediately if ``row_id`` is not in :data:`ROWS`
     (a typo'd row id should fail loud at collection, not silently pass
-    :func:`assert_rows_complete`).
+    :func:`assert_rows_complete`), and :class:`ValueError` for a ``leg`` the
+    row does not declare.
     """
     if row_id not in ROWS:
         raise KeyError(f"register_row: {row_id!r} is not a declared row in ROWS")
+    if leg is not None and leg not in ROWS[row_id].legs:
+        raise ValueError(
+            f"register_row: {row_id!r} declares legs {ROWS[row_id].legs}, not {leg!r}"
+        )
 
     def _decorate(fn):
         _COLLECTED_ROWS.add(row_id)
+        fn.__dict__.setdefault("raptor_rows", []).append((row_id, leg))
         return fn
 
     return _decorate
 
 
-def assert_rows_complete(owner_repo: str) -> None:
-    """Assert every :data:`ROWS` entry owned by ``owner_repo`` was collected.
+def assert_rows_complete(owner_repo: str, ran: bool = True) -> None:
+    """Assert every :data:`ROWS` entry owned by ``owner_repo`` is certified.
 
-    Declared vs. collected row IDs; any declared row with no collected test
-    is RED.
+    ``ran=True`` (the default): every declared row has a test that RAN and
+    passed on every declared leg in this pytest session, as recorded by the
+    :mod:`raptor.conformance.pytest_rows` plugin (which must be loaded, and
+    this check must run after the row tests: mark it ``rows_gate``). A row
+    whose test was deselected, skipped, failed or never collected is RED.
+
+    ``ran=False``: the weaker import-time check only, that each declared row
+    has a registered test. A module that merely imports satisfies it, so a
+    run that executed nothing still passes; keep it for tools that read
+    declarations, not for a gate.
     """
     declared = {rid for rid, decl in ROWS.items() if decl.owner_repo == owner_repo}
     missing = declared - _COLLECTED_ROWS
     assert not missing, (
         f"rows declared for {owner_repo!r} but never collected: {sorted(missing)}"
     )
+    if ran:
+        from . import pytest_rows
+
+        problems = pytest_rows.unfinished(
+            (rid, leg) for rid in sorted(declared) for leg in ROWS[rid].legs
+        )
+        assert not problems, (
+            f"rows declared for {owner_repo!r} without a passing run:\n"
+            + "\n".join(problems)
+        )
 
 
 #: token names that must never appear in a matrix module — skip machinery is

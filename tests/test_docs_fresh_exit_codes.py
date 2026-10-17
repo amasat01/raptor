@@ -35,11 +35,9 @@ def _run(script, *args, cwd, env=None):
 
 @pytest.fixture()
 def copy(tmp_path):
-    """A copy of the generators, cards and README."""
+    """A copy of the generator and README."""
     root = tmp_path / "raptor"
-    shutil.copytree(_REPO / "benchmarks", root / "benchmarks",
-                    ignore=shutil.ignore_patterns("__pycache__"))
-    (root / "tools").mkdir()
+    (root / "tools").mkdir(parents=True)
     shutil.copy2(_REPO / "tools" / "sync_readme_perf.py", root / "tools")
     shutil.copy2(_REPO / "README.md", root)
     return root
@@ -60,36 +58,6 @@ def eagle(tmp_path):
 
 def _perf(copy, *args):
     return _run(copy / "tools" / "sync_readme_perf.py", "--check", *args, cwd=copy)
-
-
-def _cards(copy, *args):
-    return _run(copy / "benchmarks" / "sync_readme_cards.py", "--check", *args, cwd=copy)
-
-
-# README's own cards block (benchmarks/sync_readme_cards.py)
-def test_cards_block_fresh_exits_0(copy):
-    assert _cards(copy).returncode == 0
-
-
-def test_cards_block_stale_exits_1_and_names_the_file(copy):
-    readme = copy / "README.md"
-    text = readme.read_text()
-    i = text.index("<!-- cards:begin -->") + len("<!-- cards:begin -->")
-    readme.write_text(text[:i] + "\nhand edit\n" + text[text.index("<!-- cards:end -->"):])
-    res = _cards(copy)
-    assert res.returncode == 1
-    assert "README.md" in res.stderr
-
-
-def test_cards_block_missing_card_exits_3_and_names_it(copy):
-    (copy / "benchmarks" / "zero_copy_interop_card.json").unlink()
-    res = _cards(copy)
-    assert res.returncode == 3
-    assert "zero_copy_interop_card.json" in res.stderr
-
-
-def test_cards_block_usage_error_exits_2(copy):
-    assert _cards(copy, "--no-such-flag").returncode == 2
 
 
 # README's headline (tools/sync_readme_perf.py)

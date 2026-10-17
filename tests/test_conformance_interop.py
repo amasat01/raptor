@@ -13,10 +13,12 @@ import pytest
 
 from raptor.conformance.interop import (
     CERTIFIED,
+    LEGS,
     ROADMAP,
     ROWS,
     UNIVERSE,
     RowDecl,
+    register_row,
     roadmap_framework,
 )
 
@@ -70,7 +72,7 @@ def test_t_in_cpu_host_alias_row_declared_exactly():
     row) must still be present and unchanged alongside it — this is a NEW
     row, not a flip of that one."""
     assert ROWS["T-IN-CPU-COPY"] == RowDecl("torch", "eagle", "COPY")
-    assert len(ROWS) == 28, sorted(ROWS)
+    assert len(ROWS) == 43, sorted(ROWS)
 
 
 def test_warp_rows_declared_exactly():
@@ -93,6 +95,42 @@ def test_jax_rows_declared_exactly():
     assert ROWS["JX-IN-CPU-COPY"] == RowDecl("jax", "eagle", "COPY")
     assert ROWS["STREAM-JAX-PRODUCER-ORDER"] == RowDecl("jax", "eagle", "STREAM")
     assert "jax" in CERTIFIED and "jax" not in ROADMAP
+
+
+def test_jax_ffi_rows_declared_exactly():
+    """The four jax FFI rows and their legs, pinned exactly."""
+    assert ROWS["JX-FFI-CPU-ALIAS"] == RowDecl("jax", "eagle", "ALIAS", ("cpu",))
+    assert ROWS["JX-OUT-XLA-OWNED"] == RowDecl("jax", "eagle", "ALIAS", ("cpu", "cuda"))
+    assert ROWS["JX-JIT-INVARIANCE"] == RowDecl(
+        "jax", "eagle", "INVARIANCE", ("cpu", "cuda")
+    )
+    assert ROWS["STREAM-JAX-FFI-ORDER"] == RowDecl("jax", "eagle", "STREAM", ("cuda",))
+
+
+def test_inject_rows_declared_exactly():
+    """The eleven rows of framework code inside an eagle graph, pinned exactly."""
+    assert ROWS["INJ-TIER-NAMED"] == RowDecl(None, "eagle", "ENV", ("cpu", "cuda"))
+    for row in ("STREAM-INJECT-STREAM-ORDER", "STREAM-INJECT-HOST-ORDER"):
+        assert ROWS[row] == RowDecl("torch", "eagle", "STREAM", ("cuda",))
+    for row in ("T-CHILD-OWNED", "INJ-TABLE-LIVE"):
+        assert ROWS[row] == RowDecl("torch", "eagle", "ALIAS", ("cuda",))
+    for row in ("INJ-LOOP-HOOK", "INJ-VJP-CHAIN", "INJ-RUN-VJP"):
+        assert ROWS[row] == RowDecl("torch", "eagle", "INVARIANCE", ("cpu", "cuda"))
+    for row in ("STREAM-JAX-INJECT-ORDER", "JX-INJECT-HOST"):
+        assert ROWS[row] == RowDecl("jax", "eagle", "STREAM", ("cuda",))
+    assert ROWS["JX-LOOP-INVARIANCE"] == RowDecl("jax", "eagle", "INVARIANCE", ("cpu", "cuda"))
+
+
+def test_legs_default_to_both_and_are_validated():
+    assert RowDecl("jax", "eagle", "ALIAS").legs == LEGS == ("cpu", "cuda")
+    for bad in ((), ("tpu",), ("cpu", "tpu")):
+        with pytest.raises(ValueError):
+            RowDecl("jax", "eagle", "ALIAS", bad)
+
+
+def test_register_row_refuses_a_leg_the_row_does_not_declare():
+    with pytest.raises(ValueError, match="declares legs"):
+        register_row("STREAM-JAX-FFI-ORDER", leg="cpu")
 
 
 def test_execution_rows_declared_exactly():

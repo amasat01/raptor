@@ -37,7 +37,7 @@ make nbcheck    # fail unless every notebook is fully executed
 make linkcheck  # internal + external link check
 ```
 
-Notebooks under `content/tutorials/` and `content/examples/` are executed
+Notebooks under `content/tutorials/` are executed
 locally and committed **with** their outputs — `make nbexec` fills them in,
 `make nbcheck` is the gate that refuses an unfilled one. CI never
 re-executes them; it only renders the committed outputs.

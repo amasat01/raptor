@@ -125,7 +125,7 @@ content/tutorials
 :maxdepth: 1
 :hidden:
 
-content/examples
+content/devguide/contributing_a_certification_row
 ```
 
 ```{toctree}

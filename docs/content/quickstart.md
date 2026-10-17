@@ -100,5 +100,6 @@ certification matrix defines each one.
 
 - [Tutorials](/content/tutorials) walk through the manifest schema, the
   protocol contracts and the certification matrix in depth.
-- [Examples](/content/examples) show the pieces working together with a real
-  compiled kernel, using hawk and eagle.
+- The runnable examples live with the packages they show: [hawk](https://amasat01.github.io/hawk/content/examples.html)
+  (a hybrid orbit, autodiff against torch) and [eagle](https://amasat01.github.io/eagle/content/userguide/howto.html)
+  (early termination, zero-copy interop).

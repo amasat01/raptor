@@ -23,8 +23,8 @@ author = 'Alessandro Masat'
 
 # Read version from pyproject.toml (the single source of truth). raptor is a
 # pure-Python package, so there is no CMakeLists.txt to read (unlike the CUDA
-# libraries in the ecosystem); fall back to a hardcoded 0.3.1 if it can't be read.
-_version = "0.3.1"
+# libraries in the ecosystem); fall back to a hardcoded 0.3.2 if it can't be read.
+_version = "0.3.2"
 _pyproject = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
 _pattern = re.compile(r'^\s*version\s*=\s*["\'](\d+\.\d+\.\d+)["\']')
 try:
@@ -68,8 +68,7 @@ myst_enable_extensions = [
 ]
 
 # -- Notebook execution (myst_nb) --------------------------------------------
-# Tutorials/examples are executed LOCALLY (`make nbexec`, on a GPU where the
-# example notebooks need hawk+eagle) and committed WITH their outputs. CI has
+# Tutorials are executed LOCALLY (`make nbexec`) and committed WITH their outputs. CI has
 # no CUDA toolchain and never installs hawk/eagle (raptor itself has zero
 # hard dependencies — see the GitHub Actions `ci.yml`/`docs.yml` jobs), so it
 # must never attempt to execute them: `nb_execution_mode = "off"` there,

@@ -11,6 +11,18 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
+## 0.3.2 (2026-10-17)
+
+**The demos moved to the packages they show.** The hybrid orbit and autodiff-against-torch examples now live in hawk; early termination and zero-copy interop live in eagle, each with its notebook, tests and benchmark card. raptor keeps only the contracts, so the `demo` extra is gone and `dependencies` stays empty.
+
+**Four JAX FFI rows.** `JX-FFI-CPU-ALIAS`, `JX-OUT-XLA-OWNED`, `JX-JIT-INVARIANCE` and `STREAM-JAX-FFI-ORDER` certify eagle's JAX bridge: it reads XLA's buffers in place, returns XLA-owned outputs that are zero where the kernel writes nothing, gives the same answer eager, jitted, vmapped and scanned, and rides XLA's stream with no host wait. The matrix has 32 rows.
+
+**Ten rows for framework code inside an eagle graph.** `INJ-TIER-NAMED`, `STREAM-INJECT-STREAM-ORDER`, `STREAM-INJECT-HOST-ORDER`, `T-CHILD-OWNED`, `INJ-LOOP-HOOK`, `INJ-VJP-CHAIN`, `INJ-TABLE-LIVE`, `STREAM-JAX-INJECT-ORDER`, `JX-INJECT-HOST` and `JX-LOOP-INVARIANCE` certify how eagle runs the reader's own torch or JAX code between, inside and around its launches: the tier is named, the stream fences hold, a framework graph stays alive, a per-step hook keeps the loop's answer, gradients pass through the reader's model and weights are read live. `JX-OUT-XLA-OWNED` now says that carried-state planes alias their operand. The matrix has 42 rows.
+
+**`INJ-RUN-VJP`.** Gradients through a recorded stepping loop whose step runs the reader's model before the kernel, through the reader's vjp, match pure torch autograd. The matrix has 43 rows.
+
+**A row now has legs, and the gate checks that its tests ran.** `RowDecl.legs` names the platforms a row must pass on (`cpu`, `cuda`; both by default), and `register_row(row_id, leg=...)` says which one a test covers. `assert_rows_complete(owner, ran=True)`, now the default, counts a row only if its test ran and passed on every declared leg, as recorded by the new `raptor.conformance.pytest_rows` plugin. Before, a row counted as soon as its module was imported, so a run that deselected or skipped every row still passed. Load the plugin from `conftest.py` and mark the gate test `rows_gate`; `ran=False` keeps the old import-time check. The portability check now pins 71 passes and 29 `repo_local` tests.
+
 ## 0.3.1 (2026-10-16)
 
 **JAX is certified.** Five rows cover JAX arrays in the interop matrix: `JX-IN-CUDA-ALIAS`, `JX-IN-WRITE-REFUSED`, `JX-OUT-CUDA-ALIAS`, `JX-IN-CPU-COPY` and `STREAM-JAX-PRODUCER-ORDER`. JAX moves from the roadmap to the certified list in the docs, and eagle registers against the rows.

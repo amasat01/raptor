@@ -22,7 +22,7 @@ Warp argument and route to the right provider without the caller naming
 which one.
 
 For a runnable walkthrough rather than a table, see the
-[zero-copy interop example](/content/examples/zero_copy_interop): a pointer-stable
+[zero-copy interop example](https://amasat01.github.io/eagle/content/userguide/examples/zero_copy_interop.html): a pointer-stable
 host round-trip through `numpy`, exercised for real, plus a worked read of
 what the `cupy`/`torch` device rows below certify. A CUDA-capable `torch`
 build exchanges device tensors the identical way, through the same
@@ -151,7 +151,7 @@ markers alike — on the registered functions themselves.
 JAX has its own installation limits, which decide where its rows can run.
 JAX publishes wheels for Python 3.12 and newer, and no 3.13 free-threaded
 build; its CUDA 12 build supports Pascal and newer, and its CUDA 13 build
-supports newer GPUs only (CUDA 13 dropped Pascal). So the five `JX-*` and
+supports newer GPUs only (CUDA 13 dropped Pascal). So the twelve `JX-*` and
 `STREAM-JAX-*` rows run where JAX is installed, and every other
 environment deselects them with `-m "not interop_matrix"`, the one
 sanctioned way a row may not run:
@@ -162,6 +162,34 @@ sanctioned way a row may not run:
 | Kaggle T4, CUDA 12 and CUDA 13 | the hosted GPU job (Python 3.12 or newer) |
 | any other environment | `-m "not interop_matrix"` |
 
+A row also has **legs**: the platforms it must pass on, `cpu` and `cuda`. Both
+legs are tests inside the one GPU-capable job, so a row never skips a leg. The
+JAX FFI rows and the rows of framework code inside an eagle graph declare
+theirs:
+
+| row | cpu leg | cuda leg |
+|---|---|---|
+| `JX-FFI-CPU-ALIAS` | yes | no |
+| `JX-OUT-XLA-OWNED` | yes | yes |
+| `JX-JIT-INVARIANCE` | yes | yes |
+| `STREAM-JAX-FFI-ORDER` | no | yes |
+| `INJ-TIER-NAMED` | yes | yes |
+| `STREAM-INJECT-STREAM-ORDER` | no | yes |
+| `STREAM-INJECT-HOST-ORDER` | no | yes |
+| `T-CHILD-OWNED` | no | yes |
+| `INJ-LOOP-HOOK` | yes | yes |
+| `INJ-VJP-CHAIN` | yes | yes |
+| `INJ-RUN-VJP` | yes | yes |
+| `INJ-TABLE-LIVE` | no | yes |
+| `STREAM-JAX-INJECT-ORDER` | no | yes |
+| `JX-INJECT-HOST` | no | yes |
+| `JX-LOOP-INVARIANCE` | yes | yes |
+
+A row counts only if its test **ran and passed** on every declared leg. A test
+that was deselected, skipped or never collected is red, because
+`assert_rows_complete(owner, ran=True)` reads the outcomes recorded by the
+`raptor.conformance.pytest_rows` plugin, not the imports.
+
 A certified framework missing from a gate environment is still a failure,
 never a skip: the table says where the gate is run, not where it may be
 skipped.
@@ -169,7 +197,7 @@ skipped.
 (reading-the-matrix)=
 ## Reading the matrix, in miniature
 
-Before the full 28-row table below, here is how to read any one row. These
+Before the full 42-row table below, here is how to read any one row. These
 three all share one crossing class, **ALIAS** — pointer identity plus
 write-through: the two sides report the same address, and a write on one
 is visible on the other:
@@ -184,29 +212,31 @@ Four more classes appear in the full matrix: **COPY** (pointers differ, and
 mutating either side afterwards leaves the other unchanged), **STREAM**
 (certifies ordering, not placement), **ENV** (certifies a property of the
 environment — what is absent, or what is refused), and **INVARIANCE**
-(the same eagle execution body agrees across different execution
-structures — no framework on either side, because there is no crossing).
+(the same body agrees across different execution
+structures, such as eager and `jit`; no data crossing is being certified).
 {ref}`The full certification matrix <certification-matrix>` below defines
-each in full and lists every one of the 28 rows; the acronyms
+each in full and lists every one of the 43 rows; the acronyms
 (ALIAS/COPY/STREAM/ENV/INVARIANCE) are each defined again, in depth, in
 {ref}`The two transfer laws <two-transfer-laws>` further down this page.
 
 (certification-matrix)=
 ## The certification matrix
 
-Twenty-eight rows. `framework` is what the row bridges to; `owner` is the
+Forty-two rows. `framework` is what the row bridges to; `owner` is the
 repository whose suite carries the assertion; `class` is how data crosses, in
 the vocabulary defined in the next section.
 
-Eight rows bridge to **no** framework — their `framework` column reads `—`.
+Nine rows bridge to **no** framework — their `framework` column reads `—`.
 Four of those are the `execution_*` rows, each an eagle-internal invariant of
 the **heterogeneous execution contract** (the rule that one plugin body must
 give equivalent results under every eagle execution structure, not only the
 one it happened to be written against), not a crossing between the family
 and an array framework.
 
-The other four are the `HAWK-*` rows: rows that exist only because hawk
-exists — a round-trip row and two reference-comparison rows (below).
+Four more are the `HAWK-*` rows: rows that exist only because hawk
+exists — a round-trip row and two reference-comparison rows (below). The
+ninth, `INJ-TIER-NAMED`, says how eagle runs the reader's own code, whatever
+framework that code uses.
 
 Every row on this page is **declared before the code it certifies is
 built**: the `execution_*` rows are declared here — like `CP-CAPTURE-REJECT`
@@ -244,6 +274,21 @@ them.
 | `JX-OUT-CUDA-ALIAS` | jax | eagle | ALIAS | the jax result is eagle's own fresh result buffer, complete at return and never written again; a second call returns a distinct buffer |
 | `JX-IN-CPU-COPY` | jax | eagle | COPY | a CPU jax array comes back as a CPU jax array via a copy, with correct values and no aliasing of the input |
 | `STREAM-JAX-PRODUCER-ORDER` | jax | eagle | STREAM | a jax operation still running on the GPU is waited for on the device, with no host block, when eagle imports its result on its own stream |
+| `JX-FFI-CPU-ALIAS` | jax | eagle | ALIAS | on the CPU platform the JAX bridge reads XLA's host buffers in place (the addresses the kernel receives are XLA's own) and its result is a fresh XLA-owned buffer |
+| `JX-OUT-XLA-OWNED` | jax | eagle | ALIAS | the bridge's outputs are XLA-allocated and zero where the kernel writes nothing, on an allocator that was dirtied first, except carried-state planes and the mask, which alias their operand; a donated mask comes back at the same address, and a mask that was not donated is left intact |
+| `JX-JIT-INVARIANCE` | jax | eagle | INVARIANCE | eager, `jit`, a `vmap`-folded batch and a `lax.scan` of steps agree: bit for bit on CUDA and on the exact host profiles, within the ULP contract on `native-vector-math` |
+| `STREAM-JAX-FFI-ORDER` | jax | eagle | STREAM | in one `jit`, a kernel after a long-running XLA op runs on XLA's stream: the call returns without a host wait and reads the finished values |
+| `INJ-TIER-NAMED` | — | eagle | ENV | every node's tier (captured, stream-ordered, host-synchronized, child) is named in the graph's schedule and drawing, on the GPU and the CPU |
+| `STREAM-INJECT-STREAM-ORDER` | torch | eagle | STREAM | a stream-ordered node on the reader's own stream is fenced against the stages around it, across runs, back-to-back enqueues and a second thread, and when it runs first; the host returns before the device finishes |
+| `STREAM-INJECT-HOST-ORDER` | torch | eagle | STREAM | a host-synchronized node's work on a non-default torch stream is seen by the next stage |
+| `T-CHILD-OWNED` | torch | eagle | ALIAS | a torch CUDA graph inserted as a child node keeps its owner alive after the reader drops it; a reset owner and a bare handle are refused by name |
+| `INJ-LOOP-HOOK` | torch | eagle | INVARIANCE | a per-step node inside a compacting run-until-done loop runs once per step, never writes a finished sample, and agrees between the host loop and the device loop; the step shapes it cannot keep are refused by name |
+| `INJ-VJP-CHAIN` | torch | eagle | INVARIANCE | a gradient through eagle kernels and the reader's model, through the reader's vjp, matches the analytic one, and the model's parameter gradients accumulate across reverses |
+| `INJ-RUN-VJP` | torch | eagle | INVARIANCE | gradients through a recorded stepping loop whose step runs the reader's model before the kernel, through the reader's vjp, match pure torch autograd, and the model's planes come back unchanged |
+| `INJ-TABLE-LIVE` | torch | eagle | ALIAS | weights bound zero-copy are read live on the next launch with no rebuild, and a rebound parameter is refused by name |
+| `STREAM-JAX-INJECT-ORDER` | jax | eagle | STREAM | a JAX step between eagle stages is ordered on the device, its result stays alive until eagle's copy of it is done, and the host does not wait |
+| `JX-INJECT-HOST` | jax | eagle | STREAM | a JAX call in a host-synchronized node is seen by the next stage |
+| `JX-LOOP-INVARIANCE` | jax | eagle | INVARIANCE | a carried-state kernel in `jit(while_loop)` gives the run-until-done answer, and `grad` of a `scan` over it, with no `where`, matches a plain JAX reference |
 | `execution_partition_identity` | — | eagle | INVARIANCE | the same `sample_local`/`cross_sample_read` body produces bit-identical results under `DeviceKernel` (whole) vs. a 2-way partition vs. a 2-rank `RankPartition` |
 | `execution_host_device_twin` | — | eagle | INVARIANCE | the same body's `HostTeam` and `DeviceKernel` results agree within a fixed host/device tolerance band — the band this row's own test defines |
 | `execution_illegal_placement_refused` | — | eagle | ENV | a plan placing a body on a structure its declared `exec_access` class forbids is refused at plan time, naming the violated rule |
@@ -273,9 +318,9 @@ rather than placement. **ENV** rows certify a property of the environment —
 what is absent, or what is refused. **INVARIANCE** rows certify that the same
 plugin body produces equivalent results under different eagle execution
 structures — bit-exact for `sample_local`/`cross_sample_read` bodies, or
-within a fixed tolerance band otherwise; unlike ALIAS/COPY, an INVARIANCE row
-has no framework on either side of the crossing, because there is no
-crossing — both sides are eagle.
+within a fixed tolerance band otherwise. Unlike ALIAS/COPY, an INVARIANCE
+row certifies no handoff: its two sides are two ways of running one body (two
+eagle execution structures, or eager and `jit`).
 
 **The output direction through the export bridge is always a COPY.** The export
 path copies unconditionally before wrapping a result as a tensor, whether the

@@ -27,7 +27,7 @@ name = "raptor-core"
 # new seam, so both carry a `raptor-core>=0.2.0` floor pin: an old raptor
 # under a new eagle or downstream package would ImportError at the seam, and
 # that must resolve as a dependency constraint, never as a runtime surprise.
-version = "0.3.1"
+version = "0.3.2"
 description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -41,14 +41,6 @@ classifiers = [
 # hard deps, by design. numpy is imported function-local only, so the
 # package stays importable on a numpy-less interpreter.
 dependencies = []
-
-# The `examples/` scripts only. They are NOT part of the package and nothing
-# in `raptor/` imports them, so this group never widens the spine's own
-# dependency set (`dependencies = []`, above, is the claim that matters).
-# eagle and hawk install from PyPI as raptor-eagle / raptor-hawk — see the
-# README's Demo section.
-[project.optional-dependencies]
-demo = ["numpy", "torch"]
 
 [project.urls]
 Homepage = "https://github.com/amasat01/raptor"

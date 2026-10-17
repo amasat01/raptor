@@ -78,3 +78,23 @@ def test_protocols_doc_is_wired_into_the_toctree():
     assert re.search(r"^\s*content/interop_protocols\s*$", index, re.MULTILINE), (
         "docs/index.md's toctree does not list content/interop_protocols"
     )
+
+
+def test_protocols_doc_lists_each_ffi_row_with_its_legs():
+    """The legs table under "Where the rows run" matches the declaration."""
+    text = PROTOCOLS_DOC.read_text()
+    table = text[text.index("| row | cpu leg | cuda leg |"):]
+    table = table[: table.index("\n\n")]
+    listed = {
+        m.group(1): (m.group(2) == "yes", m.group(3) == "yes")
+        for m in re.finditer(r"^\| `([A-Z0-9-]+)` \| (yes|no) \| (yes|no) \|$", table, re.M)
+    }
+    ffi = {"JX-FFI-CPU-ALIAS", "JX-OUT-XLA-OWNED", "JX-JIT-INVARIANCE", "STREAM-JAX-FFI-ORDER"}
+    inject = {"INJ-TIER-NAMED", "STREAM-INJECT-STREAM-ORDER", "STREAM-INJECT-HOST-ORDER",
+              "T-CHILD-OWNED", "INJ-LOOP-HOOK", "INJ-VJP-CHAIN", "INJ-RUN-VJP", "INJ-TABLE-LIVE",
+              "STREAM-JAX-INJECT-ORDER", "JX-INJECT-HOST", "JX-LOOP-INVARIANCE"}
+    assert set(listed) == ffi | inject
+    for row, (cpu, cuda) in listed.items():
+        assert ROWS[row].legs == tuple(
+            leg for leg, on in (("cpu", cpu), ("cuda", cuda)) if on
+        ), row

@@ -3,13 +3,15 @@
 
 """raptor.conformance — the interop certification declaration and its
 reusable matrix-hygiene scanners. See :mod:`raptor.conformance.interop`;
-the free-threading row harness is :mod:`raptor.conformance.freethreading`.
+the free-threading row harness is :mod:`raptor.conformance.freethreading`;
+the pytest plugin recording which rows ran is :mod:`raptor.conformance.pytest_rows`.
 """
 
 from __future__ import annotations
 
 from .interop import (
     CERTIFIED,
+    LEGS,
     ROADMAP,
     ROW_KINDS,
     ROWS,
@@ -32,6 +34,7 @@ from .freethreading import (
 
 __all__ = [
     "CERTIFIED",
+    "LEGS",
     "ROADMAP",
     "ROW_KINDS",
     "ROWS",

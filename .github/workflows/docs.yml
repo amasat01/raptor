@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # Build the Sphinx docs and deploy to GitHub Pages on push to main. Notebooks
-# under docs/content/{tutorials,examples}/ are executed LOCALLY (`make
+# under docs/content/tutorials/ are executed LOCALLY (`make
 # nbexec`) and committed with their outputs; this job never re-executes them
 # — `make nbcheck` only verifies every one already has output, and the build
 # renders what is committed. raptor has zero hard dependencies, so this runs

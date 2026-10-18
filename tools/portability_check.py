@@ -110,7 +110,8 @@ DEFAULT_EXPECTED_PASS_COUNT = 71
 # copies of the repository's tools/, README and cards), same docs/ reason.
 # 2026-10-16: 33 -- +1 test_docs_interop_protocols_sync (the legs table in docs/), same docs/ reason.
 # 2026-10-16: 29 -- -4 test_docs_fresh_exit_codes (the cards block left with the demos, which moved to eagle and hawk).
-EXPECTED_REPO_LOCAL_COUNT = 29
+# 2026-10-18: 37 -- +8 test_ci_publish_subset (checks the repository's workflows and tools/), same reason.
+EXPECTED_REPO_LOCAL_COUNT = 37
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

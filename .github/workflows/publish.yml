@@ -6,13 +6,11 @@
 # secrets: the `publish` job authenticates with the environment's OIDC
 # token (`permissions: id-token: write`).
 #
-# Trigger: pushing a tag `v*` builds, checks, tests AND publishes.
-# `workflow_dispatch` builds, checks and tests the same artifact but never
-# publishes (no tag => the `publish` job's `if:` below never runs it) — a
-# dry run of this whole workflow on demand.
-#
-# raptor-core is pure Python (setuptools): one sdist + one py3-none-any
-# wheel cover every supported interpreter, so there is no cibuildwheel here.
+# Nothing is built here. release.yml built, checked and tested the wheel on
+# the pull request and stored it under the git tree hash; this workflow
+# fetches that artifact for the tagged tree, verifies its checksums and
+# uploads it. Pushing a tag `v*` publishes. `workflow_dispatch` runs the
+# same fetch and verification but never uploads (a dry run).
 #
 # Release order across the family: raptor-core and aether-dsc publish FIRST
 # (hawk depends on aether-dsc; eagle depends on raptor-core) — see each
@@ -30,104 +28,36 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  fetch:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-          cache: pip
-          cache-dependency-path: pyproject.toml
-      - run: python -m pip install --quiet build
-      - run: python -m build --outdir dist
+      - name: Fetch the artifact built for this tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash tools/ci_fetch_artifact.sh dist "$(git rev-parse 'HEAD^{tree}')" dist
+      - name: Verify checksums
+        run: cd dist && sha256sum -c SHA256SUMS
+      - name: tag == version guard
+        if: github.ref_type == 'tag'
+        run: |
+          version=$(basename dist/*.whl | cut -d- -f2)
+          test "${GITHUB_REF_NAME}" = "v${version}" \
+            || { echo "::error::tag ${GITHUB_REF_NAME} != package version v${version}"; exit 1; }
+          echo "OK: tag ${GITHUB_REF_NAME} == package version ${version}"
+      - run: rm dist/SHA256SUMS
       - uses: actions/upload-artifact@v7
         with:
           name: raptor-core-dist
           retention-days: 7
           path: dist/
 
-  check:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v8
-        with:
-          name: raptor-core-dist
-          path: dist
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - run: python -m pip install --quiet "twine>=6" packaging
-      - run: python -m twine check --strict dist/*
-      - name: tag == version guard
-        if: github.ref_type == 'tag'
-        run: |
-          python - <<'EOF'
-          import glob, os
-          from packaging.utils import parse_wheel_filename
-          whl = glob.glob("dist/*.whl")[0]
-          _, version, _, _ = parse_wheel_filename(os.path.basename(whl))
-          tag = os.environ["GITHUB_REF_NAME"]
-          assert tag.startswith("v"), f"tag {tag!r} does not start with 'v'"
-          want = tag[1:]
-          got = str(version)
-          assert got == want, f"tag v{want} != package version {got} ({whl})"
-          print(f"OK: tag v{want} == package version {got}")
-          EOF
-
-  test-wheel:
-    needs: check
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # requires-python = ">=3.9" (pyproject.toml); 3.9 is excluded here as
-        # it is past upstream security-fix EOL — bump this list, not
-        # requires-python, if a newco supported floor changes.
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v8
-        with:
-          name: raptor-core-dist
-          path: dist
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: pip
-          cache-dependency-path: pyproject.toml
-      # The gate installs into its venv with `pip --no-index --find-links
-      # <wheelhouse>`, so the wheelhouse must carry pytest's wheels too, not
-      # only the release wheel (ci.yml's test-portability does the same).
-      # Without them the venv has no pytest, pytest prints nothing on stdout,
-      # and the summary parser refuses the empty output.
-      - name: Wheelhouse = the release wheel + pytest's wheels
-        run: |
-          python -m pip install --quiet wheel
-          rm -rf wh && mkdir -p wh
-          cp dist/*.whl wh/
-          python -m pip wheel --quiet -w wh pytest
-      - name: Isolated-venv portability gate against the RELEASE wheel (raptor's own CI leg)
-        run: |
-          set -o pipefail
-          rm -rf pg
-          python tools/portability_check.py --wheelhouse wh --scratch pg \
-              --base-python "$(command -v python)" --tag "publish-${{ matrix.python-version }}" \
-              --log-out "portability_raptor_${{ matrix.python-version }}.pytest.log" \
-              > "portability_raptor_${{ matrix.python-version }}.json"
-          python -c "import json,sys; v=json.load(open('portability_raptor_${{ matrix.python-version }}.json'))['verdict']; print(v); sys.exit(0 if v.get('verdict')=='GREEN' else 1)"
-      - if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: portability-raptor-${{ matrix.python-version }}
-          retention-days: 7
-          path: |
-            portability_raptor_${{ matrix.python-version }}.json
-            portability_raptor_${{ matrix.python-version }}.pytest.log
-
   publish:
     if: github.event_name == 'push' && github.ref_type == 'tag'
-    needs: [check, test-wheel]
+    needs: fetch
     runs-on: ubuntu-latest
     environment:
       name: pypi

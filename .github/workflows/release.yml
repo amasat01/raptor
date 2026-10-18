@@ -1,0 +1,155 @@
+# Copyright 2026 Alessandro Masat
+# SPDX-License-Identifier: Apache-2.0
+#
+# Build, check and test everything that ships, on the pull request. The
+# artifacts are named by git tree hash, so publish.yml and docs.yml can
+# find and upload exactly what was tested here instead of rebuilding it.
+# raptor-core is pure Python: one sdist and one py3-none-any wheel.
+
+name: Release
+
+# Pull requests only: main receives the tested tree, nothing re-runs there.
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      tree: ${{ steps.tree.outputs.tree }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: python -m pip install --quiet build "twine>=6" pyyaml
+      - name: publish and deploy workflows only download, verify and upload
+        run: python tools/ci_publish_subset.py
+      - run: python -m build --outdir dist
+      - run: python -m twine check --strict dist/*
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS
+      - id: tree
+        run: echo "tree=$(git rev-parse 'HEAD^{tree}')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist-${{ steps.tree.outputs.tree }}
+          retention-days: 90
+          path: dist/
+
+  test-wheel:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # requires-python = ">=3.9" (pyproject.toml); 3.9 is past upstream
+        # end of life and is not tested here.
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ needs.build.outputs.tree }}
+          path: dist
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      # The gate installs into its venv with `pip --no-index --find-links
+      # <wheelhouse>`, so the wheelhouse must carry pytest's wheels too, not
+      # only the release wheel. Without them the venv has no pytest, pytest
+      # prints nothing on stdout, and the summary parser refuses the empty
+      # output.
+      - name: Wheelhouse = the release wheel + pytest's wheels
+        run: |
+          python -m pip install --quiet wheel
+          rm -rf wh && mkdir -p wh
+          cp dist/*.whl wh/
+          python -m pip wheel --quiet -w wh pytest
+      - name: Isolated-venv portability gate against the RELEASE wheel (raptor's own CI leg)
+        run: |
+          set -o pipefail
+          rm -rf pg
+          python tools/portability_check.py --wheelhouse wh --scratch pg \
+              --base-python "$(command -v python)" --tag "publish-${{ matrix.python-version }}" \
+              --log-out "portability_raptor_${{ matrix.python-version }}.pytest.log" \
+              > "portability_raptor_${{ matrix.python-version }}.json"
+          python -c "import json,sys; v=json.load(open('portability_raptor_${{ matrix.python-version }}.json'))['verdict']; print(v); sys.exit(0 if v.get('verdict')=='GREEN' else 1)"
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: portability-raptor-${{ matrix.python-version }}
+          retention-days: 7
+          path: |
+            portability_raptor_${{ matrix.python-version }}.json
+            portability_raptor_${{ matrix.python-version }}.pytest.log
+
+  sdist-install:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ needs.build.outputs.tree }}
+          path: dist
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: The sdist installs into a clean venv and imports
+        run: |
+          python -m venv sv
+          sv/bin/python -m pip install --quiet dist/*.tar.gz
+          sv/bin/python -m pip check
+          cd "$RUNNER_TEMP" && "$GITHUB_WORKSPACE/sv/bin/python" -c "import raptor, sys; print(raptor.__file__); sys.exit('$GITHUB_WORKSPACE/sv/' not in raptor.__file__)"
+
+  # Notebooks under docs/content/tutorials/ are executed locally (`make
+  # nbexec`) and committed with outputs; nbcheck only verifies they have them.
+  docs:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: |
+          python -m pip install --quiet -e .
+          python -m pip install --quiet pytest \
+            Sphinx==8.2.3 myst-nb==1.4.0 sphinx-book-theme==1.2.0 sphinx-design==0.7.0 \
+            sphinx-copybutton==0.5.2 sphinx-autodoc-typehints==3.5.2
+      - run: make -C docs nbcheck
+      - run: make -C docs strict
+      - uses: actions/upload-artifact@v7
+        with:
+          name: site-${{ needs.build.outputs.tree }}
+          retention-days: 90
+          path: docs/_build/html
+
+  # Informational: a non-release PR carries an already published version.
+  pypi-version:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: dist-${{ needs.build.outputs.tree }}
+          path: dist
+      - run: |
+          whl=$(basename dist/*.whl)
+          version=$(echo "$whl" | cut -d- -f2)
+          if curl -fsS "https://pypi.org/pypi/raptor-core/${version}/json" > /dev/null; then
+            echo "::notice::raptor-core ${version} is already on PyPI; a release needs a version bump"
+          else
+            echo "::notice::raptor-core ${version} is not on PyPI yet"
+          fi

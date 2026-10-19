@@ -1,5 +1,17 @@
 # Contributing
 
+The manifesto behind [How we build](https://amasat01.github.io/raptor/content/principles.html):
+
+<!-- manifesto:begin -->
+Bloat is future technical debt.<br>
+Excessive abstraction hides reality.<br>
+Focus and clear boundaries promote flexibility and seamless integration.<br>
+Efficiency safeguards portability and scale.<br>
+Performance unlocks capabilities.<br>
+Rigor earns trust.<br>
+Simplicity enables discovery.
+<!-- manifesto:end -->
+
 Read [How we build](https://amasat01.github.io/raptor/content/principles.html) first: the twelve rules every pull request in the
 family is read against, plus the style, release and license terms.
 
@@ -39,5 +51,6 @@ needs.
 
 ## Release
 
-Bump `version` in `pyproject.toml`, update `CHANGELOG.md`, tag `vX.Y.Z`. `.github/workflows/publish.yml` does the rest; use
-`workflow_dispatch` to dry-run. Publish order is in the family guide.
+Bump `version` in `pyproject.toml` and update `CHANGELOG.md` in a pull request. Its green run builds and tests the wheels,
+the sdist and the docs; merge it up to date, then tag `vX.Y.Z` on that commit. `.github/workflows/publish.yml` uploads the files
+the pull request built (`workflow_dispatch` dry-runs it). Publish order is in the family guide.

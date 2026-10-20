@@ -37,6 +37,7 @@ import subprocess
 import sys
 import sysconfig
 import threading
+import time
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -61,6 +62,16 @@ CANARY_THREADS = 8
 CANARY_ITERATIONS = 200_000
 #: A canary that loses less than this fraction of its updates is vacuous.
 MIN_LOST_FRACTION = 0.10
+#: Wall-clock cap (seconds) on the adaptive escalation in :func:`measure_loss`.
+CANARY_TIME_CAP = 5.0
+
+
+def usable_cores() -> int:
+    """Cores this process may run on (affinity-aware where the OS has it)."""
+    try:
+        return max(1, len(os.sched_getaffinity(0)))
+    except AttributeError:
+        return max(1, os.cpu_count() or 1)
 
 
 def _is_free_threaded_build() -> bool:
@@ -187,10 +198,19 @@ def assert_gil_free(
 
 @dataclass(frozen=True)
 class CanaryResult:
-    """Outcome of one planted-race measurement."""
+    """Outcome of a planted-race measurement (the final attempt).
+
+    ``threads``, ``iterations``, ``attempts`` and ``cores`` are evidence for
+    telling a weak runner from a broken instrument; they default to "unknown"
+    so a hand-built ``CanaryResult(expected, observed)`` stays valid.
+    """
 
     expected: int
     observed: int
+    threads: int = 0
+    iterations: int = 0
+    attempts: int = 1
+    cores: int = 0
 
     @property
     def lost(self) -> int:
@@ -206,16 +226,43 @@ def measure_loss(
     read: Callable[[], int],
     threads: int = CANARY_THREADS,
     iterations: int = CANARY_ITERATIONS,
+    min_lost: float = MIN_LOST_FRACTION,
+    time_cap: float = CANARY_TIME_CAP,
 ) -> CanaryResult:
     """Hammer a deliberately unsynchronised ``bump`` and count lost updates.
 
     ``read`` returns the counter ``bump`` increments. A package's compiled
     canary plugs in here: ``measure_loss(core._unsynchronised_bump,
     core.canary_count)``.
+
+    Contention adapts to the machine. Attempt 1 uses the given shape. While
+    the loss is below ``min_lost``, each further attempt doubles the iterations
+    and raises the threads to :func:`usable_cores` (never fewer than before),
+    until the floor is cleared or ``time_cap`` seconds are spent (an attempt
+    that would not fit in the remaining time is not started). The last attempt
+    is returned, with its shape and the attempt count as evidence. The floor
+    itself is never lowered.
     """
-    before = read()
-    hammer(bump, threads, iterations)
-    return CanaryResult(threads * iterations, read() - before)
+    cores = usable_cores()
+    start = time.monotonic()
+    attempts = 0
+    while True:
+        attempts += 1
+        t0 = time.monotonic()
+        before = read()
+        hammer(bump, threads, iterations)
+        res = CanaryResult(
+            threads * iterations, read() - before, threads, iterations,
+            attempts, cores,
+        )
+        took = time.monotonic() - t0
+        if res.lost_fraction >= min_lost:
+            return res
+        # Next attempt costs about twice this one (double the iterations).
+        if time.monotonic() - start + 2 * took > time_cap:
+            return res
+        threads = max(threads, cores)
+        iterations *= 2
 
 
 #: Busy-loop steps between the canary's read and its write. A bare
@@ -251,7 +298,7 @@ def require_not_vacuous(
     """Fail (RED, never skip) unless the canary lost at least ``min_lost``.
 
     With no argument the Python canary is measured once per process and
-    cached. Pass a package's own :func:`measure_loss` result to certify its
+    cached (it escalates contention first, see :func:`measure_loss`). Pass a package's own :func:`measure_loss` result to certify its
     compiled canary. Call after :func:`require_free_threaded`.
     """
     import pytest
@@ -264,8 +311,11 @@ def require_not_vacuous(
         pytest.fail(
             f"free-threading run is VACUOUS: the planted race lost only "
             f"{result.lost_fraction:.1%} of {result.expected} updates "
-            f"(< {min_lost:.0%}); a schedule that cannot expose a known race "
-            "cannot certify the real code. Raise the thread count."
+            f"(< {min_lost:.0%}) after {result.attempts} attempt(s) "
+            f"[usable cores={result.cores}, threads={result.threads}, "
+            f"iterations/thread={result.iterations}]; a schedule that cannot "
+            "expose a known race cannot certify the real code. Few usable "
+            "cores points at a weak runner, many at a broken instrument."
         )
     return result
 

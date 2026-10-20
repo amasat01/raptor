@@ -169,11 +169,11 @@ def test_v1_with_aether_abi_v2():
         validate_manifest(doc)
 
 
-def test_schema_version_3_is_still_rejected():
-    """The transition bridge lifts the ceiling to v2, not to "anything" — v3+
-    stays forward-strict refused."""
+def test_a_schema_version_past_the_ceiling_is_still_rejected():
+    """The transition bridge lifts the ceiling to v3, not to "anything" — a
+    version past it stays forward-strict refused."""
     with pytest.raises(ValueError, match=f"v{MAX_SCHEMA_VERSION}"):
-        validate_manifest({"schema_version": 3})
+        validate_manifest({"schema_version": MAX_SCHEMA_VERSION + 1})
 
 
 def test_v2_key_order_violation_is_rejected():

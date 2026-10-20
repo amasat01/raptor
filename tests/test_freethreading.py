@@ -31,6 +31,8 @@ EXPECTED_TESTS = frozenset(
         "test_gil_required_case_fails",
         "test_python_canary_loses_updates",
         "test_vacuous_canary_is_red",
+        "test_canary_escalates_after_low_loss_attempt",
+        "test_vacuous_message_carries_evidence",
         "test_hammer_runs_every_iteration_and_propagates_errors",
     }
 )
@@ -125,3 +127,54 @@ def test_vacuous_canary_is_red():
     ft.require_free_threaded()
     with pytest.raises(pytest.fail.Exception, match="VACUOUS"):
         ft.require_not_vacuous(ft.CanaryResult(1000, 1000))
+
+
+def _lossy_counter(drop_every):
+    """Counter whose bump drops every Nth call; N depends on the attempt.
+
+    ``measure_loss`` reads twice per attempt, so the attempt number is derived
+    from the read count.
+    """
+    state = {"n": 0, "reads": 0, "calls": 0}
+    lock = __import__("threading").Lock()
+
+    def bump():
+        with lock:
+            state["calls"] += 1
+            every = drop_every[min((state["reads"] - 1) // 2, len(drop_every) - 1)]
+            if state["calls"] % every:
+                state["n"] += 1
+
+    def read():
+        state["reads"] += 1
+        return state["n"]
+
+    return bump, read
+
+
+def test_canary_escalates_after_low_loss_attempt():
+    # Attempt 1 loses ~2%, attempt 2 ~33%: escalation must clear the floor.
+    bump, read = _lossy_counter([50, 3])
+    res = ft.measure_loss(bump, read, threads=2, iterations=1000)
+    assert res.attempts == 2
+    assert res.iterations == 2000
+    assert res.threads >= 2
+    assert res.lost_fraction >= ft.MIN_LOST_FRACTION
+
+
+def test_vacuous_message_carries_evidence():
+    # A counter that never loses: escalation gives up at the time cap.
+    bump, read = _lossy_counter([10**9])
+    res = ft.measure_loss(bump, read, threads=2, iterations=100, time_cap=0.2)
+    assert res.attempts >= 1 and res.lost_fraction < ft.MIN_LOST_FRACTION
+    with pytest.raises(pytest.fail.Exception) as exc:
+        ft.require_not_vacuous(res)
+    msg = str(exc.value)
+    for field in (
+        f"{res.attempts} attempt(s)",
+        f"usable cores={res.cores}",
+        f"threads={res.threads}",
+        f"iterations/thread={res.iterations}",
+        f"{res.lost_fraction:.1%}",
+    ):
+        assert field in msg

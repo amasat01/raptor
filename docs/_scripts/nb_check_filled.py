@@ -11,7 +11,9 @@ Also refuses a notebook whose OUTPUT (stream text, ``text/plain``,
 ``text/html``, or an error traceback) contains an absolute local-machine
 path. raptor's docs publish to a public site; a committed output with
 ``/local/...``, ``/home/<user>/...`` etc. leaks the machine that
-built them. Only rendered OUTPUT is scanned, not cell source.
+built them. Only rendered OUTPUT is scanned, not cell source. A stored Python
+warning (``UserWarning:`` and the like) is refused too: it is noise from the
+machine that ran the notebook, and it usually carries such a path.
 """
 
 from __future__ import annotations
@@ -24,7 +26,9 @@ import nbformat
 
 # Deliberately narrow: absolute local-filesystem roots a committed output
 # should never contain, not a general "looks like a path" heuristic.
-_LEAK_PATTERNS = [re.compile(p) for p in (r"/local/", r"/home/", r"/tmp/", r"/root/", r"/Users/", r"C:\\Users")]
+_LEAK_PATTERNS = [re.compile(p) for p in (r"/local/", r"/home/", r"/tmp/", r"/dev/shm/", r"/root/", r"/Users/",
+                                          r"C:\\Users")]
+_WARNING = re.compile(r"\b\w*Warning: ")
 
 
 def _text_of(value) -> str:
@@ -53,6 +57,8 @@ def _output_leaks(cell) -> list[str]:
             pattern = _leaked_path(text)
             if pattern:
                 leaks.append(pattern)
+            if _WARNING.search(text):
+                leaks.append("a Python warning")
     return leaks
 
 
@@ -92,7 +98,7 @@ def main(argv: list[str]) -> int:
             f"{cells[:6]}{'…' if len(cells) > 6 else ''}"
         )
     for p, i, pattern in leaked:
-        print(f"[nb_check_filled] LEAKED PATH {p}: code cell {i} output matched {pattern!r}")
+        print(f"[nb_check_filled] LEAKED OUTPUT {p}: code cell {i} output matched {pattern!r}")
     print(f"[nb_check_filled] {len(notebooks) - len(bad)}/{len(notebooks)} notebooks fully executed")
     return 1 if (bad or leaked) else 0
 

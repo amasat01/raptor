@@ -123,7 +123,7 @@ Package internals, none of it needed to install or use raptor.
   flat, versioned top-level keys — `exec_targets` (`device`/`host` list),
   `exec_access` (`sample_local` / `cross_sample_read` / `cross_sample_write`
   / `mapreduce`), `exec_op` (required iff `exec_access="mapreduce"`) — and
-  requires `aether_abi: "aether-abi/2"`; v1 rejects any `exec_*` key
+  requires `aether_abi: "aether-abi/2"`; v3 is v2 with `cells` replacing `sample_sums` in the sidecar; v1 rejects any `exec_*` key
   outright (`manifest.check_execution_axis`).
 - `raptor.protocols` — the `typing.Protocol` definitions:
   `Backend` / `Executable` (program-level execution),

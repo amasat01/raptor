@@ -48,7 +48,10 @@ from __future__ import annotations
 SCHEMA_VERSION = 1
 
 #: the highest ``schema_version`` this loader ACCEPTS today — a TRANSITION
-#: BRIDGE: raptor accepts SCHEMA_VERSION 1 AND 2 on the aether branches.
+#: BRIDGE: raptor accepts SCHEMA_VERSION 1, 2 AND 3 on the aether branches.
+#: v2 added the execution axis; v3 is v2 with ``cells`` replacing
+#: ``sample_sums`` in the sidecar (the record of reductions over samples,
+#: ``{name: {op, columns}}``); the manifest shape and ABI tag are v2's.
 #: Deliberately a SEPARATE constant from :data:`SCHEMA_VERSION`, not a bump of
 #: it: :data:`SCHEMA_VERSION` is the cross-repo FOUR-WAY PIN against eagle's
 #: C++ ``kPluginSchemaVersion`` literal and hawk's contracts-module literal
@@ -57,7 +60,7 @@ SCHEMA_VERSION = 1
 #: :data:`SCHEMA_VERSION` here would break that pin against repos this change
 #: does not touch, for no benefit: :func:`check_schema_version`'s
 #: forward-strict ceiling is the only thing that needs to move to let v2 load.
-MAX_SCHEMA_VERSION = 2
+MAX_SCHEMA_VERSION = 3
 
 #: entry-point symbol of every kernel artifact, generated or hand-written
 #: (verbatim value of ``eagle.launch.KERNEL_NAME``).
@@ -145,7 +148,7 @@ def check_schema_version(
 
     ``schema_version`` absent means v1 (backward-lenient: pre-freeze artifacts
     stay loadable). A version greater than :data:`MAX_SCHEMA_VERSION` is rejected
-    (forward-strict) — the transition bridge: v1 AND v2 both load today, v3+
+    (forward-strict) — the transition bridge: v1, v2 AND v3 load today, v4+
     does not. Mirrors ``eagle.roles.check_schema_version``
     (``eagle/python/eagle/roles.py::check_schema_version``) and the C++
     ``kPluginSchemaVersion`` gate. ``allow_legacy_version_key`` scopes the
@@ -185,8 +188,8 @@ def check_execution_axis(meta: dict, version: int, *, name: str = "<document>") 
     document naming one is a strict-key violation, never a silent upgrade. If
     :data:`AETHER_ABI_FIELD` is present it must read :data:`AETHER_ABI_V1`.
 
-    schema v2 (``version == 2``; :func:`check_schema_version` has already rejected
-    anything else): ``exec_targets`` and ``exec_access`` are REQUIRED ("absence
+    schema v2 and v3 (``version >= 2``; :func:`check_schema_version` has already
+    rejected anything newer): ``exec_targets`` and ``exec_access`` are REQUIRED ("absence
     = load refused"); ``exec_targets`` must be a non-empty list drawn from
     :data:`EXEC_TARGETS` with no duplicates; ``exec_access`` must be one of
     :data:`EXEC_ACCESS_CLASSES`; ``exec_op`` is REQUIRED iff
@@ -216,7 +219,7 @@ def check_execution_axis(meta: dict, version: int, *, name: str = "<document>") 
             )
         return
 
-    # version == 2 — check_schema_version already rejected anything else.
+    # version >= 2 — check_schema_version already rejected anything newer.
     if tag is not None and tag != AETHER_ABI_V2:
         raise ValueError(
             f"{name!r}: schema v2 requires {AETHER_ABI_FIELD}={AETHER_ABI_V2!r}; "

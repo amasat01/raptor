@@ -11,6 +11,12 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
+## 0.3.3 (2026-10-20)
+
+**Schema v3.** `MAX_SCHEMA_VERSION` is 3. v3 is v2 with `cells` replacing `sample_sums` in the sidecar (the record of reductions over samples, `{name: {op, columns}}`); the manifest shape and the ABI tag are v2's. v1 and v2 still load; v4 and newer are refused.
+
+**The free-threading canary adapts to the machine.** `measure_loss` starts with the given shape; while the lost-update fraction is below the floor, each further attempt doubles the iterations and raises the threads to the cores the process may use (`usable_cores()`), within a time cap. The floor is never lowered, and the result reports the final shape and the number of attempts.
+
 ## 0.3.2 (2026-10-17)
 
 **The demos moved to the packages they show.** The hybrid orbit and autodiff-against-torch examples now live in hawk; early termination and zero-copy interop live in eagle, each with its notebook, tests and benchmark card. raptor keeps only the contracts, so the `demo` extra is gone and `dependencies` stays empty.

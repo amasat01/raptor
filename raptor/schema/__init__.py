@@ -75,7 +75,7 @@ def validate_manifest(doc: dict) -> None:
     if "plugins" in doc:
         if "blocks" in doc:
             expected = blocks.NEURAL_TOP_LEVEL_KEY_ORDER
-        elif version == 2:
+        elif version >= 2:
             expected = manifest.TOP_LEVEL_KEY_ORDER_V2
         else:
             expected = manifest.TOP_LEVEL_KEY_ORDER

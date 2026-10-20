@@ -1,0 +1,12 @@
+# Version sites: first entry is the primary; each regex has ONE capture group around the version.
+[[site]]
+file = "pyproject.toml"
+pattern = '^version = "([^"]+)"'
+
+[[site]]
+file = "raptor/version.py"
+pattern = '^__version__ = "([^"]+)"'
+
+[[site]]
+file = "docs/conf.py"
+pattern = '^_version = "([^"]+)"'

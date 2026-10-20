@@ -11,6 +11,8 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
+## Unreleased
+
 ## 0.3.3 (2026-10-20)
 
 **Schema v3.** `MAX_SCHEMA_VERSION` is 3. v3 is v2 with `cells` replacing `sample_sums` in the sidecar (the record of reductions over samples, `{name: {op, columns}}`); the manifest shape and the ABI tag are v2's. v1 and v2 still load; v4 and newer are refused.

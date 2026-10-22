@@ -19,20 +19,9 @@ as [hawk](https://github.com/amasat01/hawk) and an executor such as
 see [Concepts](content/concepts) for how the manifest format and the
 shape-checking contracts fit together.
 
-**What eagle and hawk do with raptor's contracts**
+![Which tool has a documented way to do each block of work, on the CPU and the GPU](_static/capmap.svg)
 
-```{raw} html
-<figure class="perf-glimpse">
-<a href="https://amasat01.github.io/eagle/content/performance.html"><img src="https://raw.githubusercontent.com/amasat01/eagle/main/docs/_static/perf/readme_gpu.svg" alt="Bar chart of wall time per tool for a million RK4 oscillators, log scale; the device, tools and numbers are on eagle's performance page." style="max-width:100%;height:auto"></a>
-<figcaption>raptor has no benchmarks of its own. This is eagle running hawk kernels that follow raptor's manifest: a million RK4 oscillators, each stopping at its own step, wall time per tool, log scale. Measured by eagle's committed performance cards; the device is named on the performance page. <a href="https://amasat01.github.io/eagle/content/performance.html">Every device, workload and arm</a>.</figcaption>
-</figure>
-```
-
-```{raw} html
-:file: _static/family_visuals/fragments/map.html
-```
-
-*Where each tool covers the work, drawn from eagle's committed performance cards; the table behind the chart lists every value. [The radar](https://amasat01.github.io/eagle/content/performance.html) is on eagle's performance page.*
+raptor has no benchmarks of its own. [The family comparison](https://amasat01.github.io/compare.html) shows eagle running hawk kernels that follow raptor's manifest, next to the other tools.
 
 ```python
 from raptor.schema import validate_manifest

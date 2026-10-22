@@ -72,7 +72,7 @@ def test_t_in_cpu_host_alias_row_declared_exactly():
     row) must still be present and unchanged alongside it — this is a NEW
     row, not a flip of that one."""
     assert ROWS["T-IN-CPU-COPY"] == RowDecl("torch", "eagle", "COPY")
-    assert len(ROWS) == 43, sorted(ROWS)
+    assert len(ROWS) == 51, sorted(ROWS)
 
 
 def test_warp_rows_declared_exactly():
@@ -119,6 +119,18 @@ def test_inject_rows_declared_exactly():
     for row in ("STREAM-JAX-INJECT-ORDER", "JX-INJECT-HOST"):
         assert ROWS[row] == RowDecl("jax", "eagle", "STREAM", ("cuda",))
     assert ROWS["JX-LOOP-INVARIANCE"] == RowDecl("jax", "eagle", "INVARIANCE", ("cpu", "cuda"))
+
+
+def test_gradient_and_handover_rows_declared_exactly():
+    """Gradients through an eagle kernel (the site's "read by jax.grad, torch
+    autograd and wp.Tape") and the NumPy/CuPy hand-over rows, pinned exactly."""
+    for row, fw in (("JX-GRAD-TRANSFORMS", "jax"), ("T-GRAD-AUTOGRAD", "torch"),
+                    ("T-GRAD-FUNC", "torch"), ("WP-GRAD-TAPE", "warp")):
+        assert ROWS[row] == RowDecl(fw, "eagle", "INVARIANCE", ("cpu", "cuda"))
+    assert ROWS["NP-HOST-ALIAS"] == RowDecl("numpy", "eagle", "ALIAS", ("cpu",))
+    assert ROWS["NP-IN-CPU-COPY"] == RowDecl("numpy", "eagle", "COPY", ("cuda",))
+    for row in ("CP-IN-ALIAS", "CP-OUT-ALIAS"):
+        assert ROWS[row] == RowDecl("cupy", "eagle", "ALIAS", ("cuda",))
 
 
 def test_legs_default_to_both_and_are_validated():

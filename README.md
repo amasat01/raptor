@@ -97,7 +97,7 @@ the whole family, see [`tools/devbox/`](https://github.com/amasat01/raptor/tree/
 The runnable demos live with the packages they show off:
 
 - [hawk](https://amasat01.github.io/hawk/content/examples.html): the hybrid orbit (analytic physics plus a learned correction in one compiled kernel) and autodiff against torch.
-- [eagle](https://amasat01.github.io/eagle/content/userguide/howto.html): early termination with a conditional graph node, and zero-copy interop with NumPy, CuPy and PyTorch.
+- [eagle](https://amasat01.github.io/eagle/content/userguide/howto.html): early termination with a conditional graph node, and zero-copy interop with NumPy, CuPy, PyTorch, Warp and JAX, with gradients certified.
 
 The measured headline, from eagle's committed performance cards:
 

@@ -13,7 +13,7 @@ manifest
   The file (`manifest.json`) that lists a deployment's plugins in order. Each entry names an artifact and its sidecar.
 
 artifact
-  The compiled kernel itself, stored as a `.ptx`, `.cubin` or `.fatbin` file.
+  The compiled kernel itself, stored as a `.ptx`, `.cubin` or `.fatbin` file (GPU), or a `.so` (host).
 
 PTX
   NVIDIA's architecture-portable GPU assembly format. The driver compiles it to real machine code when it is loaded, so one `.ptx` file runs on any supported GPU generation.

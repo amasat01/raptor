@@ -137,8 +137,9 @@ BASE_PATTERNS = frozenset({"vector", "pure"})
 EXEC_REF_KINDS = frozenset({"kernel"})
 
 #: the manifest-entry ``format`` vocabulary (schema v1) — the artifact
-#: container a plugin manifest entry names.
-MANIFEST_FORMATS = frozenset({"ptx", "cubin", "fatbin"})
+#: container a plugin manifest entry names. ``host`` is a host shared library
+#: (a CPU plugin); the others are device artifacts.
+MANIFEST_FORMATS = frozenset({"ptx", "cubin", "fatbin", "host"})
 
 
 def check_schema_version(

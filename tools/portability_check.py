@@ -88,7 +88,8 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # 2026-10-16: 70 passed. +8 test_rows_ran (the rows-ran gate, run in subprocesses) and +3 in
 # test_conformance_interop (the four JAX FFI rows' declaration, the legs vocabulary, the leg check in register_row).
 # 2026-10-16: 71 passed. +1 test_inject_rows_declared_exactly (the ten inject rows' declaration).
-DEFAULT_EXPECTED_PASS_COUNT = 71
+# 2026-10-22: 72 passed. +1 test_gradient_and_handover_rows_declared_exactly (the gradient and NumPy/CuPy rows' declaration).
+DEFAULT_EXPECTED_PASS_COUNT = 72
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --
 # test_pyproject_declares_zero_hard_deps_and_name_raptor,
@@ -111,7 +112,9 @@ DEFAULT_EXPECTED_PASS_COUNT = 71
 # 2026-10-16: 33 -- +1 test_docs_interop_protocols_sync (the legs table in docs/), same docs/ reason.
 # 2026-10-16: 29 -- -4 test_docs_fresh_exit_codes (the cards block left with the demos, which moved to eagle and hawk).
 # 2026-10-18: 37 -- +8 test_ci_publish_subset (checks the repository's workflows and tools/), same reason.
-EXPECTED_REPO_LOCAL_COUNT = 37
+# 2026-10-21: 30 -- -19 with the docs tooling's move to the shared raptor-docs package (tests/test_family_visuals 5,
+# tests/test_nb_colab_setup 7, tests/test_docs_fresh_exit_codes 7 deleted), +12 test_upstream_manifest (reads the repository's tools/).
+EXPECTED_REPO_LOCAL_COUNT = 30
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

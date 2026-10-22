@@ -27,7 +27,7 @@ name = "raptor-core"
 # new seam, so both carry a `raptor-core>=0.2.0` floor pin: an old raptor
 # under a new eagle or downstream package would ImportError at the seam, and
 # that must resolve as a dependency constraint, never as a runtime surprise.
-version = "0.3.3"
+version = "0.3.4"
 description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
 readme = "README.md"
 requires-python = ">=3.9"

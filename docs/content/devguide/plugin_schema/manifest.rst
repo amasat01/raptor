@@ -67,6 +67,6 @@ Each ``plugins`` entry:
      - string
      - Sidecar filename, relative to the manifest directory.
    * - ``format``
-     - ``"ptx"`` | ``"cubin"`` | ``"fatbin"``
+     - ``"ptx"`` | ``"cubin"`` | ``"fatbin"`` | ``"host"``
      - Artifact format: arch-portable PTX, single-arch cubin, or multi-arch
-       fatbin.
+       fatbin, or a host shared library (``host``).

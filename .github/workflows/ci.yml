@@ -17,6 +17,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  release-gate:
+    # Every merge to main is a release unless docs-only (tools/release_gate.sh). Skipped on other PRs.
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: bash tools/release_gate.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
+  version:
+    # Every version string and the CHANGELOG heading agree (tools/version_sites.toml)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python tools/version.py check
   docs-fresh:
     # Freshness check, never a commit: the generator re-renders the headline and fails on any difference.
     runs-on: ubuntu-latest
@@ -24,49 +45,30 @@ jobs:
       - uses: actions/checkout@v7
         with:
           path: raptor
-      # companion eagle: same-named branch if it exists there, else main
-      - id: ref_eagle
-        env:
-          COMPANION_REPO: eagle
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          GH_TOKEN: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
-        run: |
-          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN:-none}" | base64 -w0)"
-          [ -n "${GH_TOKEN:-}" ] || auth="X-Unauthenticated: 1"
-          found="$(git -c http.extraHeader="$auth" ls-remote --heads "https://github.com/amasat01/${COMPANION_REPO}" "refs/heads/${BRANCH_NAME}" | awk '{print $2}')"
-          if [ "$found" = "refs/heads/${BRANCH_NAME}" ]; then ref="$BRANCH_NAME"; else ref=main; fi
-          echo "companion ${COMPANION_REPO} @ ${ref}"
-          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v7
+      # companion eagle: the ref pinned in .github/companions, else a same-named branch, else main
+      - uses: ./raptor/.github/actions/companion
         with:
-          repository: amasat01/eagle
-          ref: ${{ steps.ref_eagle.outputs.ref }}
+          repo: eagle
           path: eagle
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+          pins: raptor/.github/companions
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      # companion site (amasat01.github.io): same-named branch if it exists there, else main
-      - id: ref_site
-        env:
-          COMPANION_REPO: amasat01.github.io
-          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-          GH_TOKEN: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
-        run: |
-          auth="AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN:-none}" | base64 -w0)"
-          [ -n "${GH_TOKEN:-}" ] || auth="X-Unauthenticated: 1"
-          found="$(git -c http.extraHeader="$auth" ls-remote --heads "https://github.com/amasat01/${COMPANION_REPO}" "refs/heads/${BRANCH_NAME}" | awk '{print $2}')"
-          if [ "$found" = "refs/heads/${BRANCH_NAME}" ]; then ref="$BRANCH_NAME"; else ref=main; fi
-          echo "companion ${COMPANION_REPO} @ ${ref}"
-          echo "ref=${ref}" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@v7
+      # companion site (amasat01.github.io): same rule
+      - uses: ./raptor/.github/actions/companion
         with:
-          repository: amasat01/amasat01.github.io
-          ref: ${{ steps.ref_site.outputs.ref }}
+          repo: amasat01.github.io
           path: site
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
-      - name: documented numbers and family visuals match the committed cards
-        run: bash raptor/tools/docs_fresh.sh eagle site
+          pins: raptor/.github/companions
+      - run: python -m pip install --quiet ./site
+      - name: documented numbers and the capability map match the committed cards
+        working-directory: raptor
+        run: python -m raptor_docs.fresh --check --site ../site
+      - name: manifesto copy
+        working-directory: raptor
+        run: MANIFESTO_SOURCE=docs/content/principles.md bash tools/manifesto_check.sh CONTRIBUTING.md
   test-python:
     needs: docs-fresh
     # The test suite.
@@ -90,12 +92,13 @@ jobs:
       # both free-threaded interpreters report, even when one fails
       fail-fast: false
       matrix:
-        python-version: ["3.13t", "3.14t"]
+        python-version: ["3.13t", "3.14t", "3.15t"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
           cache: pip
           cache-dependency-path: pyproject.toml
       # free-threaded: newest NumPy/SciPy ship no cp313t wheel: prefer a wheel over an sdist build

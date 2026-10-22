@@ -17,7 +17,7 @@ another an array — CPU or GPU — without copying it. Every crossing on this
 page is, mechanically, a DLPack exchange: `cupy`, `torch`, NVIDIA Warp and JAX
 arrays all expose `__dlpack__`/`__dlpack_device__`, and the family reads or
 writes through that protocol rather than through a framework-specific code
-path. That is what lets the same kernel accept a `numpy`, `cupy`, `torch` or
+path. That is what lets the same kernel accept a `numpy`, `cupy`, `torch`, JAX or
 Warp argument and route to the right provider without the caller naming
 which one.
 
@@ -151,7 +151,7 @@ markers alike — on the registered functions themselves.
 JAX has its own installation limits, which decide where its rows can run.
 JAX publishes wheels for Python 3.12 and newer, and no 3.13 free-threaded
 build; its CUDA 12 build supports Pascal and newer, and its CUDA 13 build
-supports newer GPUs only (CUDA 13 dropped Pascal). So the twelve `JX-*` and
+supports newer GPUs only (CUDA 13 dropped Pascal). So the thirteen `JX-*` and
 `STREAM-JAX-*` rows run where JAX is installed, and every other
 environment deselects them with `-m "not interop_matrix"`, the one
 sanctioned way a row may not run:
@@ -184,6 +184,16 @@ theirs:
 | `STREAM-JAX-INJECT-ORDER` | no | yes |
 | `JX-INJECT-HOST` | no | yes |
 | `JX-LOOP-INVARIANCE` | yes | yes |
+| `JX-GRAD-TRANSFORMS` | yes | yes |
+| `T-GRAD-AUTOGRAD` | yes | yes |
+| `T-GRAD-FUNC` | yes | yes |
+| `WP-GRAD-TAPE` | yes | yes |
+| `NP-HOST-ALIAS` | yes | no |
+| `NP-IN-CPU-COPY` | no | yes |
+| `CP-IN-ALIAS` | no | yes |
+| `CP-OUT-ALIAS` | no | yes |
+
+The gradient rows are shown running in eagle's [JAX](https://amasat01.github.io/eagle/content/interop/jax.html), [PyTorch](https://amasat01.github.io/eagle/content/interop/torch.html) and [Warp](https://amasat01.github.io/eagle/content/interop/warp.html) pages.
 
 A row counts only if its test **ran and passed** on every declared leg. A test
 that was deselected, skipped or never collected is red, because
@@ -215,14 +225,14 @@ environment — what is absent, or what is refused), and **INVARIANCE**
 (the same body agrees across different execution
 structures, such as eager and `jit`; no data crossing is being certified).
 {ref}`The full certification matrix <certification-matrix>` below defines
-each in full and lists every one of the 43 rows; the acronyms
+each in full and lists every one of the 51 rows; the acronyms
 (ALIAS/COPY/STREAM/ENV/INVARIANCE) are each defined again, in depth, in
 {ref}`The two transfer laws <two-transfer-laws>` further down this page.
 
 (certification-matrix)=
 ## The certification matrix
 
-Forty-two rows. `framework` is what the row bridges to; `owner` is the
+Fifty-one rows. `framework` is what the row bridges to; `owner` is the
 repository whose suite carries the assertion; `class` is how data crosses, in
 the vocabulary defined in the next section.
 
@@ -289,6 +299,14 @@ them.
 | `STREAM-JAX-INJECT-ORDER` | jax | eagle | STREAM | a JAX step between eagle stages is ordered on the device, its result stays alive until eagle's copy of it is done, and the host does not wait |
 | `JX-INJECT-HOST` | jax | eagle | STREAM | a JAX call in a host-synchronized node is seen by the next stage |
 | `JX-LOOP-INVARIANCE` | jax | eagle | INVARIANCE | a carried-state kernel in `jit(while_loop)` gives the run-until-done answer, and `grad` of a `scan` over it, with no `where`, matches a plain JAX reference |
+| `JX-GRAD-TRANSFORMS` | jax | eagle | INVARIANCE | `grad`, `jit(grad)`, `vmap(grad)`, `jacfwd` and `jacrev` of a kernel match the same law written in plain JAX, and the comparison sees a one-in-a-million error |
+| `T-GRAD-AUTOGRAD` | torch | eagle | INVARIANCE | `backward` through a kernel matches the same law in plain torch, a finished sample gets no gradient, and `gradcheck` (forward AD included) passes |
+| `T-GRAD-FUNC` | torch | eagle | INVARIANCE | `torch.func.grad`, `jvp` and `vmap` of `grad` through a kernel match the same law in plain torch |
+| `WP-GRAD-TAPE` | warp | eagle | INVARIANCE | `wp.Tape` through a kernel matches central finite differences of the same law, in float64 and float32, and a finished sample gets no gradient |
+| `NP-HOST-ALIAS` | numpy | eagle | ALIAS | a writable NumPy array crosses as a zero-copy view (pointer identity, write-through), a read-only one is flagged read-only, and a copy is told apart |
+| `NP-IN-CPU-COPY` | numpy | eagle | COPY | a NumPy array given to a CUDA kernel comes back as a NumPy array via a copy, write-isolated in both directions |
+| `CP-IN-ALIAS` | cupy | eagle | ALIAS | a CuPy array crosses as a zero-copy device view that outlives its producer, with write-through |
+| `CP-OUT-ALIAS` | cupy | eagle | ALIAS | a caller-provided CuPy output is filled in place, and a result without one is a new CuPy array that does not alias the input |
 | `execution_partition_identity` | — | eagle | INVARIANCE | the same `sample_local`/`cross_sample_read` body produces bit-identical results under `DeviceKernel` (whole) vs. a 2-way partition vs. a 2-rank `RankPartition` |
 | `execution_host_device_twin` | — | eagle | INVARIANCE | the same body's `HostTeam` and `DeviceKernel` results agree within a fixed host/device tolerance band — the band this row's own test defines |
 | `execution_illegal_placement_refused` | — | eagle | ENV | a plan placing a body on a structure its declared `exec_access` class forbids is refused at plan time, naming the violated rule |

@@ -1,0 +1,210 @@
+{
+  "_about": "What the family tests against, per upstream. Floors and tested latest come from the repos' locks and CI pins (see sources). The weekly job (tools/upstream_watch.py) reads PyPI and reports differences; it never changes this file.",
+  "upstreams": {
+    "numpy": {
+      "pypi": "numpy",
+      "floor": "1.26.4",
+      "tested_latest": "2.1.3",
+      "wheel_tags": [
+        "cp39",
+        "cp310",
+        "cp311",
+        "cp312",
+        "cp313",
+        "cp314",
+        "cp313t",
+        "cp314t",
+        "cp315"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "array protocol",
+        "__dlpack__",
+        "ctypes data pointer"
+      ],
+      "changelog": "https://numpy.org/doc/stable/release.html",
+      "sources": "floor: eagle docs/_tools/hosted_env/floor-cpu.txt (numpy==1.26.4); latest: colab-cpu.txt and colab-gpu.txt (numpy==2.1.3)",
+      "unverified_gaps": {}
+    },
+    "cupy": {
+      "pypi": "cupy-cuda13x",
+      "floor": "13.6.0",
+      "tested_latest": "14.0.1",
+      "wheel_tags": [
+        "cp310",
+        "cp311",
+        "cp312",
+        "cp313",
+        "cp314",
+        "cp313t",
+        "cp314t",
+        "cp315",
+        "cp315t"
+      ],
+      "known_gaps": [
+        "cp313t"
+      ],
+      "mechanisms": [
+        "__cuda_array_interface__",
+        "__dlpack__",
+        "cuda stream protocol (Stream.from_external)",
+        "NVRTC kernel compile"
+      ],
+      "changelog": "https://github.com/cupy/cupy/releases",
+      "sources": "floor: eagle python/pyproject.toml (cupy-cuda1Nx>=13.6,<14 below Python 3.10; >=14 from 3.10); latest: eagle colab-gpu.txt (cupy-cuda12x==14.0.1); gaps: the pyproject comment (no cp313t) and the 3.15 ruling",
+      "unverified_gaps": {
+        "cp315": "from the USER 10-19 note that cupy and torch have no 3.15 wheels yet; not checked against PyPI",
+        "cp315t": "from the USER 10-19 note that cupy and torch have no 3.15 wheels yet; not checked against PyPI"
+      }
+    },
+    "torch": {
+      "pypi": "torch",
+      "floor": "2.2.2",
+      "tested_latest": "2.14.1",
+      "wheel_tags": [
+        "cp310",
+        "cp311",
+        "cp312",
+        "cp313",
+        "cp314",
+        "cp314t",
+        "cp315",
+        "cp315t"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "__dlpack__",
+        "__cuda_array_interface__",
+        "torch.cuda.Stream raw handle",
+        "autograd.Function"
+      ],
+      "changelog": "https://github.com/pytorch/pytorch/releases",
+      "sources": "floor: eagle floor-cpu.txt (torch==2.2.2+cpu; extra torch>=2.2); latest: eagle .github/workflows/ci.yml (torch==2.14.1, free-threaded stress leg); gaps: that step's comment (torch publishes cp314t only) and the 3.15 ruling",
+      "unverified_gaps": {
+        "cp315": "from the USER 10-19 note that cupy and torch have no 3.15 wheels yet; not checked against PyPI",
+        "cp315t": "from the USER 10-19 note that cupy and torch have no 3.15 wheels yet; not checked against PyPI"
+      }
+    },
+    "jax": {
+      "pypi": "jaxlib",
+      "floor": "0.11.2",
+      "tested_latest": "0.11.2",
+      "wheel_tags": [
+        "cp312",
+        "cp313",
+        "cp314",
+        "cp314t",
+        "cp315"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "XLA FFI (libeagle_xla.so)",
+        "__dlpack__",
+        "jit/vmap/scan invariance"
+      ],
+      "changelog": "https://docs.jax.dev/en/latest/changelog.html",
+      "sources": "floor and latest: eagle python/pyproject.toml (jax>=0.11.2) and ci.yml / release.yml (jax[cpu]==0.11.2); tags: pyproject comment (Python 3.12 and newer) and ci.yml (jaxlib cp314t only); PyPI name is jaxlib, the package that carries the wheels",
+      "unverified_gaps": {
+        "cp315": "no repo records whether jaxlib ships cp315; assumed absent"
+      }
+    },
+    "warp": {
+      "pypi": "warp-lang",
+      "floor": "1.16.0",
+      "tested_latest": "1.18.0",
+      "wheel_tags": [
+        "py3"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "__cuda_array_interface__",
+        "__dlpack__",
+        "wp.Stream external handle"
+      ],
+      "changelog": "https://github.com/NVIDIA/warp/blob/main/CHANGELOG.md",
+      "sources": "floor: eagle colab-gpu.txt (warp-lang==1.16.0, the CUDA 12 build); latest: eagle ci.yml (warp-lang==1.18.0); no declared bound exists, so the floor is the oldest tested",
+      "unverified_gaps": {}
+    },
+    "cuda-bindings": {
+      "pypi": "cuda-bindings",
+      "floor": "12.6",
+      "tested_latest": null,
+      "ceiling": "14",
+      "wheel_tags": [
+        "cp310",
+        "cp311",
+        "cp312",
+        "cp313",
+        "cp314",
+        "cp313t",
+        "cp314t"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "driver API (cuModule, cuLaunchKernel, graphs)",
+        "NVRTC"
+      ],
+      "changelog": "https://nvidia.github.io/cuda-python/cuda-bindings/latest/release.html",
+      "sources": "floor and ceiling: hawk pyproject.toml extras cuda12 (>=12.6,<13) and cuda13 (>=13,<14); no exact version is pinned anywhere, so the weekly run reports the newest only against the ceiling",
+      "unverified_gaps": {}
+    },
+    "nanobind": {
+      "pypi": "nanobind",
+      "floor": "2.2",
+      "tested_latest": null,
+      "ceiling": "4",
+      "wheel_tags": [
+        "py3"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "stable-ABI-free extension modules",
+        "free-threaded builds (nanobind 3)"
+      ],
+      "changelog": "https://nanobind.readthedocs.io/en/latest/changelog.html",
+      "sources": "eagle python/pyproject.toml and hawk pyproject.toml build requires (>=3.1,<4 from Python 3.10; >=2.2,<3 on 3.9); no exact version is pinned",
+      "unverified_gaps": {}
+    },
+    "cibuildwheel": {
+      "pypi": "cibuildwheel",
+      "floor": "3.4.1",
+      "tested_latest": "3.4.1",
+      "ceiling": "4",
+      "wheel_tags": [
+        "py3"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "CIBW_BUILD identifiers cp39..cp314 and cp313t/cp314t",
+        "manylinux images"
+      ],
+      "changelog": "https://cibuildwheel.pypa.io/en/stable/changelog/",
+      "sources": "eagle and hawk .github/workflows/release.yml (pypa/cibuildwheel@v3.4.1); 4.x dropped the free-threaded 3.13 build, so it stays outside the range until that is decided",
+      "unverified_gaps": {}
+    },
+    "cpython": {
+      "pypi": null,
+      "floor": "3.9",
+      "tested_latest": "3.14",
+      "wheel_tags": [
+        "cp39",
+        "cp310",
+        "cp311",
+        "cp312",
+        "cp313",
+        "cp314",
+        "cp313t",
+        "cp314t",
+        "cp315",
+        "cp315t"
+      ],
+      "known_gaps": [],
+      "mechanisms": [
+        "free-threaded build (3.13t, 3.14t)"
+      ],
+      "changelog": "https://docs.python.org/3/whatsnew/index.html",
+      "sources": "eagle .github/workflows/release.yml and ci.yml matrices (3.9 to 3.14 plus 3.13t/3.14t); 3.15 is the ruling's addition. The weekly run takes the newest cpXY that numpy ships",
+      "unverified_gaps": {}
+    }
+  }
+}

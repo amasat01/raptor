@@ -1,0 +1,12 @@
+repo = "raptor"
+helper_dirs = ["docs/content/_shared"]
+preinstalled = ["numpy", "IPython"]
+image_budget = 80000
+nb_roots = ["docs/content/tutorials"]
+fresh = [
+  "python tools/sync_readme_perf.py --eagle-root ../eagle",
+  "python -m raptor_docs.capmap -o docs/_static/capmap.svg",
+]
+
+[helper_needs]
+"docs/content/_shared/nb_diagrams.py" = ["matplotlib"]

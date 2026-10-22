@@ -28,17 +28,27 @@ python -m pytest -q -rs -m "not cross_repo"      # the suite gate (.github/workf
 `cross_repo` selects the eagle conformance battery. It needs an `eagle` checkout next to this one and fails, not skips, without it.
 The free-threading rows run with `python -m pytest -m ft -W error::RuntimeWarning` on a free-threaded build.
 
-Docs (`cd docs`; the packages are listed in `.github/workflows/docs.yml`):
+Docs (`cd docs`; install `pip install -r requirements.txt`, or `pip install ./site` from a checkout of the landing site for the shared `raptor-docs` tooling):
 
 ```bash
 make strict     # zero warnings
 make linkcheck
 make nbexec     # run the tutorial notebooks in place; outputs are committed
 make nbcheck    # fail on an unexecuted notebook
+python -m raptor_docs.fresh --check --site ../site   # generated numbers and the capability map are current; --write re-mints
 ```
 
-`make nbcheck-hosted` runs the notebooks the way a Colab user does; read the comments above the target in `docs/Makefile` for what it
-needs.
+`make nbcheck-hosted` runs the notebooks the way a Colab user does; the rules are in eagle's
+[Documentation guide](https://amasat01.github.io/eagle/content/devguide/docs_guide.html).
+
+## Where things live
+
+- `raptor/schema/`: the manifest contract (`manifest.py`, `blocks.py`, `dtypes.py`); `validate_manifest` is the entry point.
+- `raptor/protocols/`: `Backend`, `KernelLauncher`, `ManifestProvider` as structural protocols.
+- `raptor/conformance/`: the row declaration (`interop.py`) and the pytest plugin that records which rows ran.
+- `tests/`: the suite; `goldens/`: manifests every golden test validates. `docs/content/`: the pages.
+- A new interop row: [Contributing a certification row](https://amasat01.github.io/raptor/content/devguide/contributing_a_certification_row.html).
+  What each contract pins: [Concepts, for contributors](https://amasat01.github.io/raptor/content/concepts.html).
 
 ## What a PR here must show
 
@@ -51,6 +61,4 @@ needs.
 
 ## Release
 
-Bump `version` in `pyproject.toml` and update `CHANGELOG.md` in a pull request. Its green run builds and tests the wheels,
-the sdist and the docs; merge it up to date, then tag `vX.Y.Z` on that commit. `.github/workflows/publish.yml` uploads the files
-the pull request built (`workflow_dispatch` dry-runs it). Publish order is in the family guide.
+Record changes under `## Unreleased` in `CHANGELOG.md`; release with `python tools/version.py bump X.Y.Z` (never edit version strings by hand); the whole flow is in [RELEASING.md](https://github.com/amasat01/raptor/blob/main/RELEASING.md).

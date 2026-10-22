@@ -130,6 +130,14 @@ jobs:
           path: site
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
           pins: .github/companions
+      # companion eagle: the README numbers are rendered by its tools/prose_claims.py (docs/raptor_docs.toml reads ../eagle)
+      - uses: ./.github/actions/companion
+        with:
+          repo: eagle
+          path: eagle
+          token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+          pins: .github/companions
+      - run: ln -s "$GITHUB_WORKSPACE/eagle" ../eagle
       - run: |
           python -m pip install --quiet -e .
           grep -v '^raptor-docs' docs/requirements.txt > /tmp/docs-reqs.txt

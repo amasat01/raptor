@@ -25,17 +25,18 @@ def _watch():
     return mod
 
 
-MANIFEST = json.loads((ROOT / "tools" / "upstream.json").read_text())
-UPSTREAMS = MANIFEST["upstreams"]
+def _upstreams():
+    # read when a test runs, not at import: the installed-wheel check collects these tests without tools/
+    return json.loads((ROOT / "tools" / "upstream.json").read_text())["upstreams"]
 
 
 def test_every_certified_framework_and_the_toolchain_has_an_entry():
-    assert set(UPSTREAMS) == set(CERTIFIED) | TOOLCHAIN
+    assert set(_upstreams()) == set(CERTIFIED) | TOOLCHAIN
 
 
-@pytest.mark.parametrize("name", sorted(UPSTREAMS))
+@pytest.mark.parametrize("name", sorted(set(CERTIFIED) | TOOLCHAIN))
 def test_entry_is_complete_and_consistent(name):
-    up = UPSTREAMS[name]
+    up = _upstreams()[name]
     assert FIELDS <= set(up)
     assert up["mechanisms"] and up["sources"] and up["changelog"].startswith("https://")
     assert set(up["known_gaps"]) | set(up["unverified_gaps"]) <= set(up["wheel_tags"])

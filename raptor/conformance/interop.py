@@ -7,9 +7,9 @@ raptor is the framework-free contract owner: this module names every
 framework the family will ever bridge to (:data:`UNIVERSE`), which subset is
 certified today (:data:`CERTIFIED`) vs. declared-but-not-yet-built
 (:data:`ROADMAP`), and the row-level ``ROWS`` catalogue, declared here in
-full ahead of the packages that write the matrix tests — so that
-:func:`assert_rows_complete` has a real gap to catch instead of declared and
-collected always landing together. Framework objects NEVER enter raptor —
+full, owned here and registered against by the packages that write the
+matrix tests — so that :func:`assert_rows_complete` has a real gap to catch
+instead of declared and collected always landing together. Framework objects NEVER enter raptor —
 pointers and callables are passed in duck-typed; this module itself imports
 no framework, ever (``find_spec`` never imports).
 
@@ -88,7 +88,7 @@ class RowDecl:
             )
 
 
-#: row_id -> RowDecl — the full row catalogue, declared here ahead of the
+#: row_id -> RowDecl — the full row catalogue, declared here, before the
 #: packages that write the tests. This is deliberate: if declaring and
 #: collecting happened in the same later package, declared and collected
 #: would always agree by construction and :func:`assert_rows_complete` could
@@ -183,8 +183,19 @@ ROWS: dict[str, RowDecl] = {
     "STREAM-JAX-INJECT-ORDER": RowDecl("jax", "eagle", "STREAM", ("cuda",)),
     "JX-INJECT-HOST": RowDecl("jax", "eagle", "STREAM", ("cuda",)),
     "JX-LOOP-INVARIANCE": RowDecl("jax", "eagle", "INVARIANCE", ("cpu", "cuda")),
+    # gradients through an eagle kernel, read by each framework's own machinery
+    # (both legs), each against the same law written in that framework alone.
+    "JX-GRAD-TRANSFORMS": RowDecl("jax", "eagle", "INVARIANCE"),
+    "T-GRAD-AUTOGRAD": RowDecl("torch", "eagle", "INVARIANCE"),
+    "T-GRAD-FUNC": RowDecl("torch", "eagle", "INVARIANCE"),
+    "WP-GRAD-TAPE": RowDecl("warp", "eagle", "INVARIANCE"),
+    # host/device hand-over rows for numpy and cupy.
+    "NP-HOST-ALIAS": RowDecl("numpy", "eagle", "ALIAS", ("cpu",)),
+    "NP-IN-CPU-COPY": RowDecl("numpy", "eagle", "COPY", ("cuda",)),
+    "CP-IN-ALIAS": RowDecl("cupy", "eagle", "ALIAS", ("cuda",)),
+    "CP-OUT-ALIAS": RowDecl("cupy", "eagle", "ALIAS", ("cuda",)),
     # execution rows: the closed RowDecl framework/kind sets extended (above)
-    # so these four can be declared here, ahead of their eagle-owned consumer
+    # so these four are declared here with the eagle-owned consumer
     # implementation — the same declare-before-build convention every other
     # eagle-owned row above already uses (e.g. CP-CAPTURE-REJECT): raptor's
     # own suite never calls ``assert_rows_complete("eagle")``, so a
@@ -196,11 +207,11 @@ ROWS: dict[str, RowDecl] = {
     "execution_host_device_twin": RowDecl(None, "eagle", "INVARIANCE"),
     "execution_illegal_placement_refused": RowDecl(None, "eagle", "ENV"),
     "execution_layout_selfcheck_refused": RowDecl(None, "eagle", "ENV"),
-    # HAWK rows: rows that exist only because HAWK exists, declared
-    # owner_repo="hawk" — same declare-before-build convention as the
-    # execution_* rows above, ahead of HAWK's own consumer implementation.
-    # The numpy/cupy/torch crossing rows HAWK will own are declared when its
-    # consumer implementation lands, not here. framework=None for all
+    # hawk rows: rows that exist only because hawk exists, declared
+    # owner_repo="hawk" — same convention as the execution_* rows above,
+    # checked by hawk's own consumer implementation.
+    # The array-framework crossing rows are owned by eagle, above, not here.
+    # framework=None for all
     # five: none bridges to an array framework (see RowDecl's docstring);
     # every check is deferred to its own consumer implementation. Row ids
     # cite the row they carry in hawk's own documentation, which gives no

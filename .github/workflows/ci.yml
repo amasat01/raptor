@@ -62,8 +62,13 @@ jobs:
           path: site
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
           pins: raptor/.github/companions
-      - name: documented numbers and family visuals match the committed cards
-        run: bash raptor/tools/docs_fresh.sh eagle site
+      - run: python -m pip install --quiet ./site
+      - name: documented numbers and the capability map match the committed cards
+        working-directory: raptor
+        run: python -m raptor_docs.fresh --check --site ../site
+      - name: manifesto copy
+        working-directory: raptor
+        run: MANIFESTO_SOURCE=docs/content/principles.md bash tools/manifesto_check.sh CONTRIBUTING.md
   test-python:
     needs: docs-fresh
     # The test suite.
@@ -87,12 +92,13 @@ jobs:
       # both free-threaded interpreters report, even when one fails
       fail-fast: false
       matrix:
-        python-version: ["3.13t", "3.14t"]
+        python-version: ["3.13t", "3.14t", "3.15t"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
           cache: pip
           cache-dependency-path: pyproject.toml
       # free-threaded: newest NumPy/SciPy ship no cp313t wheel: prefer a wheel over an sdist build

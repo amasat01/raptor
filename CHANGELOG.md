@@ -13,6 +13,12 @@ and is where this file tries to spend its words.
 
 ## Unreleased
 
+**Host library format.** A manifest entry may name `"format": "host"` (a host shared library, a CPU plugin) beside `ptx`, `cubin` and `fatbin`; the schema, its JSON schemas and the vocabulary eagle mirrors all carry it.
+
+**Eight new rows.** Gradients through an eagle kernel are certified: `JX-GRAD-TRANSFORMS`, `T-GRAD-AUTOGRAD`, `T-GRAD-FUNC` and `WP-GRAD-TAPE`, each against the same law in the framework alone. NumPy and CuPy hand-over get rows too: `NP-HOST-ALIAS`, `NP-IN-CPU-COPY`, `CP-IN-ALIAS` and `CP-OUT-ALIAS`. The catalogue is 51 rows.
+
+**Upstream watch.** `tools/upstream.json` records, for each framework the interop matrix certifies and each build tool (numpy, cupy, torch, jax, warp, cuda-bindings, nanobind, cibuildwheel, CPython), the tested floor and latest, the wheel tags we need, the mechanisms we rely on and the changelog. A weekly job reads PyPI, compares, and keeps one issue current; it never publishes and is not a required check.
+
 ## 0.3.3 (2026-10-20)
 
 **Schema v3.** `MAX_SCHEMA_VERSION` is 3. v3 is v2 with `cells` replacing `sample_sums` in the sidecar (the record of reductions over samples, `{name: {op, columns}}`); the manifest shape and the ABI tag are v2's. v1 and v2 still load; v4 and newer are refused.

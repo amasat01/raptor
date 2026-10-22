@@ -23,7 +23,7 @@ below:
      - Type
      - Meaning
    * - ``format``
-     - ``"ptx"`` | ``"cubin"`` | ``"fatbin"``
+     - ``"ptx"`` | ``"cubin"`` | ``"fatbin"`` | ``"host"``
      - Artifact format the sidecar accompanies.
    * - ``schema_version``
      - int (``1``)

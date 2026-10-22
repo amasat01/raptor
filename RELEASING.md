@@ -10,6 +10,7 @@ needs no new version and can merge any time.
 
 ## Steps
 
+0. **Upstream review.** Read the open "Upstream watch" issue and the changelogs it links. Each new feature worth adopting becomes a tracker item, or a "not now" line in the issue.
 1. **Branch.** Name it `release-X.Y.Z` in every repo that changes, the same name everywhere. The checks in
    each repo find the matching branch in the others and test against it.
 2. **Bump.** Write changes under `## Unreleased` in `CHANGELOG.md` as you go. When ready, run

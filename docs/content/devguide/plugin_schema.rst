@@ -74,8 +74,8 @@ eagle owns the **plugin protocol**: the on-disk contract between the
 producer and every loader, as sketched above. A deployment unit is:
 
 * one **manifest** (``manifest.json``) — an ordered list of plugin artifacts;
-* one **artifact** per plugin (``<id>.ptx`` / ``.cubin`` / ``.fatbin``) — the
-  compiled kernel;
+* one **artifact** per plugin (``<id>.ptx`` / ``.cubin`` / ``.fatbin``, or ``.so`` for a host
+  plugin) — the compiled kernel;
 * one **sidecar** (``<id>.json``) per artifact — its launch signature.
 
 This page freezes both JSON shapes as **schema v1**. The normative machine-readable

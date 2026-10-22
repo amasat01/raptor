@@ -1,0 +1,45 @@
+# Copyright 2026 Alessandro Masat
+# SPDX-License-Identifier: Apache-2.0
+#
+# Weekly: compare PyPI with tools/upstream.json and keep ONE issue current. Reports only: it publishes
+# nothing, changes no file, and is never a required check.
+
+name: Upstream watch
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: python tools/upstream_watch.py > report.md
+      - name: keep the one issue current
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cat report.md
+          title="Upstream watch"
+          number="$(gh issue list --state all --label upstream-watch --json number --jq '.[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file report.md
+            if grep -q '^- ' report.md; then gh issue reopen "$number" || true; else gh issue close "$number" || true; fi
+          elif grep -q '^- ' report.md; then
+            gh label create upstream-watch --description "Upstream versions and wheels" --force
+            gh issue create --title "$title" --label upstream-watch --body-file report.md
+          fi

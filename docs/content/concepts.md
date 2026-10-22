@@ -50,6 +50,18 @@ required v2 key is a load refused, never a guessed default — see
 [`raptor.schema.manifest.check_execution_axis`](/content/api/schema) for the
 exact rules.
 
+## For contributors
+
+Each contract has a test that fails when the contract moves without its description.
+
+| Contract | What it is | What pins it |
+|---|---|---|
+| Manifest | the `raptor.schema` fields and `validate_manifest` | `tests/test_schema_v2_execution.py` enumerates every valid and invalid execution-axis case; `tests/test_goldens.py` validates every golden; `tests/test_purity.py` keeps the core layer free of other repos' names |
+| Protocols | `Backend`, `KernelLauncher`, `ManifestProvider` | `tests/test_protocols.py` pins the method names; `tests/test_packaging.py` keeps `dependencies` empty |
+| Rows | the interop declaration in `raptor.conformance.interop` | `tests/test_docs_interop_protocols_sync.py` checks the published matrix against the declaration in both directions; `assert_rows_complete` fails an owner whose declared row did not run |
+
+A change to a contract changes the test and the page in the same pull request. To add a row, follow [Contributing a certification row](/content/devguide/contributing_a_certification_row).
+
 ## Where to read next
 
 - [Tutorials](/content/tutorials) walk through the schema, the protocols and

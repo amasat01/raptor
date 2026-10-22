@@ -123,13 +123,20 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: pyproject.toml
+      # companion site (amasat01.github.io): the shared docs tooling; the ref pinned in .github/companions, else a same-named branch, else main
+      - uses: ./.github/actions/companion
+        with:
+          repo: amasat01.github.io
+          path: site
+          token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
+          pins: .github/companions
       - run: |
           python -m pip install --quiet -e .
-          python -m pip install --quiet pytest \
-            Sphinx==8.2.3 myst-nb==1.4.0 sphinx-book-theme==1.2.0 sphinx-design==0.7.0 \
-            sphinx-copybutton==0.5.2 sphinx-autodoc-typehints==3.5.2
+          grep -v '^raptor-docs' docs/requirements.txt > /tmp/docs-reqs.txt
+          python -m pip install --quiet pytest -r /tmp/docs-reqs.txt ./site
       - run: make -C docs nbcheck
       - run: make -C docs strict
+      - run: python -m raptor_docs.fresh --check --site site
       - uses: actions/upload-artifact@v7
         with:
           name: site-${{ needs.build.outputs.tree }}

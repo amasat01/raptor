@@ -8,7 +8,6 @@ SPHINXOPTS    ?=
 SPHINXBUILD   ?= python -m sphinx
 SOURCEDIR     = .
 BUILDDIR      = _build
-NBROOTS       = content/tutorials
 
 .PHONY: help Makefile clean livehtml strict linkcheck nbexec nbcheck nbcheck-hosted nbcheck-floor nbcheck-hosted-gpu nbtest
 
@@ -29,21 +28,21 @@ strict:
 linkcheck:
 	@$(SPHINXBUILD) -b linkcheck "$(SOURCEDIR)" "$(BUILDDIR)/linkcheck" $(SPHINXOPTS) $(O)
 
-# Execute every tutorial/example notebook IN PLACE (outputs kept) — the local,
+# Execute every tutorial notebook IN PLACE (outputs kept) — the local,
 # pre-commit gate. CI never calls this; it only renders the committed outputs.
 nbexec:
-	python _scripts/nb_execute.py $(NBROOTS)
+	python -m raptor_docs.nb execute
 
-# Refuse to proceed unless every notebook under NBROOTS was actually executed
+# Refuse to proceed unless every notebook under the notebook roots was actually executed
 # (every non-blank code cell carries an execution count).
 nbcheck:
-	python _scripts/nb_colab_setup.py --check
-	python _scripts/nb_check_filled.py $(NBROOTS)
+	python -m raptor_docs.nb colab_setup --check
+	python -m raptor_docs.nb check
 
 # Execute every tutorial/example notebook and fail on any error, via nbval —
 # a lighter-weight standalone check than nbexec (does not rewrite outputs).
 nbtest:
-	python -m pytest --nbval-lax -q $(NBROOTS)
+	python -m pytest --nbval-lax -q content/tutorials
 
 # Watch for changes and auto-recompile (requires watchdog: pip install watchdog)
 livehtml: Makefile
@@ -56,24 +55,21 @@ livehtml: Makefile
 %: Makefile
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-# The driver lives in eagle's docs tools; point EAGLE_ROOT at an eagle checkout.
-EAGLE_ROOT ?= $(abspath ../../eagle)
-
 # Run every docs notebook as a hosted (Colab) user does: wheels built from the checkouts, a pinned environment,
-# the setup cell included (_tools/nb_hosted.py). Needs uv, a Python 3.13 and a C++23 compiler (CXX).
+# the setup cell included (raptor_docs.nb hosted). Needs uv, a Python 3.13 and a C++23 compiler (CXX).
 NBH_PYTHON ?= python3.13
 NBH_ARGS   ?=
 nbcheck-hosted:
-	python $(EAGLE_ROOT)/docs/_tools/nb_hosted.py --python $(NBH_PYTHON) --lock colab --repos raptor --raptor $(abspath ..) $(NBH_ARGS)
+	python -m raptor_docs.nb hosted --python $(NBH_PYTHON) --lock colab --repos raptor --raptor $(abspath ..) $(NBH_ARGS)
 
-# The same against the oldest numpy and torch that have Python 3.13 wheels (_tools/hosted_env/floor-cpu.txt).
+# The same against the oldest numpy and torch that have Python 3.13 wheels (raptor_docs/nb/hosted_env/floor-cpu.txt).
 nbcheck-floor:
-	python $(EAGLE_ROOT)/docs/_tools/nb_hosted.py --python $(NBH_PYTHON) --lock floor --repos raptor --raptor $(abspath ..) $(NBH_ARGS)
+	python -m raptor_docs.nb hosted --python $(NBH_PYTHON) --lock floor --repos raptor --raptor $(abspath ..) $(NBH_ARGS)
 
-# The GPU runtime's lock (CUDA 12 builds: see the header of _tools/hosted_env/colab-gpu.txt): eagle's CUDA plugin is built for
+# The GPU runtime's lock (CUDA 12 builds: see the header of raptor_docs/nb/hosted_env/colab-gpu.txt): eagle's CUDA plugin is built for
 # NBH_GPU_ARCH, the GPU-only notebooks run too, on GPU NBH_GPU_INDEX, under the flock file NBH_GPU_LOCK if set. Needs ~5 GB free.
 NBH_GPU_ARCH  ?= 61
 NBH_GPU_INDEX ?= 1
 NBH_GPU_LOCK  ?=
 nbcheck-hosted-gpu:
-	python $(EAGLE_ROOT)/docs/_tools/nb_hosted.py --python $(NBH_PYTHON) --lock colab-gpu --gpu --cuda-arch $(NBH_GPU_ARCH) --gpu-index $(NBH_GPU_INDEX) $(if $(NBH_GPU_LOCK),--gpu-lock $(NBH_GPU_LOCK)) --repos raptor --raptor $(abspath ..) $(NBH_ARGS)
+	python -m raptor_docs.nb hosted --python $(NBH_PYTHON) --lock colab-gpu --gpu --cuda-arch $(NBH_GPU_ARCH) --gpu-index $(NBH_GPU_INDEX) $(if $(NBH_GPU_LOCK),--gpu-lock $(NBH_GPU_LOCK)) --repos raptor --raptor $(abspath ..) $(NBH_ARGS)

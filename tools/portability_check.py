@@ -88,7 +88,8 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # 2026-10-16: 70 passed. +8 test_rows_ran (the rows-ran gate, run in subprocesses) and +3 in
 # test_conformance_interop (the four JAX FFI rows' declaration, the legs vocabulary, the leg check in register_row).
 # 2026-10-16: 71 passed. +1 test_inject_rows_declared_exactly (the ten inject rows' declaration).
-DEFAULT_EXPECTED_PASS_COUNT = 71
+# 2026-10-22: 72 passed. +1 test_gradient_and_handover_rows_declared_exactly (the gradient and NumPy/CuPy rows' declaration).
+DEFAULT_EXPECTED_PASS_COUNT = 72
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --
 # test_pyproject_declares_zero_hard_deps_and_name_raptor,

@@ -11,7 +11,7 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
-## Unreleased
+## 0.3.4 (2026-10-22)
 
 **Host library format.** A manifest entry may name `"format": "host"` (a host shared library, a CPU plugin) beside `ptx`, `cubin` and `fatbin`; the schema, its JSON schemas and the vocabulary eagle mirrors all carry it.
 

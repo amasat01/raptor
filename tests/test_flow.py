@@ -25,7 +25,8 @@ _PROG = (
 
 def test_dash_c_lift_is_scoped_to_verified_functions():
     out = subprocess.run([sys.executable, "-c", _PROG], capture_output=True, text=True, check=True).stdout.split("\n")
-    assert out[0] == "False True True"
+    # CPython 3.13+ keeps the -c text in linecache itself, so the source is there before the lift.
+    assert out[0] == ("True True True" if sys.version_info >= (3, 13) else "False True True")
     assert out[1] == "def k(x):"
     assert out[2] == "False"  # an exec'd '<string>' def is not from the -c text: not relabelled
 

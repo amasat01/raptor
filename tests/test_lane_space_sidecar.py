@@ -12,11 +12,24 @@ import pytest
 
 from raptor.schema import manifest, validate_manifest
 
-jsonschema = pytest.importorskip("jsonschema")
+# Reads docs/schemas and goldens from the repository; the wheel carries neither. jsonschema is a
+# dev dependency, so the module must import without it: the wheel leg deselects these rows.
+pytestmark = pytest.mark.repo_local
+
+try:
+    import jsonschema
+except ImportError:
+    jsonschema = None
 
 REPO = Path(__file__).resolve().parents[1]
 SCHEMA = json.loads((REPO / "docs/schemas/sidecar-v1.schema.json").read_text())
-VALIDATOR = jsonschema.Draft202012Validator(SCHEMA)
+VALIDATOR = jsonschema.Draft202012Validator(SCHEMA) if jsonschema else None
+
+
+@pytest.fixture(autouse=True)
+def _needs_jsonschema():
+    if jsonschema is None:
+        pytest.skip("jsonschema is not installed")
 GOLD = json.loads((REPO / "goldens/vector/gravity.json").read_text())
 SIDECARS = sorted(
     p

@@ -10,4 +10,9 @@ version this package's schema documents describe) — this is raptor-the
 
 from __future__ import annotations
 
-__version__ = "0.3.4"
+from importlib.metadata import PackageNotFoundError, version
+
+try:
+    __version__ = version("raptor-core")
+except PackageNotFoundError:  # run from a checkout without an install
+    __version__ = "unknown"

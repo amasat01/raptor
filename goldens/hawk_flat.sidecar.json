@@ -1,0 +1,84 @@
+{
+  "format": "host",
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "host"
+  ],
+  "exec_access": "sample_local",
+  "scalar_type": "float64",
+  "kernel": "hawk_flat",
+  "params": [],
+  "params_schema": 2,
+  "per_sample": [
+    "x"
+  ],
+  "vector_inputs": [
+    "v"
+  ],
+  "matrix_inputs": [],
+  "mat_shapes": {},
+  "mutables": [
+    {
+      "name": "out",
+      "dtype": "scalar",
+      "width": 1,
+      "default": null
+    }
+  ],
+  "arg_widths": {
+    "out": 1,
+    "v": 3,
+    "x": 1
+  },
+  "vec_widths": {
+    "v": 3
+  },
+  "arg_shapes": {
+    "out": 1,
+    "v": 3,
+    "x": 1
+  },
+  "arg_dtypes": {
+    "out": "float64",
+    "v": "float64",
+    "x": "float64"
+  },
+  "wide_inputs": [],
+  "wide_outputs": [],
+  "accum_outputs": [],
+  "dispatch": [],
+  "buffers": [],
+  "arg_spec": [
+    [
+      "mutable",
+      "out"
+    ],
+    [
+      "vec_in",
+      "v"
+    ],
+    [
+      "per_sample",
+      "x"
+    ]
+  ],
+  "terminated_readonly": true,
+  "launch": {
+    "lane_space": {
+      "axes": [
+        {
+          "label": null,
+          "extent": null
+        }
+      ],
+      "group": 1
+    }
+  },
+  "digest": "072720dc09c3542c77cff355e6055033bd0f7c4d704b5dbb734a48b5f292228c",
+  "quantities": {},
+  "aether_include": "",
+  "eagle_include": "",
+  "host_entry": "hawk_flat_host"
+}

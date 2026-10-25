@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/amasat01/eagle/raw/main/docs/schemas/sidecar-v1.schema.json",
-  "title": "EAGLE plugin sidecar (schema v1)",
-  "description": "Frozen schema v1 for the per-artifact JSON sidecar emitted by the code generator's deploy pipeline (deploy/compile.py). A sidecar describes one plugin's launch signature: a shared base plus one of two pattern-specific variants (vector | pure). arg_spec is the ordered list of [role, name] pairs a loader binds; every role must be one of the 9 canonical schema-v1 roles enumerated inline (plugin/roles.h::kPluginArgRoles ≡ eagle.roles.ROLES). Validators are backward-lenient (absent schema_version ⇒ v1) and forward-strict (an unknown role, or a schema_version newer than the loader, ⇒ rejected). Unknown/future top-level keys are tolerated (additionalProperties true) so a future minor revision may add keys — including populating the reserved launch surface — without a schema_version bump.",
+  "title": "EAGLE plugin sidecar (schema v1 to v3)",
+  "description": "Schema for the per-artifact JSON sidecar a code generator writes next to a compiled kernel (v1 through v3). A sidecar describes one plugin's launch signature: a shared base plus one of two pattern-specific variants (vector | pure). arg_spec is the ordered list of [role, name] pairs a loader binds; every role must be one of the 12 canonical roles enumerated inline (plugin/roles.h::kPluginArgRoles ≡ eagle.roles.ROLES). v2 adds the execution axis (exec_targets, exec_access, exec_op) and the tag aether-abi/2; v3 is v2 with the cells record. Validators are backward-lenient (absent schema_version ⇒ v1) and forward-strict (an unknown role, or a schema_version newer than the loader, ⇒ rejected). Unknown/future top-level keys are tolerated (additionalProperties true) so a future minor revision may add keys — including populating the reserved launch surface — without a schema_version bump.",
   "type": "object",
   "additionalProperties": true,
   "required": [
@@ -18,8 +18,8 @@
   ],
   "properties": {
     "schema_version": {
-      "const": 1,
-      "description": "Plugin-schema version this sidecar conforms to. Single-sourced from eagle.roles.SCHEMA_VERSION. Absent ⇒ treated as v1 (backward-lenient); newer than the loader ⇒ rejected (forward-strict). Orthogonal to aether_abi."
+      "enum": [1, 2, 3],
+      "description": "Plugin-schema version this sidecar conforms to (raptor.schema.manifest.MAX_SCHEMA_VERSION is the newest). Absent ⇒ treated as v1 (backward-lenient); newer than the loader ⇒ rejected (forward-strict). Selects the aether_abi tag and whether the execution axis is carried (see the conditional blocks)."
     },
     "format": {
       "enum": ["ptx", "cubin", "fatbin", "host"],
@@ -30,8 +30,8 @@
       "description": "Plugin family — selects the variant-specific required fields (see the conditional blocks). A loader refuses the wrong artifact family; an unknown OR absent pattern is a hard error (strict)."
     },
     "aether_abi": {
-      "const": "aether-abi/1",
-      "description": "Binary-ABI tag of the by-value GRef / HandleT POD mirrors the artifact was built against. Separate from and orthogonal to schema_version: the ABI-stable binary-layout contract. A loader rejects a mismatch before binding any by-value struct."
+      "enum": ["aether-abi/1", "aether-abi/2"],
+      "description": "Binary-ABI tag of the by-value GRef / HandleT POD mirrors the artifact was built against: aether-abi/1 with schema v1, aether-abi/2 with v2 and v3 (see the conditional blocks). A loader rejects a mismatch before binding any by-value struct."
     },
     "scalar_type": {
       "enum": ["float64", "float32", "softdouble"],
@@ -48,8 +48,20 @@
     },
     "params": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Named uniform scalar parameters (bound via the uniform role)."
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["name", "dtype"],
+            "properties": {
+              "name": { "type": "string" },
+              "dtype": { "enum": ["float", "int"] }
+            }
+          }
+        ]
+      },
+      "description": "Named uniform scalar parameters (bound via the uniform role): bare names, or {name, dtype} entries when params_schema is 2."
     },
     "per_sample": {
       "type": "array",
@@ -64,6 +76,87 @@
     },
     "launch": {
       "$ref": "#/$defs/launch"
+    },
+    "exec_targets": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["device", "host"] },
+      "description": "v2 and v3: the entry kinds the artifact provides."
+    },
+    "exec_access": {
+      "enum": ["sample_local", "cross_sample_read", "cross_sample_write", "mapreduce"],
+      "description": "v2 and v3: how the body touches sample-local versus cross-sample data."
+    },
+    "exec_op": {
+      "enum": ["sum", "times", "max", "land"],
+      "description": "v2 and v3: the reduction operator; present exactly when exec_access is mapreduce."
+    },
+    "params_schema": {
+      "type": "integer",
+      "description": "Wire version of the params block; 2 means decl-carrying {name, dtype} entries."
+    },
+    "arg_widths": { "$ref": "#/$defs/vecWidths" },
+    "arg_shapes": {
+      "type": "object",
+      "description": "Per-name flat width of every plane-bound slot; null for a runtime-length plane.",
+      "additionalProperties": { "type": ["integer", "null"] }
+    },
+    "arg_dtypes": {
+      "type": "object",
+      "description": "Per-name wire dtype of every plane-bound slot.",
+      "additionalProperties": { "type": "string" }
+    },
+    "wide_inputs": { "$ref": "#/$defs/names" },
+    "wide_outputs": { "$ref": "#/$defs/names" },
+    "accum_outputs": { "$ref": "#/$defs/names" },
+    "sorted_inputs": { "$ref": "#/$defs/names" },
+    "dispatch": {
+      "type": "array",
+      "description": "Per-kernel dispatch groups: name, K, policy, static_selector and the selector's read slots.",
+      "items": {
+        "type": "object",
+        "required": ["name", "K", "policy"],
+        "additionalProperties": true,
+        "properties": {
+          "name": { "type": "string" },
+          "K": { "type": "integer" },
+          "policy": { "type": "string" },
+          "static_selector": { "type": "boolean" },
+          "selector_reads": { "type": "array" },
+          "units": { "$ref": "#/$defs/names" }
+        }
+      }
+    },
+    "quantities": {
+      "type": "object",
+      "description": "Per-quantity list of the wires it spans.",
+      "additionalProperties": { "type": "array" }
+    },
+    "plane_axes": {
+      "type": "object",
+      "description": "Per sink declared with named axes: its payload shape and the axes it is bound over.",
+      "additionalProperties": { "type": "object" }
+    },
+    "terminated_readonly": {
+      "type": "boolean",
+      "description": "Whether the kernel only reads the terminated mask."
+    },
+    "host_entry": {
+      "type": "string",
+      "description": "The host entry-point symbol, for an artifact with a host entry."
+    },
+    "digest": {
+      "type": "string",
+      "description": "Digest of the kernel body the artifact was built from."
+    },
+    "aether_include": {
+      "type": "string",
+      "description": "Provenance: the aether header root (or a sealed-payload marker) the kernel was built against."
+    },
+    "eagle_include": {
+      "type": "string",
+      "description": "Provenance: the eagle header root (or a sealed-payload marker) the kernel was built against."
     },
 
     "accumulate": {
@@ -106,6 +199,29 @@
   "allOf": [
     {
       "if": {
+        "required": ["schema_version"],
+        "properties": { "schema_version": { "enum": [2, 3] } }
+      },
+      "then": {
+        "required": ["exec_targets", "exec_access"],
+        "properties": { "aether_abi": { "const": "aether-abi/2" } },
+        "if": { "required": ["exec_access"], "properties": { "exec_access": { "const": "mapreduce" } } },
+        "then": { "required": ["exec_op"] },
+        "else": { "not": { "required": ["exec_op"] } }
+      },
+      "else": {
+        "properties": { "aether_abi": { "const": "aether-abi/1" } },
+        "not": {
+          "anyOf": [
+            { "required": ["exec_targets"] },
+            { "required": ["exec_access"] },
+            { "required": ["exec_op"] }
+          ]
+        }
+      }
+    },
+    {
+      "if": {
         "required": ["pattern"],
         "properties": { "pattern": { "const": "vector" } }
       },
@@ -125,7 +241,7 @@
   ],
   "$defs": {
     "role": {
-      "description": "The 9 canonical schema-v1 arg-spec roles. Single source of truth: plugin/roles.h::kPluginArgRoles ≡ eagle.roles.ROLES (cross-checked by python/tests/test_roles_vocab.py). A loader rejects any role outside this set at LOAD time (forward-strict). Note: mat_in is a valid role recognized by every loader, but the reference C++ host inject() does not pack matrix arguments (a CUDA-backend capability).",
+      "description": "The 12 canonical arg-spec roles. Single source of truth: plugin/roles.h::kPluginArgRoles ≡ eagle.roles.ROLES (cross-checked by python/tests/test_roles_vocab.py). A loader rejects any role outside this set at LOAD time (forward-strict). Note: mat_in is a valid role recognized by every loader, but the reference C++ host inject() does not pack matrix arguments (a CUDA-backend capability).",
       "enum": [
         "out",
         "vec_in",
@@ -135,7 +251,10 @@
         "mutable",
         "terminated",
         "uniform",
-        "nsamples"
+        "nsamples",
+        "wide_in",
+        "wide_out",
+        "accum_out"
       ]
     },
     "argSpec": {
@@ -151,6 +270,10 @@
         ],
         "items": false
       }
+    },
+    "names": {
+      "type": "array",
+      "items": { "type": "string" }
     },
     "vecWidths": {
       "type": "object",
@@ -195,12 +318,16 @@
       "properties": {
         "name": { "type": "string" },
         "dtype": {
-          "enum": ["float", "int", "vector", "matrix"],
+          "enum": ["scalar", "float", "int", "int32", "uint32", "vector", "matrix"],
           "description": "Element kind of the mutable."
         },
         "width": {
           "type": "integer",
           "description": "Flat component count (1 for a scalar)."
+        },
+        "prior": {
+          "type": "boolean",
+          "description": "The body reads this slot's launch-start value, so the host must preserve it between launches."
         },
         "default": {
           "type": ["number", "null"],
@@ -234,12 +361,24 @@
     },
     "launch": {
       "type": "object",
-      "description": "RESERVED in v1 (unpopulated; loaders ignore). Populated in a future minor revision without a schema_version bump. additionalProperties is true so unknown/future launch keys do not fail validation of the reserved surface.",
+      "description": "Launch configuration. `block`, `box` and `lane_space` are populated; `shmem_bytes` and `grid` stay reserved (loaders ignore them). Keys are added without a schema_version bump. additionalProperties is true so unknown/future launch keys do not fail validation.",
       "additionalProperties": true,
       "properties": {
         "block": {
           "type": "integer",
-          "description": "Reserved: thread-block size hint."
+          "minimum": 1,
+          "description": "The exact number of threads per block the artifact was emitted for. Required for an artifact that uses a thread/block box; the loader launches with it verbatim."
+        },
+        "box": {
+          "type": "object",
+          "description": "A thread box: each thread computes T lanes that differ only along lane axis `axis`, `stride` flat lanes apart. A launch of n lanes runs ceil(n / (T * stride)) * stride threads, and the launch's base and count count threads while the lane count stays n.",
+          "required": ["axis", "T", "stride"],
+          "additionalProperties": false,
+          "properties": {
+            "axis": { "type": "integer", "minimum": 0, "description": "Position of the boxed axis in lane_space.axes." },
+            "T": { "type": "integer", "minimum": 2, "description": "Lanes per thread." },
+            "stride": { "type": "integer", "minimum": 1, "description": "Flat-lane distance between two lanes of one box's axis step." }
+          }
         },
         "shmem_bytes": {
           "type": "integer",
@@ -249,7 +388,36 @@
           "type": "object",
           "additionalProperties": true,
           "description": "Reserved: freeform grid-configuration hint (shape TBD)."
+        },
+        "lane_space": {
+          "type": "object",
+          "description": "The logical shape of the kernel's flat sample axis. axes is row-major and the LAST axis is the fastest; memory stays the flat n = product of the extents. Only the first axis may have a null extent (known at run time); every later extent is fixed. label is null for an unlabeled axis; non-null labels are unique. group is the compaction unit: a lane count, 1 by default.",
+          "required": ["axes", "group"],
+          "additionalProperties": false,
+          "properties": {
+            "axes": {
+              "type": "array",
+              "minItems": 1,
+              "prefixItems": [ { "$ref": "#/$defs/laneAxis" } ],
+              "items": {
+                "allOf": [
+                  { "$ref": "#/$defs/laneAxis" },
+                  { "properties": { "extent": { "type": "integer" } } }
+                ]
+              }
+            },
+            "group": { "type": "integer", "minimum": 1 }
+          }
         }
+      }
+    },
+    "laneAxis": {
+      "type": "object",
+      "required": ["label", "extent"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "type": ["string", "null"] },
+        "extent": { "type": ["integer", "null"], "minimum": 1 }
       }
     }
   }

@@ -9,7 +9,6 @@
 """Sphinx configuration for building the raptor documentation."""
 
 import os
-import re
 import sys
 
 # -- Make raptor importable for autosummary + notebook execution.
@@ -21,24 +20,10 @@ project = 'raptor'
 copyright = '2026, Alessandro Masat'
 author = 'Alessandro Masat'
 
-# Read version from pyproject.toml (the single source of truth). raptor is a
-# pure-Python package, so there is no CMakeLists.txt to read (unlike the CUDA
-# libraries in the ecosystem); fall back to a hardcoded version if it can't be read.
-_version = "0.3.4"
-_pyproject = os.path.join(os.path.dirname(__file__), '..', 'pyproject.toml')
-_pattern = re.compile(r'^\s*version\s*=\s*["\'](\d+\.\d+\.\d+)["\']')
-try:
-    with open(_pyproject) as _f:
-        for _line in _f:
-            _m = _pattern.match(_line)
-            if _m:
-                _version = _m.group(1)
-                break
-except FileNotFoundError:
-    pass
+# The version is the latest git tag (setuptools-scm), never written into the tree.
+import setuptools_scm
 
-version = _version
-release = _version
+release = version = setuptools_scm.get_version(root="..", relative_to=__file__, fallback_version="0.0.0")
 
 # -- General configuration ---------------------------------------------------
 

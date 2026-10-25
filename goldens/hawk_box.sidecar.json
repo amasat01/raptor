@@ -1,0 +1,90 @@
+{
+  "format": "host",
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "host"
+  ],
+  "exec_access": "cross_sample_read",
+  "scalar_type": "float64",
+  "kernel": "kg_fwd",
+  "params": [],
+  "params_schema": 2,
+  "per_sample": [
+    "lane"
+  ],
+  "vector_inputs": [],
+  "matrix_inputs": [],
+  "mat_shapes": {},
+  "mutables": [
+    {
+      "name": "y",
+      "dtype": "scalar",
+      "width": 1,
+      "default": null
+    }
+  ],
+  "arg_widths": {
+    "y": 1,
+    "lane": 1
+  },
+  "vec_widths": {},
+  "arg_shapes": {
+    "y": 1,
+    "lane": 1,
+    "feat": null,
+    "th": null
+  },
+  "arg_dtypes": {
+    "y": "float64",
+    "lane": "int64",
+    "feat": "float64",
+    "th": "float64"
+  },
+  "wide_inputs": [],
+  "wide_outputs": [],
+  "accum_outputs": [],
+  "dispatch": [],
+  "buffers": [],
+  "arg_spec": [
+    [
+      "mutable",
+      "y"
+    ],
+    [
+      "per_sample",
+      "lane"
+    ],
+    [
+      "lookup",
+      "feat"
+    ],
+    [
+      "lookup",
+      "th"
+    ]
+  ],
+  "terminated_readonly": true,
+  "launch": {
+    "lane_space": {
+      "axes": [
+        {
+          "label": null,
+          "extent": null
+        }
+      ],
+      "group": 1
+    },
+    "box": {
+      "axis": 0,
+      "T": 16,
+      "stride": 256
+    }
+  },
+  "digest": "a080bedcdf6d6b57471326ec7019a668eec0b4b83622f86a451aed84c7dd24c8",
+  "quantities": {},
+  "aether_include": "",
+  "eagle_include": "",
+  "host_entry": "kg_fwd_host"
+}

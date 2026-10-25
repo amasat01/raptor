@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [build-system]
-requires = ["setuptools>=77"]
+requires = ["setuptools>=77", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -16,18 +16,7 @@ build-backend = "setuptools.build_meta"
 # package) is a namespace string keyed to the IMPORT name — it is NOT a dist
 # name and must never gain the prefix.
 name = "raptor-core"
-# 0.3.0: the family's free-threading harness (`raptor.conformance.freethreading`)
-# and the written threading contract. Additive; no schema or protocol change.
-#
-# 0.2.0: the spine gained a PUBLIC runtime surface —
-# `raptor.schema.blocks.validate_neural_block_descriptor`, the one
-# implementation of the descriptor family's wire contract — and
-# `raptor.schema.manifest.check_schema_version`'s message became the family's
-# single corpus-pinned wording. eagle and downstream packages both import the
-# new seam, so both carry a `raptor-core>=0.2.0` floor pin: an old raptor
-# under a new eagle or downstream package would ImportError at the seam, and
-# that must resolve as a dependency constraint, never as a runtime surprise.
-version = "0.3.4"
+dynamic = ["version"]
 description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -46,6 +35,9 @@ dependencies = []
 Homepage = "https://github.com/amasat01/raptor"
 Documentation = "https://amasat01.github.io/raptor/"
 Repository = "https://github.com/amasat01/raptor"
+
+[tool.setuptools_scm]
+# the version is the latest vX.Y.Z tag (a PR build tags its checkout first); sdists carry it in PKG-INFO
 
 [tool.setuptools.packages.find]
 include = ["raptor*"]

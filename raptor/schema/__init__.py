@@ -46,8 +46,10 @@ def validate_manifest(doc: dict) -> None:
        ``exec_access`` and validates their vocabulary + ``exec_op``'s
        mapreduce-conditional requiredness. Either version's ``aether_abi``, when
        present, must match its version's tag.
-    4. ``pattern``, when present, is one of :data:`ALL_PATTERNS`.
-    5. For a MANIFEST-shaped document (one carrying a ``plugins`` key), the
+    4. ``launch.lane_space``, when present, has the documented shape
+       (:func:`raptor.schema.manifest.check_lane_space`).
+    5. ``pattern``, when present, is one of :data:`ALL_PATTERNS`.
+    6. For a MANIFEST-shaped document (one carrying a ``plugins`` key), the
        top-level keys that are present appear in the contractual relative order: the
        neural order (:data:`raptor.schema.blocks.NEURAL_TOP_LEVEL_KEY_ORDER`, with
        ``blocks``) when the document itself carries a ``blocks`` key, else the
@@ -64,6 +66,7 @@ def validate_manifest(doc: dict) -> None:
         doc, name="<document>", allow_legacy_version_key=True
     )
     manifest.check_execution_axis(doc, version, name="<document>")
+    manifest.check_lane_space(doc, name="<document>")
 
     pattern = doc.get("pattern")
     if pattern is not None and pattern not in ALL_PATTERNS:

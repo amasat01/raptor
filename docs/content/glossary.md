@@ -61,7 +61,46 @@ capability
   A feature a consumer may or may not support, named in the schema so a missing one is a clear refusal, never a silent fallback.
 
 backend
-  Something that executes whole programs, described by raptor's `Backend` and `Executable` protocols.
+  An eagle execution backend: a device kind behind `eagle-backend/1`. raptor's `Backend` and `Executable` protocols describe whole-program execution, which is a different thing.
+
+language
+  hawk's IR: the target-free form a kernel is built in.
+
+dialect
+  Extra IR operations that have a direct native counterpart on a target.
+
+Writer
+  How one language writes each IR construct as source text for a target.
+
+Wrapper
+  How a kernel is wrapped for one execution model: the declaration, the index, the argument unpacking and the reduction frame.
+
+target
+  A Writer and a Wrapper with their compile and package facts. Its id is what `hawk.build(targets=...)` takes.
+
+translation
+  The act of turning the IR into native source text.
+
+entry kind
+  `device` or `host`: how eagle enters a built kernel.
+
+format
+  The artifact container: `ptx`, `cubin`, `fatbin` or `host`. raptor holds the list as `raptor.schema.manifest.MANIFEST_FORMATS`.
+
+numerics contract
+  aether's rules for how results are computed, shared by every target.
+
+lane
+  One item along the sample axis: one sample, seen through the shape the kernel declares for that axis.
+
+lane space
+  The shape a kernel gives its flat sample axis, as an ordered list of axes. Memory stays flat; the shape only says how the lanes are grouped.
+
+fastest axis
+  The last axis a lane space declares. Consecutive lanes along it are consecutive threads or SIMD lanes.
+
+group
+  A lane count, the unit in which finished lanes are compacted away (default 1). It is the sidecar's `launch.lane_space.group`.
 
 launcher
   Something that launches one kernel and marshals its arguments, described by raptor's `KernelLauncher` and `Marshal` protocols.

@@ -272,3 +272,49 @@ def check_execution_axis(meta: dict, version: int, *, name: str = "<document>") 
             f"{name!r}: exec_op {op!r} is not a supported reduction op "
             f"(supported: {sorted(EXEC_OPS)})"
         )
+
+
+def check_lane_space(meta: dict, *, name: str = "<document>") -> None:
+    """Validate the optional ``launch.lane_space`` block (shape only; absent = valid).
+
+    ``axes``: non-empty list of ``{label: str | None, extent: int >= 1 | None}``,
+    row-major, last axis fastest. Non-null labels are unique; only the FIRST
+    extent may be ``None`` (known at run time). ``group``: int >= 1, the
+    compaction unit. Unknown keys are refused. Mirrors ``lane_space`` in
+    ``docs/schemas/sidecar-v1.schema.json``.
+    """
+    launch = meta.get("launch")
+    if not isinstance(launch, dict) or "lane_space" not in launch:
+        return
+    space = launch["lane_space"]
+
+    def bad(why):
+        raise ValueError(f"{name!r}: launch.lane_space {why}")
+
+    def is_int(v):
+        return isinstance(v, int) and not isinstance(v, bool)
+
+    if not isinstance(space, dict) or set(space) != {"axes", "group"}:
+        bad("must be an object with exactly 'axes' and 'group'")
+    axes = space["axes"]
+    if not isinstance(axes, list) or not axes:
+        bad("axes must be a non-empty list")
+    seen = set()
+    for i, ax in enumerate(axes):
+        if not isinstance(ax, dict) or set(ax) != {"label", "extent"}:
+            bad(f"axes[{i}] must be an object with exactly 'label' and 'extent'")
+        label, ext = ax["label"], ax["extent"]
+        if label is not None:
+            if not isinstance(label, str):
+                bad(f"axes[{i}].label must be a string or null; got {label!r}")
+            if label in seen:
+                bad(f"axes[{i}].label {label!r} is a duplicate")
+            seen.add(label)
+        if ext is None:
+            if i:
+                bad(f"axes[{i}].extent is null; only the first axis may be run-time")
+        elif not is_int(ext) or ext < 1:
+            bad(f"axes[{i}].extent must be an integer >= 1 or null; got {ext!r}")
+    group = space["group"]
+    if not is_int(group) or group < 1:
+        bad(f"group must be an integer >= 1; got {group!r}")

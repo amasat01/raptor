@@ -19,7 +19,15 @@ as [hawk](https://github.com/amasat01/hawk) and an executor such as
 see [Concepts](content/concepts) for how the manifest format and the
 shape-checking contracts fit together.
 
-![Which tool has a documented way to do each block of work, on the CPU and the GPU](_static/capmap.svg)
+```{image} _static/capmap.svg
+:alt: Which tool has a documented way to do each block of work, on the CPU and the GPU
+:class: only-light
+```
+
+```{image} _static/capmap-dark.svg
+:alt: ""
+:class: only-dark
+```
 
 raptor has no benchmarks of its own. [The family comparison](https://amasat01.github.io/compare.html) shows eagle running hawk kernels that follow raptor's manifest, next to the other tools.
 

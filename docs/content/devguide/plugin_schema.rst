@@ -78,7 +78,7 @@ producer and every loader, as sketched above. A deployment unit is:
   plugin) — the compiled kernel;
 * one **sidecar** (``<id>.json``) per artifact — its launch signature.
 
-This page freezes both JSON shapes as **schema v1**. The normative machine-readable
+This page freezes both JSON shapes as **schema v1**. The sidecar schema also accepts the v2 and v3 documents (execution axis, ``aether-abi/2``) that hawk writes. The normative machine-readable
 definitions are the two JSON Schema files (draft 2020-12) shipped alongside this
 page:
 

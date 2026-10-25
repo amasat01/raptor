@@ -11,6 +11,18 @@ against — so most entries here are about a *contract* changing, not a
 runtime feature; the "why" is usually more informative than the diff itself,
 and is where this file tries to spend its words.
 
+Releases after 0.3.4 are on [GitHub](https://github.com/amasat01/raptor/releases): the notes are the pull request body.
+
+## Unreleased
+
+**Lane space in the sidecar.** `launch.lane_space = {axes: [{label, extent}], group}` describes the shape of the flat sample axis: row-major, last axis fastest, only the first extent may be null (known at run time), `group` the compaction unit (a lane count, at least 1). Unknown keys inside it are refused. `raptor.schema.manifest.check_lane_space` checks the same shape without `jsonschema`, and a new test validates every golden sidecar and the refusals against the JSON schema with `jsonschema` 4 or newer. No `schema_version` bump.
+
+**Sidecar schema matches what hawk writes.** `docs/schemas/sidecar-v1.schema.json` (same file name) now accepts `schema_version` 1 to 3 with the matching `aether_abi` tag, requires the execution axis from v2 and refuses it on v1, names the three wide/accumulate roles, accepts the `scalar`, `int32` and `uint32` mutable dtypes and `{name, dtype}` params, and types the keys a hawk sidecar carries (`arg_dtypes`, `arg_shapes`, `arg_widths`, `dispatch`, `quantities`, `plane_axes`, `sorted_inputs`, `digest`, ...). Two sidecars built by hawk (`goldens/hawk_flat.sidecar.json`, `goldens/hawk_grid.sidecar.json`) are checked against both the schema and `validate_manifest`.
+
+**`launch.block` wording.** It is the exact number of threads per block the artifact was emitted for, an integer of at least 1, and a loader launches with it verbatim. `shmem_bytes` and `grid` stay reserved.
+
+**Glossary.** The vocabulary the family shares now includes language, dialect, Writer, Wrapper, target, translation, entry kind, format, numerics contract, lane, lane space, fastest axis and group.
+
 ## 0.3.4 (2026-10-22)
 
 **Host library format.** A manifest entry may name `"format": "host"` (a host shared library, a CPU plugin) beside `ptx`, `cubin` and `fatbin`; the schema, its JSON schemas and the vocabulary eagle mirrors all carry it.

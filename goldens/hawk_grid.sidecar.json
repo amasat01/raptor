@@ -1,0 +1,77 @@
+{
+  "format": "host",
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "host"
+  ],
+  "exec_access": "sample_local",
+  "scalar_type": "float64",
+  "kernel": "hawk_grid",
+  "params": [],
+  "params_schema": 2,
+  "per_sample": [
+    "x"
+  ],
+  "vector_inputs": [],
+  "matrix_inputs": [],
+  "mat_shapes": {},
+  "mutables": [
+    {
+      "name": "out",
+      "dtype": "scalar",
+      "width": 1,
+      "default": null
+    }
+  ],
+  "arg_widths": {
+    "out": 1,
+    "x": 1
+  },
+  "vec_widths": {},
+  "arg_shapes": {
+    "out": 1,
+    "x": 1
+  },
+  "arg_dtypes": {
+    "out": "float64",
+    "x": "float64"
+  },
+  "wide_inputs": [],
+  "wide_outputs": [],
+  "accum_outputs": [],
+  "dispatch": [],
+  "buffers": [],
+  "arg_spec": [
+    [
+      "mutable",
+      "out"
+    ],
+    [
+      "per_sample",
+      "x"
+    ]
+  ],
+  "terminated_readonly": true,
+  "launch": {
+    "lane_space": {
+      "axes": [
+        {
+          "label": "channel",
+          "extent": null
+        },
+        {
+          "label": "sample",
+          "extent": 8
+        }
+      ],
+      "group": 8
+    }
+  },
+  "digest": "837235225ed4105ecc499e3dd39b9288f492eca11f0fb62556bef3be27c5736b",
+  "quantities": {},
+  "aether_include": "",
+  "eagle_include": "",
+  "host_entry": "hawk_grid_host"
+}

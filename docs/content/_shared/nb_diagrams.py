@@ -3,31 +3,19 @@
 
 """One drawing function per tutorial figure, so a notebook's hidden "plumbing"
 cell is an import and a single call rather than 15-25 lines of inline
-matplotlib. Each function both draws AND shows the figure (``plt.show()``),
+matplotlib. Each function both draws AND shows the figure (``show(fig)``),
 matching how the figures were authored inline before this extraction -- the
 notebook's hidden cell keeps the exact same rendered output.
 
-Every figure here is rendered ONCE and embedded as a raster image in the
-notebook's committed output -- unlike the landing site's hand-authored SVGs,
-there is no separate light/dark asset to swap. Each figure therefore uses a
-transparent background plus a dark, theme-neutral ink (``_INK``) so the one
-rendering reads on either background.
-
-In dark mode the site's own theme CSS (``div.cell_output img``) draws every
-notebook-output image, transparent or not, on a light-grey panel -- that is
-pydata-sphinx-theme's standing behaviour for un-classed images, not a defect
-in these PNGs. ``_INK`` is chosen dark enough to stay legible on THAT panel
-as well as on the near-white light-mode page, rather than matching the
-site's lighter ``--muted`` CSS token (which reads fine standalone but is
-low-contrast against the dark-mode panel).
+Every figure is shown by ``themed_figure.show``: rendered twice, with a light and a dark ink, as one output of two images that
+the docs theme swaps. The transparent background and the neutral ink (``_INK``) below are recoloured for each mode there.
 """
 
 from __future__ import annotations
 
-#: Dark, theme-neutral ink for figure text, ticks and spines -- legible both
-#: on the light-mode page and on the light-grey panel pydata-sphinx-theme
-#: draws behind every notebook-output image in dark mode (see module
-#: docstring).
+from themed_figure import show
+
+#: Neutral ink for figure text, ticks and spines; ``themed_figure.show`` swaps it for the light or the dark page's ink.
 _INK = "#555555"
 
 
@@ -66,7 +54,7 @@ def two_engines_diagram() -> None:
     ax.annotate("", xy=(0.78, 0.74), xytext=(0.57, 0.56),
                 arrowprops=dict(arrowstyle="->", color="#DD8452"))
     ax.set_title("One manifest, two engines that never import each other", fontsize=10, color=_INK)
-    plt.show()
+    show(fig)
 
 
 def manifest_key_gloss() -> None:
@@ -94,7 +82,7 @@ def manifest_key_gloss() -> None:
                 color=_INK, bbox=dict(boxstyle="round,pad=0.3", fc="none", ec="#4C72B0"))
         ax.text(0.34, y, note, ha="left", va="center", fontsize=8.5, color=_INK)
     ax.set_title("A v2 manifest's top-level keys, in their contractual order", fontsize=10, color=_INK)
-    plt.show()
+    show(fig)
 
 
 def capability_grid() -> None:
@@ -124,7 +112,7 @@ def capability_grid() -> None:
                     color="white" if grid[r, c] else "#993333")
     ax.set_title("Declared capabilities() decide what a call may do", fontsize=10, color=_INK)
     fig.tight_layout()
-    plt.show()
+    show(fig)
 
 
 def rows_by_framework_bar(rows: dict) -> None:
@@ -147,4 +135,4 @@ def rows_by_framework_bar(rows: dict) -> None:
     ax.set_xlabel("declared rows")
     ax.set_title(f"{len(rows)} declared rows, by framework", fontsize=10, color=_INK)
     fig.tight_layout()
-    plt.show()
+    show(fig)

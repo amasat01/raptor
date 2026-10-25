@@ -13,7 +13,8 @@ import pytest
 from raptor.schema import manifest, validate_manifest
 
 # Reads docs/schemas and goldens from the repository; the wheel carries neither. jsonschema is a
-# dev dependency, so the module must import without it: the wheel leg deselects these rows.
+# dev dependency, so the module must import without it or without those files (the wheel leg
+# collects it from a copy of tests/ alone, then deselects these rows).
 pytestmark = pytest.mark.repo_local
 
 try:
@@ -22,7 +23,8 @@ except ImportError:
     jsonschema = None
 
 REPO = Path(__file__).resolve().parents[1]
-SCHEMA = json.loads((REPO / "docs/schemas/sidecar-v1.schema.json").read_text())
+_SCHEMA_FILE = REPO / "docs/schemas/sidecar-v1.schema.json"
+SCHEMA = json.loads(_SCHEMA_FILE.read_text()) if _SCHEMA_FILE.exists() else {}
 VALIDATOR = jsonschema.Draft202012Validator(SCHEMA) if jsonschema else None
 
 
@@ -30,7 +32,8 @@ VALIDATOR = jsonschema.Draft202012Validator(SCHEMA) if jsonschema else None
 def _needs_jsonschema():
     if jsonschema is None:
         pytest.skip("jsonschema is not installed")
-GOLD = json.loads((REPO / "goldens/vector/gravity.json").read_text())
+_GOLD_FILE = REPO / "goldens/vector/gravity.json"
+GOLD = json.loads(_GOLD_FILE.read_text()) if _GOLD_FILE.exists() else {}
 SIDECARS = sorted(
     p
     for p in (REPO / "goldens").rglob("*.json")
@@ -81,7 +84,8 @@ def test_built_sidecars_are_among_the_goldens():
     assert {"hawk_flat.sidecar.json", "hawk_grid.sidecar.json", "hawk_box.sidecar.json"} <= names
 
 
-V3 = json.loads((REPO / "goldens/hawk_flat.sidecar.json").read_text())
+_V3_FILE = REPO / "goldens/hawk_flat.sidecar.json"
+V3 = json.loads(_V3_FILE.read_text()) if _V3_FILE.exists() else {}
 
 
 @pytest.mark.parametrize(

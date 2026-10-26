@@ -8,7 +8,7 @@ owning repository's test suite calls. ``doc_includes`` is a
 non-Sphinx-warning-dependent checker for ``include``/``literalinclude``
 targets, reused by every repository in the family. ``freethreading`` is the
 free-threaded-Python conformance harness (``require_free_threaded``, ``hammer``,
-``assert_gil_free``); see :doc:`../../threading`.
+``assert_gil_free``); see :doc:`../threading`.
 
 See :doc:`../interop_protocols` for the human-readable certification matrix
 this module's ``ROWS`` declares.

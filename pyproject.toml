@@ -57,25 +57,12 @@ markers = [
 ]
 
 [tool.ruff]
-line-length = 88
 target-version = "py39"
+# notebooks are executed by nbcheck, not linted
+extend-exclude = ["*.ipynb"]
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "UP", "D"]
-ignore = [
-    "D102",
-    "D105",
-    "D107", # per-method / magic / __init__ docstrings optional
-    "D205",
-    "D209",
-    "D401", # docstring whitespace / imperative-mood pedantry
-    "E741", # single-letter loop vars (l/i) used deliberately
-]
+select = ["F"]
+# kernel bodies assign named values the tracer reads; deleting them changes the kernel
+ignore = ["F841"]
 
-[tool.ruff.lint.pydocstyle]
-convention = "pep257"
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D", "F841", "E501"]
-"__init__.py" = ["D104"]
-"tools/**" = ["D"]

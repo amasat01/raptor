@@ -21,9 +21,25 @@ copyright = '2026, Alessandro Masat'
 author = 'Alessandro Masat'
 
 # The version is the latest git tag (setuptools-scm), never written into the tree.
-import setuptools_scm
 
-release = version = setuptools_scm.get_version(root="..", relative_to=__file__, fallback_version="0.0.0")
+
+# -- Version and indexing ------------------------------------------------------
+# The version shown is the release this build is for, never a development string (tools/docs_version.py). The sitemap
+# and the canonical links come from html_baseurl; sphinx-sitemap adds the lastmod of each page from git history.
+import pathlib as _pathlib
+import sys as _sys
+
+_sys.path.insert(0, str(_pathlib.Path(__file__).resolve().parents[1] / "tools"))
+import docs_version  # noqa: E402
+
+release = version = docs_version.release_version(_pathlib.Path(__file__).resolve().parents[1])
+html_baseurl = "https://amasat01.github.io/raptor/"
+sitemap_url_scheme = "{link}"
+try:
+    import sphinx_sitemap  # noqa: F401
+    _SITEMAP = True
+except ImportError:   # docs/requirements.txt installs it; an offline local build goes without
+    _SITEMAP = False
 
 # -- General configuration ---------------------------------------------------
 
@@ -90,6 +106,7 @@ exclude_patterns = ['_templates', '_build', 'Thumbs.db', '.DS_Store', 'README.md
 
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
+html_extra_path = ['_redirects']   # stubs for pages that moved
 # The skin (font, raptor-*.css, favicon links) comes from raptor_docs.sphinx; this site only sets its accent and page styles.
 html_css_files = ['site-accent.css', 'brand.css']
 
@@ -109,3 +126,10 @@ html_theme_options = {
 linkcheck_ignore = []
 
 html_title = f"raptor — one manifest, any engine ({version})"
+
+if _SITEMAP:
+    extensions.append("sphinx_sitemap")
+
+
+def setup(app):
+    app.connect("build-finished", docs_version.sitemap_lastmod)   # each page's lastmod, from git, into sitemap.xml

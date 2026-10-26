@@ -1,4 +1,4 @@
-# Foundational interoperability protocols
+# Interoperability protocols
 
 This page tells you which array libraries can hand data to RAPTOR, and
 whether that copies.
@@ -193,7 +193,7 @@ theirs:
 | `CP-IN-ALIAS` | no | yes |
 | `CP-OUT-ALIAS` | no | yes |
 
-The gradient rows are shown running in eagle's [JAX](https://amasat01.github.io/eagle/content/interop/jax.html), [PyTorch](https://amasat01.github.io/eagle/content/interop/torch.html) and [Warp](https://amasat01.github.io/eagle/content/interop/warp.html) pages.
+The gradient rows are shown running in eagle's [JAX](https://amasat01.github.io/eagle/content/interop/use_eagle_with_jax.html), [PyTorch](https://amasat01.github.io/eagle/content/interop/use_eagle_with_torch.html) and [Warp](https://amasat01.github.io/eagle/content/interop/use_eagle_with_warp.html) pages.
 
 A row counts only if its test **ran and passed** on every declared leg. A test
 that was deselected, skipped or never collected is red, because

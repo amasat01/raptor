@@ -13,6 +13,44 @@ Performance unlocks capabilities.<br>
 Rigor earns trust.<br>
 Simplicity enables discovery.
 
+## Decision rules
+
+Two questions decide a change. Both are tied to the manifesto.
+
+**The complexity budget** (*Bloat is future technical debt. Excessive abstraction hides reality.*). An abstraction must remove
+more complexity from its consumers than it adds to the system. Ask of every piece of complexity: is it intrinsic to the
+computation, or did our architecture make the computation complicated? If the architecture did, change the abstraction. Do
+not add a workaround.
+
+**The scaling loop** (*Focus and clear boundaries promote flexibility and seamless integration. Simplicity enables discovery.*).
+Can the space of applications grow without the core growing with it? A new domain composes the existing vocabulary. If it
+stresses a primitive, the primitive is improved and every domain benefits. A domain need is met by a generic primitive or
+refused by name. It is never a domain special case in the engine. New problems should usually need new compositions, not
+new machinery.
+
+Differentiation, compilation, scheduling, hardware mapping and parallel execution are infrastructure. They live in the
+family's layers and are never reimplemented inside an application or an example. The reasoning is on
+[Why RAPTOR is built this way](https://amasat01.github.io/why.html).
+
+## Decisions this keeps us to
+
+Each is already in force and checked somewhere.
+
+- **raptor has no dependencies.** Its `pyproject.toml` declares none. (*Focus and clear boundaries*)
+- **aether is header-only C++23.** The Python arrays sit on top of it.
+  (*Efficiency safeguards portability*)
+- **eagle reaches a backend only through a versioned C seam**, `eagle-backend/1`, which only grows within a major version.
+  (*Focus and clear boundaries*)
+- **One kernel source runs on CPU and GPU**, and hawk also writes it as standalone C (rule 2). (*Efficiency safeguards
+  portability and scale*)
+- **Derivatives are exact or refused by name.** A kernel hawk cannot differentiate says why and says what to write
+  instead. (*Rigor earns trust*)
+- **Adding a feature must not change the code of kernels that do not use it.** `hawk/tests/test_render_baseline.py` pins a
+  hash of the generated text per kernel; a change fails there unless it re-pins in the same commit. (*Bloat is future
+  technical debt*)
+- **A number appears in prose only from a measured card.** The site's `test_one_number_rule.py` checks it. (*Rigor earns
+  trust. Performance unlocks capabilities.*)
+
 ## The principles
 
 Each rule has the rule, the reason, and what a pull request must show.

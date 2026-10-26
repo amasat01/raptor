@@ -122,7 +122,7 @@ content/tutorials
 :maxdepth: 1
 :hidden:
 
-content/devguide/contributing_a_certification_row
+content/howto
 ```
 
 ```{toctree}
@@ -130,9 +130,7 @@ content/devguide/contributing_a_certification_row
 :maxdepth: 1
 :hidden:
 
-content/interop_protocols
-content/concepts
-threading
+content/explanation
 ```
 
 ```{toctree}

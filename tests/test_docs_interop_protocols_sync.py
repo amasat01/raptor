@@ -74,9 +74,13 @@ def test_protocols_doc_is_wired_into_the_toctree():
     """A document nobody can navigate to is not published. Sphinx would emit a
     warning for an orphan page, but warnings are not errors in the default
     build, so the wiring is asserted here instead."""
+    explanation = (DOCS_ROOT / "content" / "explanation.md").read_text()
     index = (DOCS_ROOT / "index.md").read_text()
-    assert re.search(r"^\s*content/interop_protocols\s*$", index, re.MULTILINE), (
-        "docs/index.md's toctree does not list content/interop_protocols"
+    assert re.search(r"^\s*content/explanation\s*$", index, re.MULTILINE), (
+        "docs/index.md's toctree does not list content/explanation"
+    )
+    assert re.search(r"^\s*interop_protocols\s*$", explanation, re.MULTILINE), (
+        "docs/content/explanation.md's toctree does not list interop_protocols"
     )
 
 

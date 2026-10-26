@@ -1,6 +1,6 @@
 # Tutorials
 
-Four short, sequential notebooks. Each builds on the last; none needs a GPU,
+Four short, sequential notebooks in two topics. Each builds on the last; none needs a GPU,
 hawk or eagle — they only exercise raptor itself.
 
 1. [What the contracts buy you](/content/tutorials/01_what_the_contracts_buy_you) —
@@ -17,12 +17,24 @@ hawk or eagle — they only exercise raptor itself.
    libraries this environment actually has installed. Contributing a
    certification row of your own is covered separately, in the devguide.
 
+## Contracts and manifests
+
+What the contracts buy you, how to write a manifest, and how to implement a protocol.
+
 ```{toctree}
 :maxdepth: 1
-:hidden:
 
 tutorials/01_what_the_contracts_buy_you
 tutorials/02_write_a_manifest
 tutorials/03_implement_a_protocol
+```
+
+## Interoperability
+
+Read the interop matrix and plug a new framework into it.
+
+```{toctree}
+:maxdepth: 1
+
 tutorials/04_plug_into_the_interop_matrix
 ```

@@ -162,6 +162,8 @@ jobs:
           python -m pip install --quiet pytest -r /tmp/docs-reqs.txt ./site
       - run: make -C docs nbcheck
       - run: make -C docs strict
+      - name: every public name has a page
+        run: python tools/docs_inventory_check.py docs/_build/html/objects.inv raptor
       - run: python -m raptor_docs.fresh --check --site site
       - uses: actions/upload-artifact@v7
         with:

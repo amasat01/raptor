@@ -64,6 +64,11 @@ jobs:
       - name: manifesto copy
         working-directory: raptor
         run: MANIFESTO_SOURCE=docs/content/principles.md bash tools/manifesto_check.sh CONTRIBUTING.md
+      - name: ruff, pyflakes rules (repo config)
+        working-directory: raptor
+        run: |
+          python -m pip install --quiet --only-binary=:all: ruff==0.15.18
+          ruff check
   test-python:
     needs: docs-fresh
     # The test suite.

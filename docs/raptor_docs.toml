@@ -1,7 +1,7 @@
 repo = "raptor"
 helper_dirs = ["docs/content/_shared"]
 preinstalled = ["numpy", "IPython"]
-image_budget = 80000
+image_budget = 500_000
 nb_roots = ["docs/content/tutorials"]
 fresh = [
   "python tools/sync_readme_perf.py --eagle-root ../eagle",

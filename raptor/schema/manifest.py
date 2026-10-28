@@ -401,6 +401,24 @@ def _check_keyed_record(rec, where: str, bad) -> None:
         bad(where, f"payload must be a list of integers >= 1; got {pay!r}")
 
 
+
+def check_index_planes(meta: dict, *, name: str = "<document>") -> None:
+    """Validate the optional ``index_planes`` list (shape only; absent = valid): the names of the input planes
+    declared ``Index``, which bind as ``int32`` (a runtime converts an ``int64`` array whose values fit). A
+    non-empty list of distinct plane names, each one a name in ``arg_spec``. Mirrors
+    ``docs/schemas/sidecar-v1.schema.json``."""
+    if "index_planes" not in meta:
+        return
+    planes = meta["index_planes"]
+    if not isinstance(planes, list) or not planes or not all(isinstance(p, str) and p for p in planes):
+        raise ValueError(f"{name!r}: index_planes must be a non-empty list of plane names")
+    if len(set(planes)) != len(planes):
+        raise ValueError(f"{name!r}: index_planes names a plane twice")
+    declared = {entry[1] for entry in meta.get("arg_spec") or () if isinstance(entry, (list, tuple)) and len(entry) == 2}
+    missing = [p for p in planes if p not in declared]
+    if declared and missing:
+        raise ValueError(f"{name!r}: index_planes names {missing}, which arg_spec does not declare")
+
 def check_team_fields(meta: dict, *, name: str = "<document>") -> None:
     """Validate the optional team-stage fields of a split kernel (shape only; absent = valid).
 

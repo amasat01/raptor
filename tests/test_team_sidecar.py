@@ -110,6 +110,8 @@ BAD = {
     "plane_two_sizes": ("scatter_ordered", _set(["team_planes", "tms_acc_m", "per_target"], "acc"), "tms_acc_m"),
     "plane_keys_bad": ("scatter_ordered", _set(["team_planes", "tms_acc_p", "keys"], {"width": 0, "axes": []}), "tms_acc_p"),
     "keyed_bad": ("team_gram", _set(["keyed"], {"g": {"width": 4, "axes": [["a"]]}}), "keyed"),
+    "index_planes_empty": ("box", _set(["index_planes"], []), "index_planes"),
+    "index_planes_twice": ("box", _set(["index_planes"], ["x", "x"]), "index_planes"),
 }
 
 
@@ -129,3 +131,14 @@ def test_a_keys_sized_plane_and_a_keyed_block_are_valid_in_both():
     doc["keyed"] = {"tmb0_g": KEYED, "old": {"width": 3, "axes": []}}     # payload absent: older sidecar
     assert not list(VALIDATOR.iter_errors(doc))
     validate_manifest(doc)
+
+
+def test_index_planes_name_declared_planes_and_refuse_an_undeclared_one():
+    doc = copy.deepcopy(_load("box"))
+    name = doc["arg_spec"][0][1]
+    doc["index_planes"] = [name]
+    assert not list(VALIDATOR.iter_errors(doc))
+    validate_manifest(doc)
+    doc["index_planes"] = ["not_a_plane"]
+    with pytest.raises(ValueError, match="index_planes names"):
+        validate_manifest(doc)

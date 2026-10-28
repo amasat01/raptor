@@ -117,7 +117,8 @@ DEFAULT_EXPECTED_PASS_COUNT = 77
 # tests/test_nb_colab_setup 7, tests/test_docs_fresh_exit_codes 7 deleted), +12 test_upstream_manifest (reads the repository's tools/).
 # 2026-10-25: 58 -- +28 test_lane_space_sidecar (reads docs/schemas and goldens/), same reason.
 # 2026-10-28: 101 -- +43 test_team_sidecar (the 0.7.2 sidecar fields, against docs/schemas and goldens/), same reason.
-EXPECTED_REPO_LOCAL_COUNT = 101
+# 2026-10-28: 104 -- +3 test_team_sidecar (index_planes rows), same reason.
+EXPECTED_REPO_LOCAL_COUNT = 104
 
 # GPU-safe: find_spec only, never imports/executes the target or eagle.
 # argv[3], if given, is a test_cwd to probe route 3 with: it is inserted onto

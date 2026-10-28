@@ -17,6 +17,10 @@
     "arg_spec"
   ],
   "properties": {
+    "index_planes": {
+      "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true,
+      "description": "Names of the input planes declared Index; they bind as int32 (a runtime converts an int64 array whose values fit). Absent = none."
+    },
     "schema_version": {
       "enum": [1, 2, 3],
       "description": "Plugin-schema version this sidecar conforms to (raptor.schema.manifest.MAX_SCHEMA_VERSION is the newest). Absent ⇒ treated as v1 (backward-lenient); newer than the loader ⇒ rejected (forward-strict). Selects the aether_abi tag and whether the execution axis is carried (see the conditional blocks)."

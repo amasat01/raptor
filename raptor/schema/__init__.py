@@ -73,6 +73,7 @@ def validate_manifest(doc: dict) -> None:
     manifest.check_lane_space(doc, name="<document>")
     manifest.check_launch_fields(doc, name="<document>")
     manifest.check_team_fields(doc, name="<document>")
+    manifest.check_index_planes(doc, name="<document>")
 
     pattern = doc.get("pattern")
     if pattern is not None and pattern not in ALL_PATTERNS:

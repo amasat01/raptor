@@ -47,7 +47,11 @@ def validate_manifest(doc: dict) -> None:
        mapreduce-conditional requiredness. Either version's ``aether_abi``, when
        present, must match its version's tag.
     4. ``launch.lane_space``, when present, has the documented shape
-       (:func:`raptor.schema.manifest.check_lane_space`).
+       (:func:`raptor.schema.manifest.check_lane_space`); the optional ``launch.index_set`` /
+       ``launch.local_*`` fields and the team-stage fields (``stages[k].team``, ``team_planes``,
+       ``keyed``) are shape-checked the same way
+       (:func:`raptor.schema.manifest.check_launch_fields`,
+       :func:`raptor.schema.manifest.check_team_fields`).
     5. ``pattern``, when present, is one of :data:`ALL_PATTERNS`.
     6. For a MANIFEST-shaped document (one carrying a ``plugins`` key), the
        top-level keys that are present appear in the contractual relative order: the
@@ -67,6 +71,8 @@ def validate_manifest(doc: dict) -> None:
     )
     manifest.check_execution_axis(doc, version, name="<document>")
     manifest.check_lane_space(doc, name="<document>")
+    manifest.check_launch_fields(doc, name="<document>")
+    manifest.check_team_fields(doc, name="<document>")
 
     pattern = doc.get("pattern")
     if pattern is not None and pattern not in ALL_PATTERNS:

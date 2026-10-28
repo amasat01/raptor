@@ -39,9 +39,12 @@ def test_scalar_types_verbatim():
 
 
 def test_np_dtype_mapping_matches_for_every_tag():
+    # eagle names the dtype of a scalar type (eagle.DType); raptor's numpy mirror names the same one
+    import numpy as np
+
     eagle_dtypes = import_eagle_module("dtypes")
     for tag in dtypes.SCALAR_TYPES:
-        assert dtypes.np_dtype(tag) == eagle_dtypes.np_dtype(tag)
+        assert np.dtype(dtypes.np_dtype(tag)).name == eagle_dtypes.dtype_name(eagle_dtypes.dtype_of(tag))
 
 
 def test_kernel_name_verbatim():

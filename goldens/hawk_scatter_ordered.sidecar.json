@@ -1,0 +1,151 @@
+{
+  "format": "ptx",
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "device",
+    "host"
+  ],
+  "exec_access": "cross_sample_write",
+  "scalar_type": "float64",
+  "kernel": "add",
+  "params": [],
+  "params_schema": 2,
+  "per_sample": [
+    "key",
+    "x"
+  ],
+  "vector_inputs": [],
+  "matrix_inputs": [],
+  "mat_shapes": {},
+  "mutables": [],
+  "arg_widths": {
+    "key": 1,
+    "x": 1
+  },
+  "vec_widths": {},
+  "arg_shapes": {
+    "key": 1,
+    "x": 1,
+    "tms_acc_k": null,
+    "tms_acc_v": null
+  },
+  "arg_dtypes": {
+    "tms_acc_k": "int32",
+    "tms_acc_v": "float64",
+    "key": "int64",
+    "x": "float64"
+  },
+  "wide_inputs": [],
+  "wide_outputs": [
+    "tms_acc_k",
+    "tms_acc_v"
+  ],
+  "accum_outputs": [],
+  "dispatch": [],
+  "buffers": [],
+  "arg_spec": [
+    [
+      "wide_out",
+      "tms_acc_k"
+    ],
+    [
+      "wide_out",
+      "tms_acc_v"
+    ],
+    [
+      "per_sample",
+      "key"
+    ],
+    [
+      "per_sample",
+      "x"
+    ]
+  ],
+  "terminated_readonly": true,
+  "launch": {
+    "lane_space": {
+      "axes": [
+        {
+          "label": null,
+          "extent": null
+        }
+      ],
+      "group": 1
+    },
+    "local_bytes": 0,
+    "local_source": "ptx",
+    "local_limit": 524288
+  },
+  "digest": "2c4c8603430556212f7f8866a772e51cb412bf3b19cea239e8fa2b6e270b349c",
+  "quantities": {},
+  "aether_include": "/local/scratch/amasat/tmp/w072/wt/aether_c",
+  "eagle_include": "/local/scratch/amasat/tmp/w072/wt/eagle_chain",
+  "host_entry": "add_host",
+  "cells": {},
+  "stages": [
+    {
+      "kernel": "add",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": []
+    },
+    {
+      "kernel": "add_2",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": [],
+      "team": {
+        "threads": 32,
+        "grid": "targets",
+        "of": "acc"
+      }
+    },
+    {
+      "kernel": "add_3",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": [],
+      "team": {
+        "threads": 32,
+        "grid": "chunks",
+        "of": "acc",
+        "status": "tms_acc_m"
+      }
+    },
+    {
+      "kernel": "add_4",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": [],
+      "team": {
+        "threads": 32,
+        "grid": "targets",
+        "of": "acc"
+      }
+    }
+  ],
+  "team_planes": {
+    "tms_acc_p": {
+      "dtype": "real",
+      "per_lane": 1,
+      "per_target": "acc"
+    },
+    "tms_acc_m": {
+      "dtype": "int32",
+      "per_lane": 257,
+      "once": true,
+      "fill": 0
+    },
+    "tms_acc_k": {
+      "dtype": "int32",
+      "per_lane": 1,
+      "fill": -1
+    },
+    "tms_acc_v": {
+      "dtype": "real",
+      "per_lane": 1
+    }
+  }
+}

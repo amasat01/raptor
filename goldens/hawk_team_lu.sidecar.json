@@ -1,0 +1,163 @@
+{
+  "format": "ptx",
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "device",
+    "host"
+  ],
+  "exec_access": "cross_sample_write",
+  "scalar_type": "float64",
+  "kernel": "la_lu_71",
+  "params": [],
+  "params_schema": 2,
+  "per_sample": [],
+  "vector_inputs": [
+    "b"
+  ],
+  "matrix_inputs": [
+    "A",
+    "B"
+  ],
+  "mat_shapes": {
+    "A": [
+      71,
+      71
+    ],
+    "B": [
+      71,
+      2
+    ]
+  },
+  "mutables": [],
+  "arg_widths": {
+    "b": 71,
+    "A": 5041,
+    "B": 142
+  },
+  "vec_widths": {
+    "b": 71
+  },
+  "arg_shapes": {
+    "b": 71,
+    "A": 5041,
+    "B": 142,
+    "tm0_a": null,
+    "tm0_x0": null,
+    "tm0_x1": null
+  },
+  "arg_dtypes": {
+    "tm0_a": "float64",
+    "tm0_x0": "float64",
+    "tm0_x1": "float64",
+    "b": "float64",
+    "A": "float64",
+    "B": "float64"
+  },
+  "wide_inputs": [],
+  "wide_outputs": [
+    "tm0_a",
+    "tm0_x0",
+    "tm0_x1"
+  ],
+  "accum_outputs": [],
+  "dispatch": [],
+  "buffers": [],
+  "arg_spec": [
+    [
+      "wide_out",
+      "tm0_a"
+    ],
+    [
+      "wide_out",
+      "tm0_x0"
+    ],
+    [
+      "wide_out",
+      "tm0_x1"
+    ],
+    [
+      "vec_in",
+      "b"
+    ],
+    [
+      "mat_in",
+      "A"
+    ],
+    [
+      "mat_in",
+      "B"
+    ]
+  ],
+  "terminated_readonly": true,
+  "launch": {
+    "lane_space": {
+      "axes": [
+        {
+          "label": null,
+          "extent": null
+        }
+      ],
+      "group": 1
+    },
+    "local_bytes": 0,
+    "local_source": "ptx",
+    "local_limit": 524288
+  },
+  "digest": "f10fae397c68e7b0642fee8a014c98fbab05d24b8d6b52125eff88d10ff4d6a2",
+  "quantities": {},
+  "aether_include": "/local/scratch/amasat/tmp/w072/wt/aether_c",
+  "eagle_include": "/local/scratch/amasat/tmp/w072/wt/eagle_chain",
+  "host_entry": "la_lu_71_host",
+  "cells": {},
+  "stages": [
+    {
+      "kernel": "la_lu_71",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": []
+    },
+    {
+      "kernel": "la_lu_71_2",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": [],
+      "team": {
+        "threads": 128
+      }
+    },
+    {
+      "kernel": "la_lu_71_3",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": []
+    }
+  ],
+  "team_planes": {
+    "tm0_a": {
+      "dtype": "real",
+      "per_lane": 5041
+    },
+    "tm0_piv": {
+      "dtype": "int32",
+      "per_lane": 71
+    },
+    "tm0_info": {
+      "dtype": "int32",
+      "per_lane": 1
+    },
+    "tm0_x0": {
+      "dtype": "real",
+      "per_lane": 71
+    },
+    "tm0_x1": {
+      "dtype": "real",
+      "per_lane": 142
+    },
+    "tm0_d2": {
+      "dtype": "real",
+      "per_lane": 1
+    }
+  }
+}

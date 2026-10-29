@@ -1,0 +1,115 @@
+{
+  "format": "ptx",
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "device",
+    "host"
+  ],
+  "exec_access": "cross_sample_write",
+  "scalar_type": "float64",
+  "kernel": "gram",
+  "params": [],
+  "params_schema": 2,
+  "per_sample": [],
+  "vector_inputs": [
+    "j"
+  ],
+  "matrix_inputs": [],
+  "mat_shapes": {},
+  "mutables": [],
+  "arg_widths": {
+    "j": 24
+  },
+  "vec_widths": {
+    "j": 24
+  },
+  "arg_shapes": {
+    "j": 24,
+    "tmb0_u": null
+  },
+  "arg_dtypes": {
+    "tmb0_u": "float64",
+    "j": "float64"
+  },
+  "wide_inputs": [],
+  "wide_outputs": [
+    "tmb0_u"
+  ],
+  "accum_outputs": [],
+  "dispatch": [],
+  "buffers": [],
+  "arg_spec": [
+    [
+      "wide_out",
+      "tmb0_u"
+    ],
+    [
+      "vec_in",
+      "j"
+    ]
+  ],
+  "terminated_readonly": true,
+  "launch": {
+    "lane_space": {
+      "axes": [
+        {
+          "label": "key",
+          "extent": null
+        },
+        {
+          "label": "row",
+          "extent": 5
+        }
+      ],
+      "group": 1
+    },
+    "local_bytes": 0,
+    "local_source": "ptx",
+    "local_limit": 524288
+  },
+  "digest": "37c7a5fd4e7454a8b61b5afd4c808781c9684357ce83e85d6269bb8d2a27599d",
+  "quantities": {},
+  "aether_include": "/local/scratch/amasat/tmp/w072/wt/aether_c",
+  "eagle_include": "/local/scratch/amasat/tmp/w072/wt/eagle_chain",
+  "host_entry": "gram_host",
+  "cells": {},
+  "stages": [
+    {
+      "kernel": "gram",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": []
+    },
+    {
+      "kernel": "gram_2",
+      "cells_in": [],
+      "cells_out": [],
+      "recomputed": [],
+      "team": {
+        "threads": 128,
+        "grid": "keys",
+        "keyed": {
+          "width": 576,
+          "axes": [
+            [
+              "key",
+              null
+            ]
+          ],
+          "payload": [
+            24,
+            24
+          ]
+        }
+      }
+    }
+  ],
+  "team_planes": {
+    "tmb0_u": {
+      "dtype": "real",
+      "per_lane": 24
+    }
+  }
+}

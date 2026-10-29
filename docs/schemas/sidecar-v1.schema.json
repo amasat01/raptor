@@ -17,6 +17,10 @@
     "arg_spec"
   ],
   "properties": {
+    "index_planes": {
+      "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1, "uniqueItems": true,
+      "description": "Names of the input planes declared Index; they bind as int32 (a runtime converts an int64 array whose values fit). Absent = none."
+    },
     "schema_version": {
       "enum": [1, 2, 3],
       "description": "Plugin-schema version this sidecar conforms to (raptor.schema.manifest.MAX_SCHEMA_VERSION is the newest). Absent ⇒ treated as v1 (backward-lenient); newer than the loader ⇒ rejected (forward-strict). Selects the aether_abi tag and whether the execution axis is carried (see the conditional blocks)."
@@ -127,6 +131,27 @@
           "units": { "$ref": "#/$defs/names" }
         }
       }
+    },
+    "stages": {
+      "type": "array",
+      "description": "A split kernel: one record per stage launch, in order. A team stage carries its team record.",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+          "team": { "$ref": "#/$defs/team" }
+        }
+      }
+    },
+    "team_planes": {
+      "type": "object",
+      "description": "Scratch planes the team stages work on, by name. The runtime makes each once per kernel and lane count.",
+      "additionalProperties": { "$ref": "#/$defs/teamPlane" }
+    },
+    "keyed": {
+      "type": "object",
+      "description": "The keyed planes the runtime owns between the stages of a split kernel, by name.",
+      "additionalProperties": { "$ref": "#/$defs/keyedRecord" }
     },
     "quantities": {
       "type": "object",
@@ -361,8 +386,13 @@
     },
     "launch": {
       "type": "object",
-      "description": "Launch configuration. `block`, `box` and `lane_space` are populated; `shmem_bytes` and `grid` stay reserved (loaders ignore them). Keys are added without a schema_version bump. additionalProperties is true so unknown/future launch keys do not fail validation.",
+      "description": "Launch configuration. `block`, `box`, `lane_space`, `index_set` and `local_*` are populated; `shmem_bytes` and `grid` stay reserved (loaders ignore them). Keys are added without a schema_version bump. additionalProperties is true so unknown/future launch keys do not fail validation.",
       "additionalProperties": true,
+      "dependentRequired": {
+        "local_bytes": ["local_source", "local_limit"],
+        "local_source": ["local_bytes", "local_limit"],
+        "local_limit": ["local_bytes", "local_source"]
+      },
       "properties": {
         "block": {
           "type": "integer",
@@ -379,6 +409,34 @@
             "T": { "type": "integer", "minimum": 2, "description": "Lanes per thread." },
             "stride": { "type": "integer", "minimum": 1, "description": "Flat-lane distance between two lanes of one box's axis step." }
           }
+        },
+        "index_set": {
+          "type": "object",
+          "description": "A kernel over an index set: width is the bits of the lane-number map; the prefix form has no map and names in count the one-element plane holding how many leading lanes run.",
+          "required": ["width"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "enum": [32, 64] },
+            "prefix": { "type": "boolean" },
+            "count": { "type": "string", "minLength": 1 }
+          },
+          "if": { "required": ["prefix"], "properties": { "prefix": { "const": true } } },
+          "then": { "required": ["count"], "properties": { "width": { "const": 32 } } },
+          "else": { "not": { "required": ["count"] } }
+        },
+        "local_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Local memory one thread holds. Comes with local_source and local_limit."
+        },
+        "local_source": {
+          "enum": ["ptxas", "ptx"],
+          "description": "Where local_bytes was read: ptxas (the stack frame of a CUBIN) or ptx (the declared depots, a ceiling)."
+        },
+        "local_limit": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The device's per-thread local memory limit, in bytes."
         },
         "shmem_bytes": {
           "type": "integer",
@@ -409,6 +467,85 @@
             "group": { "type": "integer", "minimum": 1 }
           }
         }
+      }
+    },
+    "keyedRecord": {
+      "type": "object",
+      "description": "A keyed plane: width payload entries over the kept lane axes; payload is the shape of one key's payload.",
+      "required": ["width", "axes"],
+      "additionalProperties": false,
+      "properties": {
+        "width": { "type": "integer", "minimum": 1 },
+        "axes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              { "type": ["string", "null"] },
+              { "type": ["integer", "null"], "minimum": 1 }
+            ],
+            "items": false
+          }
+        },
+        "payload": { "type": "array", "items": { "type": "integer", "minimum": 1 } }
+      }
+    },
+    "team": {
+      "type": "object",
+      "description": "A team stage. grid says what a block is: a lane (the default), a key of a block sum (keys, with keyed), or in an ordered scatter into the plane named by of, a chunk of lanes (chunks, with status) or a cell of that plane (targets).",
+      "required": ["threads"],
+      "additionalProperties": false,
+      "properties": {
+        "threads": { "type": "integer", "minimum": 1 },
+        "grid": { "enum": ["lanes", "keys", "chunks", "targets"] },
+        "keyed": { "$ref": "#/$defs/keyedRecord" },
+        "of": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["grid"], "properties": { "grid": { "const": "keys" } } },
+          "then": { "required": ["keyed"], "not": { "anyOf": [ { "required": ["of"] }, { "required": ["status"] } ] } }
+        },
+        {
+          "if": { "required": ["grid"], "properties": { "grid": { "const": "chunks" } } },
+          "then": { "required": ["of", "status"], "not": { "required": ["keyed"] } }
+        },
+        {
+          "if": { "required": ["grid"], "properties": { "grid": { "const": "targets" } } },
+          "then": { "required": ["of"], "not": { "anyOf": [ { "required": ["keyed"] }, { "required": ["status"] } ] } }
+        },
+        {
+          "if": { "not": { "required": ["grid"] } },
+          "then": { "not": { "anyOf": [ { "required": ["keyed"] }, { "required": ["of"] }, { "required": ["status"] } ] } }
+        },
+        {
+          "if": { "required": ["grid"], "properties": { "grid": { "const": "lanes" } } },
+          "then": { "not": { "anyOf": [ { "required": ["keyed"] }, { "required": ["of"] }, { "required": ["status"] } ] } }
+        }
+      ]
+    },
+    "teamPlane": {
+      "type": "object",
+      "description": "One scratch plane of a team stage: per_lane elements of dtype for each lane, or for each key (keys), each chunk-by-cell pair of the plane per_target, or once for the whole run (once). fill is what the plane holds at the start of every run.",
+      "required": ["dtype", "per_lane"],
+      "additionalProperties": false,
+      "properties": {
+        "dtype": { "enum": ["real", "int32"] },
+        "per_lane": { "type": "integer", "minimum": 1 },
+        "keys": { "$ref": "#/$defs/keyedRecord" },
+        "per_target": { "type": "string", "minLength": 1 },
+        "once": { "const": true },
+        "fill": { "type": "integer" }
+      },
+      "not": {
+        "anyOf": [
+          { "required": ["keys", "per_target"] },
+          { "required": ["keys", "once"] },
+          { "required": ["per_target", "once"] }
+        ]
       }
     },
     "laneAxis": {

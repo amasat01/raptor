@@ -13,7 +13,11 @@ and is where this file tries to spend its words.
 
 Releases after 0.3.4 are on [GitHub](https://github.com/amasat01/raptor/releases): the notes are the pull request body.
 
-## Unreleased
+## 0.7.2 (2026-10-29)
+
+**The sidecar schema checks the 0.7.2 hawk fields.** `docs/schemas/sidecar-v1.schema.json` and `validate_manifest` now accept and check `launch.index_set` (`{width: 32 | 64}`, or the prefix form with its `count` plane), `launch.local_bytes`, `local_source` (`ptxas` or `ptx`) and `local_limit` (they come together), `launch.box`, `stages[k].team`, `team_planes`, the keyed record's `payload` and `index_planes` (the input planes declared `Index`). `check_launch_fields` and `check_team_fields` in `raptor.schema.manifest` do the same without `jsonschema`, and unknown keys inside these records are refused. Five new goldens built by hawk (team LU, team Gram, ordered scatter, prefix and 64-bit index sets) are checked against both.
+
+## 0.7.0
 
 **Lane space in the sidecar.** `launch.lane_space = {axes: [{label, extent}], group}` describes the shape of the flat sample axis: row-major, last axis fastest, only the first extent may be null (known at run time), `group` the compaction unit (a lane count, at least 1). Unknown keys inside it are refused. `raptor.schema.manifest.check_lane_space` checks the same shape without `jsonschema`, and a new test validates every golden sidecar and the refusals against the JSON schema with `jsonschema` 4 or newer. No `schema_version` bump.
 

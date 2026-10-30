@@ -47,7 +47,7 @@ gate-lint: gate-venv
 
 # Every public name is referenced by a test or on the shrink-only allowlist
 gate-names:
-	$(PYTHON) tools/public_names.py --src . --tests tests --allow ci/public_names_untested.txt --walk raptor
+	$(PYTHON) -m raptor.conformance.public_names --src . --tests tests --allow ci/public_names_untested.txt --walk raptor
 
 # The suite as CI runs it: the cross_repo battery is gate-gpu's
 gate-test: gate-venv

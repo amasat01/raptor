@@ -68,7 +68,7 @@ gate-docs: gate-fresh
 	$(gate_py) -m pip install --quiet --disable-pip-version-check -r $(GATE_DIR)/docs-requirements.txt
 	$(MAKE) -C docs nbcheck
 	$(MAKE) -C docs strict
-	$(gate_py) tools/docs_inventory_check.py docs/_build/html/objects.inv raptor
+	$(gate_py) -m raptor_docs.inventory docs/_build/html/objects.inv raptor
 
 # The conformance battery that reads the eagle and hawk sources; a missing sibling is a hard failure.
 # Eagle's host core is built from EAGLE_SRC against AETHER_SRC (eagle's own recipe) and installed into the gate venv.

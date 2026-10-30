@@ -78,6 +78,8 @@ gate-gpu: gate-venv
 	$(gate_env)
 	export CMAKE_BUILD_PARALLEL_LEVEL=$(GATE_JOBS)
 	if ! $(gate_py) -c "import eagle._core" 2>/dev/null; then
+	  # a fresh build starts from empty trees: a wheel or a cache of an earlier run never leaks into this one
+	  rm -rf $(GATE_DIR)/aether-build $(GATE_DIR)/eagle-hdr $(GATE_DIR)/prefix $(GATE_DIR)/eagle-wheel
 	  prefix="$(CURDIR)/$(GATE_DIR)/prefix"
 	  cmake -DAETHER_CPP_MODE=ON -DCMAKE_INSTALL_PREFIX="$$prefix" -B $(GATE_DIR)/aether-build -S "$(abspath $(AETHER_SRC))"
 	  cmake --install $(GATE_DIR)/aether-build

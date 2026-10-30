@@ -155,16 +155,7 @@ jobs:
           path: eagle
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
           pins: .github/companions
-      - run: ln -s "$GITHUB_WORKSPACE/eagle" ../eagle
-      - run: |
-          python -m pip install --quiet -e .
-          grep -v '^raptor-docs' docs/requirements.txt > /tmp/docs-reqs.txt
-          python -m pip install --quiet pytest -r /tmp/docs-reqs.txt ./site
-      - run: make -C docs nbcheck
-      - run: make -C docs strict
-      - name: every public name has a page
-        run: python tools/docs_inventory_check.py docs/_build/html/objects.inv raptor
-      - run: python -m raptor_docs.fresh --check --site site
+      - run: make gate-docs SITE_SRC=site EAGLE_SRC=eagle
       - uses: actions/upload-artifact@v7
         with:
           name: site-${{ needs.build.outputs.tree }}

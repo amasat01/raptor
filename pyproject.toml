@@ -31,6 +31,10 @@ classifiers = [
 # package stays importable on a numpy-less interpreter.
 dependencies = []
 
+[project.optional-dependencies]
+# what the tests import: the manifest schema and the yaml/jsonschema rows
+test = ["pytest", "pyyaml", "jsonschema>=4"]
+
 [project.urls]
 Homepage = "https://github.com/amasat01/raptor"
 Documentation = "https://amasat01.github.io/raptor/"

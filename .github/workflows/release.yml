@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       tree: ${{ steps.tree.outputs.tree }}
     steps:
@@ -55,7 +55,7 @@ jobs:
 
   test-wheel:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -104,7 +104,7 @@ jobs:
 
   sdist-install:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -125,7 +125,7 @@ jobs:
   # nbexec`) and committed with outputs; nbcheck only verifies they have them.
   docs:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -165,7 +165,7 @@ jobs:
   # Informational: a docs-only PR carries an already published version.
   pypi-version:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v8
         with:

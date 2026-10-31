@@ -21,7 +21,7 @@ jobs:
   release-gate:
     # The release label, the diff, the PR body and the tag it would create agree (tools/release_gate.sh). Skipped on other PRs.
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -35,7 +35,7 @@ jobs:
         run: bash tools/release_gate.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
   docs-fresh:
     # Freshness check, never a commit: the generator re-renders the headline and fails on any difference.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -66,7 +66,7 @@ jobs:
   test-python:
     needs: docs-fresh
     # The test suite.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -80,7 +80,7 @@ jobs:
     needs: docs-fresh
     # The free-threading rows (pytest marker `ft`), which skip on a GIL build:
     # run them on both free-threaded interpreters, with the GIL left off.
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       # both free-threaded interpreters report, even when one fails
       fail-fast: false

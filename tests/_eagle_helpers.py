@@ -12,6 +12,7 @@ need to diff raptor's copied values against the live eagle source.
 from __future__ import annotations
 
 import importlib
+import importlib.util
 import os
 import sys
 from pathlib import Path
@@ -52,6 +53,9 @@ def import_eagle_module(dotted: str):
             "this is a cross_repo test — deselect with -m 'not cross_repo' for "
             "a repo-isolated run"
         )
+    if importlib.util.find_spec("eagle") is not None:
+        # an installed eagle (the gate builds one from EAGLE_SRC): the source tree alone has no compiled _core
+        return importlib.import_module(f"eagle.{dotted}")
     python_dir = str(root / "python")
     added = python_dir not in sys.path
     if added:

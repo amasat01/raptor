@@ -12,7 +12,6 @@
         "cp312",
         "cp313",
         "cp314",
-        "cp313t",
         "cp314t",
         "cp315"
       ],
@@ -36,14 +35,11 @@
         "cp312",
         "cp313",
         "cp314",
-        "cp313t",
         "cp314t",
         "cp315",
         "cp315t"
       ],
-      "known_gaps": [
-        "cp313t"
-      ],
+      "known_gaps": [],
       "mechanisms": [
         "__cuda_array_interface__",
         "__dlpack__",
@@ -51,7 +47,7 @@
         "NVRTC kernel compile"
       ],
       "changelog": "https://github.com/cupy/cupy/releases",
-      "sources": "floor: eagle python/pyproject.toml (cupy-cuda1Nx>=13.6,<14 below Python 3.10; >=14 from 3.10); latest: eagle colab-gpu.txt (cupy-cuda12x==14.0.1); gaps: the pyproject comment (no cp313t) and the 3.15 ruling",
+      "sources": "floor: eagle python/pyproject.toml (cupy-cuda1Nx>=13.6,<14 below Python 3.10; >=14 from 3.10); latest: eagle colab-gpu.txt (cupy-cuda12x==14.0.1); gaps: the pyproject comment and the 3.15 ruling",
       "unverified_gaps": {
         "cp315": "from the USER 10-19 note that cupy and torch have no 3.15 wheels yet; not checked against PyPI",
         "cp315t": "from the USER 10-19 note that cupy and torch have no 3.15 wheels yet; not checked against PyPI"
@@ -136,7 +132,6 @@
         "cp312",
         "cp313",
         "cp314",
-        "cp313t",
         "cp314t"
       ],
       "known_gaps": [],
@@ -175,7 +170,7 @@
       ],
       "known_gaps": [],
       "mechanisms": [
-        "CIBW_BUILD identifiers cp39..cp314 and cp313t/cp314t",
+        "CIBW_BUILD identifiers cp39..cp315 and cp314t/cp315t",
         "manylinux images"
       ],
       "changelog": "https://cibuildwheel.pypa.io/en/stable/changelog/",
@@ -193,17 +188,16 @@
         "cp312",
         "cp313",
         "cp314",
-        "cp313t",
         "cp314t",
         "cp315",
         "cp315t"
       ],
       "known_gaps": [],
       "mechanisms": [
-        "free-threaded build (3.13t, 3.14t)"
+        "free-threaded build (3.14t, 3.15t)"
       ],
       "changelog": "https://docs.python.org/3/whatsnew/index.html",
-      "sources": "eagle .github/workflows/release.yml and ci.yml matrices (3.9 to 3.14 plus 3.13t/3.14t); 3.15 is the ruling's addition. The weekly run takes the newest cpXY that numpy ships",
+      "sources": "eagle .github/workflows/release.yml and ci.yml matrices (3.9 to 3.15 plus 3.14t/3.15t); 3.15 is the ruling's addition. The weekly run takes the newest cpXY that numpy ships",
       "unverified_gaps": {}
     }
   }

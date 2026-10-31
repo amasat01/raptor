@@ -56,7 +56,7 @@ hawk ([kernel authoring](https://github.com/amasat01/hawk)) pulls `aether-dsc`, 
 sealed C++ headers it compiles against, automatically, and needs a host `g++` 11 or
 newer. eagle ([execution](https://github.com/amasat01/eagle)) runs the kernels on the
 GPU. No `nvcc` or CUDA toolkit is needed. hawk and eagle need Python 3.10 or newer
-(hawk: Linux x86_64, CPython 3.9-3.14 including free-threaded 3.13t and 3.14t).
+(hawk: Linux x86_64, CPython 3.9-3.15 including free-threaded 3.14t and 3.15t).
 
 ```{admonition} NVIDIA packages come only through the extras
 :class: important

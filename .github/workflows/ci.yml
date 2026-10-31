@@ -85,7 +85,7 @@ jobs:
       # both free-threaded interpreters report, even when one fails
       fail-fast: false
       matrix:
-        python-version: ["3.13t", "3.14t", "3.15t"]
+        python-version: ["3.14t", "3.15t"]
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -94,7 +94,7 @@ jobs:
           allow-prereleases: true
           cache: pip
           cache-dependency-path: pyproject.toml
-      # free-threaded: newest NumPy/SciPy ship no cp313t wheel: prefer a wheel over an sdist build
+      # free-threaded: newest NumPy/SciPy ship no wheel for the newest free-threaded builds: prefer a wheel over an sdist build
       - run: python -m pip install --quiet --prefer-binary -e . pytest pyyaml 'jsonschema>=4'
       - name: The interpreter runs without the GIL
         run: |

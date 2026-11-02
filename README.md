@@ -114,7 +114,7 @@ Package internals, none of it needed to install or use raptor.
 
 - `raptor.schema` — the kernel-manifest schema, two layers:
   `schema.manifest` (the core layer every producer writes against) and
-  `schema.blocks` (the `neural_block` extension; hawk never imports it).
+  `schema.blocks` (the `graph_block` extension; hawk never imports it).
   `schema.dtypes` carries the scalar-type tag vocabulary.
   `raptor.schema.validate_manifest(doc)` is a minimal shape validator (key
   order, top keys, schema_version, pattern vocabulary) — not a port of

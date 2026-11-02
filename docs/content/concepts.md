@@ -6,7 +6,7 @@ A short map of why raptor is shaped the way it is. Unfamiliar words (manifest, s
 
 - `raptor.schema` is the kernel-manifest contract: a bird-neutral core layer
   (`raptor.schema.manifest`) that any producer can write against, plus one
-  extension (`raptor.schema.blocks`, the `neural_block` descriptor family)
+  extension (`raptor.schema.blocks`, the `graph_block` descriptor family)
   that a producer never has to import. `raptor.schema.dtypes` carries the
   scalar-type vocabulary both layers share.
 - `raptor.protocols` is the structural-typing contract: `Backend` /

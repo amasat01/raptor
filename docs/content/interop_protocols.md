@@ -467,7 +467,7 @@ for torch devices other than CPU and CUDA. That is **ROADMAP**.
 ### A sidecar nesting hazard
 
 A separate and unrelated hazard lives in the sidecar reader (the sidecar is
-the small per-kernel JSON file describing how to call it): a neural-block
+the small per-kernel JSON file describing how to call it): a graph-block
 descriptor embeds nested execution references whose keys share names with
 top-level keys, so a nested object appearing before its parent's own key could be
 read as the parent's value. That is a nesting hazard, not a key-order contract;

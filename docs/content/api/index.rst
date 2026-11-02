@@ -13,7 +13,7 @@ the ones the checked-out code actually exports.
      - Contents
    * - :doc:`raptor.schema <schema>`
      - The kernel-manifest schema: ``manifest`` (the bird-neutral core layer),
-       ``blocks`` (the ``neural_block`` extension), ``dtypes`` (the scalar-type
+       ``blocks`` (the ``graph_block`` extension), ``dtypes`` (the scalar-type
        vocabulary), and :func:`raptor.schema.validate_manifest`.
    * - :doc:`raptor.protocols <protocols>`
      - The family's ``typing.Protocol`` contracts: ``Backend`` /

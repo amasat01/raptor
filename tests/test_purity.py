@@ -23,7 +23,7 @@ BANNED = (
     "active_indices",
     "scatter",
     "gather",
-    "neural",
+    "graph_block",
     "block_type",
     "source_indices",
     "target_indices",
@@ -49,8 +49,8 @@ def test_dtypes_py_is_purity_clean():
     assert not hits, f"banned substrings found in dtypes.py: {hits}"
 
 
-def test_blocks_py_is_the_extension_layer_and_carries_neural_vocabulary():
+def test_blocks_py_is_the_extension_layer_and_carries_graph_block_vocabulary():
     """Sanity twin: blocks.py is NOT purity-gated and legitimately carries the
-    neural vocabulary — confirms the split is real, not accidentally neutered."""
+    graph_block vocabulary — confirms the split is real, not accidentally neutered."""
     text = (SCHEMA_DIR / "blocks.py").read_text()
-    assert "neural" in text.lower()
+    assert "graph_block" in text.lower()

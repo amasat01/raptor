@@ -7,9 +7,9 @@ The sidecar
 
 A sidecar is a **shared base** plus one ``pattern``-keyed variant. Two variants are
 KERNEL variants — ``vector`` and ``pure``, the shapes a ``Bundle`` emits and
-the only shapes any loader launches. A third, ``neural_block``, is a **descriptor**:
+the only shapes any loader launches. A third, ``graph_block``, is a **descriptor**:
 it names kernels rather than being one, and nothing launches it (see
-:ref:`neural-block-descriptor`).
+:ref:`graph-block-descriptor`).
 
 The base fields are present on every KERNEL variant;
 a descriptor carries a deliberately smaller base, spelled out in its own section
@@ -29,7 +29,7 @@ below:
      - int (``1``)
      - As for the manifest (backward-lenient / forward-strict).
    * - ``pattern``
-     - ``"vector"`` | ``"pure"`` | ``"neural_block"``
+     - ``"vector"`` | ``"pure"`` | ``"graph_block"``
      - Selects the variant. Python's ``LoadedVector``/``LoadedPure`` each refuse
        the wrong family outright (and default an *absent* value to ``"vector"``
        for ``LoadedVector`` only). C++'s shared ``validate_sidecar`` treats it as

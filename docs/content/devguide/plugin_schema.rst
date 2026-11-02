@@ -101,7 +101,7 @@ Each page below holds one part of the schema.
 
    plugin_schema/manifest
    plugin_schema/sidecar
-   plugin_schema/neural_block
+   plugin_schema/graph_block
    plugin_schema/cpp_consumer_scope
    plugin_schema/compatibility
    plugin_schema/execution_axis
@@ -109,7 +109,7 @@ Each page below holds one part of the schema.
 
 - :doc:`plugin_schema/manifest` — the manifest, the file that lists a deployment's plugins.
 - :doc:`plugin_schema/sidecar` — the per-kernel file that says how to call it, with its variant additions.
-- :doc:`plugin_schema/neural_block` — the descriptor for neural-network blocks.
+- :doc:`plugin_schema/graph_block` — the descriptor for graph blocks.
 - :doc:`plugin_schema/cpp_consumer_scope` — what the C++ reference consumer covers, and the float32 capability it defers.
 - :doc:`plugin_schema/compatibility` — the compatibility policy, and why the ``aether_abi`` tag is versioned separately.
 - :doc:`plugin_schema/execution_axis` — the v2 execution axis, driving a v2 body from Python, and running across MPI ranks.

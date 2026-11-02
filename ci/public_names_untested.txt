@@ -24,10 +24,10 @@ raptor.conformance.pytest_rows.pytest_runtest_logreport  # untested at 0.7.2: ad
 raptor.conformance.pytest_rows.unfinished  # untested at 0.7.2: add a test that names it, then delete this line
 raptor.flow.register_source  # untested at 0.7.2: add a test that names it, then delete this line
 raptor.schema.blocks.BUFFER_KINDS  # untested at 0.7.2: add a test that names it, then delete this line
-raptor.schema.blocks.NEURAL_EXEC_REF_FIELDS  # untested at 0.7.2: add a test that names it, then delete this line
-raptor.schema.blocks.NEURAL_FORBIDDEN_FIELDS  # untested at 0.7.2: add a test that names it, then delete this line
-raptor.schema.blocks.NEURAL_REQUIRED_FIELDS  # untested at 0.7.2: add a test that names it, then delete this line
-raptor.schema.blocks.NEURAL_TOP_LEVEL_KEY_ORDER  # untested at 0.7.2: add a test that names it, then delete this line
+raptor.schema.blocks.BLOCK_EXEC_REF_FIELDS  # untested at 0.7.2: add a test that names it, then delete this line
+raptor.schema.blocks.BLOCK_FORBIDDEN_FIELDS  # untested at 0.7.2: add a test that names it, then delete this line
+raptor.schema.blocks.BLOCK_REQUIRED_FIELDS  # untested at 0.7.2: add a test that names it, then delete this line
+raptor.schema.blocks.BLOCK_TOP_LEVEL_KEY_ORDER  # untested at 0.7.2: add a test that names it, then delete this line
 raptor.schema.blocks.SCATTER_POLICIES  # untested at 0.7.2: add a test that names it, then delete this line
 raptor.schema.manifest.EXEC_KEYS  # untested at 0.7.2: add a test that names it, then delete this line
 raptor.schema.manifest.EXEC_REF_KINDS  # untested at 0.7.2: add a test that names it, then delete this line

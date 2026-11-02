@@ -70,7 +70,7 @@ def test_row01_is_byte_identical_to_its_eagle_conformance_source():
     """cross_repo: HARD FAILS if eagle (or its conformance fixture) is not
     found — deselect with ``-m "not cross_repo"`` for a repo-isolated run;
     never a skip."""
-    row01_golden = GOLDENS / "row01_neural_block_golden.sidecar.json"
+    row01_golden = GOLDENS / "row01_graph_block_golden.sidecar.json"
     root = eagle_root()
     if root is None:
         raise FileNotFoundError(
@@ -78,7 +78,7 @@ def test_row01_is_byte_identical_to_its_eagle_conformance_source():
             "this is a cross_repo test — deselect with -m 'not cross_repo' for "
             "a repo-isolated run"
         )
-    source = root / "tests" / "conformance" / "row01_neural_block_golden.sidecar.json"
+    source = root / "tests" / "conformance" / "row01_graph_block_golden.sidecar.json"
     if not source.exists():
         raise FileNotFoundError(f"row01 conformance source not found at {source}")
     assert row01_golden.read_bytes() == source.read_bytes()

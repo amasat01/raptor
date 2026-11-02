@@ -1,16 +1,16 @@
-.. _neural-block-descriptor:
+.. _graph-block-descriptor:
 
-The ``neural_block`` descriptor
+The ``graph_block`` descriptor
 ===============================
 
 .. contents:: On this page
    :local:
    :depth: 2
 
-A ``neural_block`` sidecar describes a **block**, not a kernel. It carries no
+A ``graph_block`` sidecar describes a **block**, not a kernel. It carries no
 artifact of its own and no bindings; it declares the block's shape and *names* the
 kernels that implement it. Those kernels are ordinary ``pure`` plugins, deployed and
-loaded through the normal doors — so a neural deployment is a set of familiar
+loaded through the normal doors — so a graph-block deployment is a set of familiar
 artifacts plus a descriptor that says how they fit together.
 
 That distinction has a hard consequence, and it is the reason this variant exists as
@@ -18,7 +18,7 @@ a separate family rather than as extra keys on ``pure``:
 
 .. important::
 
-   ``neural_block`` is **recognized but never launch-certified**. The shared
+   ``graph_block`` is **recognized but never launch-certified**. The shared
    validator understands and checks it in full; no loader in either language will
    bind or run it. A descriptor arriving at any launching entry point is refused
    with *"is recognized but not launchable by this loader"* — deliberately **without**
@@ -35,7 +35,7 @@ variant: it is required (no pre-freeze leniency — a family minted after the fr
 has no backward to be compatible with) and must be ``"float32"`` or ``"float64"``.
 
 Required, descriptor-specific — single-sourced as
-:data:`eagle.roles.NEURAL_REQUIRED_FIELDS` / ``plugin/roles.h::kNeuralRequiredFields``,
+:data:`eagle.roles.BLOCK_REQUIRED_FIELDS` / ``plugin/roles.h::kBlockRequiredFields``,
 which both validators *iterate*:
 
 .. list-table::

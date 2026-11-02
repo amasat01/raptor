@@ -28,6 +28,14 @@ This section covers what changes from 0.7.2. The schema and the certification ro
 - CPython 3.13t is dropped. The free-threading rows, the docs and the watched wheel tags name 3.14t and 3.15t.
 - CI runs on `ubuntu-24.04`, not the rolling `ubuntu-latest`, and test jobs that already passed on the same inputs are skipped until the weekly full run.
 - A fresh eagle build in the GPU leg starts from empty trees, so an earlier run's wheel never joins the install.
+- The `neural_block` pattern is now `graph_block`, and the `NEURAL_*` field constants are `BLOCK_*`. Schema version stays 1; the old pattern name is refused by name. The table at the end lists the names.
+
+### Removed
+
+| Gone | Use instead |
+|---|---|
+| `validate_neural_block_descriptor`, `NEURAL_BLOCK_PATTERN`, `NEURAL_REQUIRED_FIELDS`, `NEURAL_EXEC_REF_FIELDS`, `NEURAL_FORBIDDEN_FIELDS`, `NEURAL_TOP_LEVEL_KEY_ORDER` (`raptor.schema.blocks`) | `validate_block_descriptor`, `GRAPH_BLOCK_PATTERN`, `BLOCK_REQUIRED_FIELDS`, `BLOCK_EXEC_REF_FIELDS`, `BLOCK_FORBIDDEN_FIELDS`, `BLOCK_TOP_LEVEL_KEY_ORDER` |
+| the pattern value `"neural_block"`; `goldens/row01_neural_block_golden.sidecar.json` | `"graph_block"` (a manifest or sidecar that says `neural_block` is refused by name); `goldens/row01_graph_block_golden.sidecar.json` |
 
 ## 0.7.2 (2026-10-29)
 

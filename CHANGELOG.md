@@ -13,6 +13,22 @@ and is where this file tries to spend its words.
 
 Releases after 0.3.4 are on [GitHub](https://github.com/amasat01/raptor/releases): the notes are the pull request body.
 
+## 0.7.3 (unreleased)
+
+This section covers what changes from 0.7.2. The schema and the certification rows are unchanged; the changes are in how the family is checked and which platforms it supports.
+
+### Added
+
+**One public-name check for the whole family.** `raptor.conformance.public_names` checks starred `__all__` lists, each package's doors and a `--base` comparison against an earlier release, in one tool that raptor, aether, eagle and hawk all run. The portability check now expects 81 passes, the four new rows included.
+
+**`make gate`, `make gate-gpu`, `make gate-all`.** The checks CI runs are now make targets built from the declared dependencies, so a red CI run reproduces locally with the same command.
+
+### Changed
+
+- CPython 3.13t is dropped. The free-threading rows, the docs and the watched wheel tags name 3.14t and 3.15t.
+- CI runs on `ubuntu-24.04`, not the rolling `ubuntu-latest`, and test jobs that already passed on the same inputs are skipped until the weekly full run.
+- A fresh eagle build in the GPU leg starts from empty trees, so an earlier run's wheel never joins the install.
+
 ## 0.7.2 (2026-10-29)
 
 **The sidecar schema checks the 0.7.2 hawk fields.** `docs/schemas/sidecar-v1.schema.json` and `validate_manifest` now accept and check `launch.index_set` (`{width: 32 | 64}`, or the prefix form with its `count` plane), `launch.local_bytes`, `local_source` (`ptxas` or `ptx`) and `local_limit` (they come together), `launch.box`, `stages[k].team`, `team_planes`, the keyed record's `payload` and `index_planes` (the input planes declared `Index`). `check_launch_fields` and `check_team_fields` in `raptor.schema.manifest` do the same without `jsonschema`, and unknown keys inside these records are refused. Five new goldens built by hawk (team LU, team Gram, ordered scatter, prefix and 64-bit index sets) are checked against both.

@@ -136,7 +136,7 @@ exception in the family's design record.
 
 **Compatibility for a new downstream package, torch interop (2026-07-28).**
 Extended the manifest/interop contracts to accommodate a new downstream
-neural-runtime package and its torch-tensor interop path, ahead of that
+runtime package and its torch-tensor interop path, ahead of that
 package's own first release.
 
 **Downstream compatibility and completed untangling (2026-07-23).** raptor

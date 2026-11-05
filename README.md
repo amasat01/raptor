@@ -102,7 +102,7 @@ The runnable demos live with the packages they show off:
 The measured headline, from eagle's committed performance cards:
 
 <!-- hero:begin -->
-hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on an NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch with torch.compile (130×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
+hawk + eagle (`eagle.simulate`) integrates 1,000,000 Kepler orbits with an adaptive RKF7(8), each stopping at its own time, in 48.9 ms on an NVIDIA H100 NVL (477 ms for 10,000,000), 2.3×–190× faster than NVIDIA Warp (2.3×), JAX (25×), CuPy (190×), PyTorch with torch.compile (16×) at N = 1,000,000 (2.3×–150× at N = 10,000,000), in 102 MiB of GPU memory
 <!-- hero:end -->
 
 ## Going deeper (optional)

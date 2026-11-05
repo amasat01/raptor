@@ -82,7 +82,7 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # 2026-10-09 (venv leg): still 58 passed, 0 skipped. tests/test_freethreading.py
 # is marked `ft` throughout; its rows need a free-threaded interpreter and skip
 # on a GIL build, so this leg deselects `ft` (DEFAULT_MARKER_EXPR) and ci.yml's
-# ft-stress job runs them on 3.13t and 3.14t.
+# ft-stress job runs them on 3.14t and 3.15t.
 # 2026-10-15 (venv leg): 59 passed. The +1 pass is test_jax_rows_declared_exactly (the JAX rows
 # of the interop matrix), a declaration check with no framework import.
 # 2026-10-16: 70 passed. +8 test_rows_ran (the rows-ran gate, run in subprocesses) and +3 in
@@ -90,7 +90,9 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # 2026-10-16: 71 passed. +1 test_inject_rows_declared_exactly (the ten inject rows' declaration).
 # 2026-10-22: 72 passed. +1 test_gradient_and_handover_rows_declared_exactly (the gradient and NumPy/CuPy rows' declaration).
 # 2026-10-25: 77 passed. +5 test_flow (raptor.flow's source lifts, run in subprocesses).
-DEFAULT_EXPECTED_PASS_COUNT = 77
+# 2026-10-30: 81 passed. +4 test_public_names (the family's public-name check).
+# 2026-11-02: 82 passed. +1 test_old_pattern_name_is_refused_by_name (the renamed graph_block pattern).
+DEFAULT_EXPECTED_PASS_COUNT = 82
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --
 # test_pyproject_declares_zero_hard_deps_and_name_raptor,

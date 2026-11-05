@@ -4,7 +4,7 @@
 """raptor.schema — the two-layer kernel-manifest schema.
 
 :mod:`raptor.schema.manifest` is the bird-neutral layer (hawk's writer binds
-here only); :mod:`raptor.schema.blocks` is the ``neural_block`` extension
+here only); :mod:`raptor.schema.blocks` is the ``graph_block`` extension
 (hawk never imports it); :mod:`raptor.schema.dtypes` is the scalar-type tag
 vocabulary. This top-level module is NOT part of the purity gate (only
 ``manifest.py`` and ``dtypes.py`` are) — it is the combined public surface, so
@@ -19,8 +19,8 @@ from __future__ import annotations
 
 from . import blocks, dtypes, manifest
 
-#: the full recognized pattern vocabulary (base + the neural extension).
-ALL_PATTERNS = manifest.BASE_PATTERNS | {blocks.NEURAL_BLOCK_PATTERN}
+#: the full recognized pattern vocabulary (base + the graph_block extension).
+ALL_PATTERNS = manifest.BASE_PATTERNS | {blocks.GRAPH_BLOCK_PATTERN}
 
 __all__ = [
     "ALL_PATTERNS",
@@ -55,7 +55,7 @@ def validate_manifest(doc: dict) -> None:
     5. ``pattern``, when present, is one of :data:`ALL_PATTERNS`.
     6. For a MANIFEST-shaped document (one carrying a ``plugins`` key), the
        top-level keys that are present appear in the contractual relative order: the
-       neural order (:data:`raptor.schema.blocks.NEURAL_TOP_LEVEL_KEY_ORDER`, with
+       graph_block order (:data:`raptor.schema.blocks.BLOCK_TOP_LEVEL_KEY_ORDER`, with
        ``blocks``) when the document itself carries a ``blocks`` key, else the
        version-appropriate base order
        (:data:`raptor.schema.manifest.TOP_LEVEL_KEY_ORDER` for v1,
@@ -76,6 +76,10 @@ def validate_manifest(doc: dict) -> None:
     manifest.check_index_planes(doc, name="<document>")
 
     pattern = doc.get("pattern")
+    if pattern == "neural_block":
+        raise ValueError(
+            "pattern 'neural_block' was renamed to 'graph_block' in 0.7.3"
+        )
     if pattern is not None and pattern not in ALL_PATTERNS:
         raise ValueError(
             f"pattern {pattern!r} is not recognized; expected one of "
@@ -84,7 +88,7 @@ def validate_manifest(doc: dict) -> None:
 
     if "plugins" in doc:
         if "blocks" in doc:
-            expected = blocks.NEURAL_TOP_LEVEL_KEY_ORDER
+            expected = blocks.BLOCK_TOP_LEVEL_KEY_ORDER
         elif version >= 2:
             expected = manifest.TOP_LEVEL_KEY_ORDER_V2
         else:

@@ -25,7 +25,7 @@ pytestmark = pytest.mark.cross_repo
 
 def test_recognized_patterns_verbatim():
     roles = import_eagle_module("roles")
-    assert manifest.BASE_PATTERNS | {blocks.NEURAL_BLOCK_PATTERN} == roles.RECOGNIZED_PATTERNS
+    assert manifest.BASE_PATTERNS | {blocks.GRAPH_BLOCK_PATTERN} == roles.RECOGNIZED_PATTERNS
 
 
 def test_manifest_formats_verbatim():

@@ -2,7 +2,7 @@ raptor.schema
 =============
 
 The two-layer kernel-manifest schema. ``manifest`` is the bird-neutral core
-every producer writes against; ``blocks`` is the ``neural_block`` extension a
+every producer writes against; ``blocks`` is the ``graph_block`` extension a
 producer never has to import; ``dtypes`` carries the scalar-type tag
 vocabulary both layers share.
 

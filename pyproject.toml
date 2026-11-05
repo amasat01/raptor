@@ -31,6 +31,10 @@ classifiers = [
 # package stays importable on a numpy-less interpreter.
 dependencies = []
 
+[project.optional-dependencies]
+# what the tests import: the manifest schema and the yaml/jsonschema rows
+test = ["pytest", "pyyaml", "jsonschema>=4"]
+
 [project.urls]
 Homepage = "https://github.com/amasat01/raptor"
 Documentation = "https://amasat01.github.io/raptor/"
@@ -51,7 +55,7 @@ testpaths = ["tests"]
 # this repo root, prepended to sys.path before collection.
 pythonpath = ["."]
 markers = [
-    "ft: free-threading rows (raptor.conformance.freethreading) -- skip on a GIL build; select with -m ft on 3.13t/3.14t. Never run them under -X gil=... or PYTHON_GIL (the gate fails if you do).",
+    "ft: free-threading rows (raptor.conformance.freethreading) -- skip on a GIL build; select with -m ft on 3.14t/3.15t. Never run them under -X gil=... or PYTHON_GIL (the gate fails if you do).",
     "cross_repo: eagle conformance battery (deselect explicitly via -m 'not cross_repo'; the only sanctioned way these tests do not run — sibling absence is a HARD FAIL, never a skip)",
     "repo_local: venv-gate guardrail — certifies the REPOSITORY (docs/pyproject/source-as-text, or a dev-env package-presence assumption), never the installed DISTRIBUTION, so a wheel legitimately cannot carry what it checks. Deselect only in the isolated-venv leg (-m 'not repo_local'); the repo-rooted suite (CI, dev runs) always runs these — never deselected there. The venv leg enumerates and pins the count by collection, never a hand list.",
 ]

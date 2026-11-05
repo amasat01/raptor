@@ -8,7 +8,7 @@ function-locally, exactly as :mod:`raptor.conformance.interop` does, so the
 rest of :mod:`raptor.conformance` stays importable without it.
 
 The harness is written for reuse by every package in the family that ships a
-module to be run under 3.13t / 3.14t. Its pieces:
+module to be run under 3.14t / 3.15t. Its pieces:
 
 * :func:`require_free_threaded` -- skip on a GIL build, **fail** when the GIL
   state is forced from outside (``-X gil=...`` or ``PYTHON_GIL``): a forced

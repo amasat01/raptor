@@ -77,7 +77,7 @@ isinstance(Bundle(), ManifestProvider)  # True — duck-typed, no inheritance ne
 
 ## Threading
 
-Free-threaded CPython (3.13t/3.14t) is supported: the compiled modules declare GIL-free operation and the GIL stays disabled after import. Any number of threads may call module-level functions, build, compile, plan and cache concurrently. Distinct objects may be used from distinct threads without synchronisation. One stateful object (a stream, capture, launcher, graph, composer, plan, pipeline, active set, host kernel or arg block) shared by several threads is memory-safe — its calls serialise and a consumed object raises — but the ORDER of those calls is the caller's responsibility, exactly as for a NumPy array or a CuPy stream. CUDA adds two rules of its own: a stream capture is begun, filled and ended by one thread, and while any capture is open no thread may synchronise the whole device (stream-level synchronisation is fine). GPU routes are supported on free-threaded 3.14; on 3.13t the CPU route runs.
+Free-threaded CPython (3.14t/3.15t) is supported: the compiled modules declare GIL-free operation and the GIL stays disabled after import. Any number of threads may call module-level functions, build, compile, plan and cache concurrently. Distinct objects may be used from distinct threads without synchronisation. One stateful object (a stream, capture, launcher, graph, composer, plan, pipeline, active set, host kernel or arg block) shared by several threads is memory-safe — its calls serialise and a consumed object raises — but the ORDER of those calls is the caller's responsibility, exactly as for a NumPy array or a CuPy stream. CUDA adds two rules of its own: a stream capture is begun, filled and ended by one thread, and while any capture is open no thread may synchronise the whole device (stream-level synchronisation is fine). GPU routes are supported on free-threaded 3.14; the CPU route runs elsewhere.
 
 ## Install
 
@@ -102,7 +102,7 @@ The runnable demos live with the packages they show off:
 The measured headline, from eagle's committed performance cards:
 
 <!-- hero:begin -->
-hawk + eagle (`eagle.simulate`) integrates 1,000,000 RK4 oscillators, each stopping at its own step, in 613 µs on an NVIDIA H100 80GB HBM3 (199 µs for 100,000), 2.5×–600× faster than NVIDIA Warp (2.5×), JAX (76×), CuPy (600×), PyTorch with torch.compile (130×) at N = 1,000,000 (1.1×–1700× at N = 100,000), in 40 MiB of GPU memory
+hawk + eagle (`eagle.simulate`) integrates 1,000,000 Kepler orbits with an adaptive RKF7(8), each stopping at its own time, in 48.9 ms on an NVIDIA H100 NVL (477 ms for 10,000,000), 2.3×–190× faster than NVIDIA Warp (2.3×), JAX (25×), CuPy (190×), PyTorch with torch.compile (16×) at N = 1,000,000 (2.3×–150× at N = 10,000,000), in 102 MiB of GPU memory
 <!-- hero:end -->
 
 ## Going deeper (optional)
@@ -114,7 +114,7 @@ Package internals, none of it needed to install or use raptor.
 
 - `raptor.schema` — the kernel-manifest schema, two layers:
   `schema.manifest` (the core layer every producer writes against) and
-  `schema.blocks` (the `neural_block` extension; hawk never imports it).
+  `schema.blocks` (the `graph_block` extension; hawk never imports it).
   `schema.dtypes` carries the scalar-type tag vocabulary.
   `raptor.schema.validate_manifest(doc)` is a minimal shape validator (key
   order, top keys, schema_version, pattern vocabulary) — not a port of

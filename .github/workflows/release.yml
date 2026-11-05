@@ -10,6 +10,8 @@ name: Release
 
 # Pull requests only: main receives the tested tree, nothing re-runs there.
 on:
+  schedule:
+    - cron: "23 4 * * 1"   # weekly on main: every remembered pass runs again
   pull_request:
     branches: [main]
     types: [opened, synchronize, reopened, labeled, unlabeled]
@@ -20,7 +22,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       tree: ${{ steps.tree.outputs.tree }}
     steps:
@@ -55,7 +57,7 @@ jobs:
 
   test-wheel:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -64,15 +66,24 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v7
+      - id: memo
+        uses: ./.github/actions/memo
+        with:
+          name: release-test-wheel
+          args: >-
+            --tree . --skip docs/ --skip CHANGELOG.md --skip .github/ --skip-ext .ipynb --tree . --only .github/actions/ --only .github/ci_digest.sh --only .github/cuda_redist.sh --only .github/companions --tag . --file .github/workflows/release.yml
+          extra: ${{ toJSON(matrix) }}
       - uses: actions/download-artifact@v8
         with:
           name: dist-${{ needs.build.outputs.tree }}
           path: dist
+        if: steps.memo.outputs.run == 'true'
       - uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: pyproject.toml
+        if: steps.memo.outputs.run == 'true'
       # The gate installs into its venv with `pip --no-index --find-links
       # <wheelhouse>`, so the wheelhouse must carry pytest's wheels too, not
       # only the release wheel. Without them the venv has no pytest, pytest
@@ -84,6 +95,7 @@ jobs:
           rm -rf wh && mkdir -p wh
           cp dist/*.whl wh/
           python -m pip wheel --quiet -w wh pytest
+        if: steps.memo.outputs.run == 'true'
       - name: Isolated-venv portability gate against the RELEASE wheel (raptor's own CI leg)
         run: |
           set -o pipefail
@@ -93,7 +105,8 @@ jobs:
               --log-out "portability_raptor_${{ matrix.python-version }}.pytest.log" \
               > "portability_raptor_${{ matrix.python-version }}.json"
           python -c "import json,sys; v=json.load(open('portability_raptor_${{ matrix.python-version }}.json'))['verdict']; print(v); sys.exit(0 if v.get('verdict')=='GREEN' else 1)"
-      - if: always()
+        if: steps.memo.outputs.run == 'true'
+      - if: always() && steps.memo.outputs.run == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: portability-raptor-${{ matrix.python-version }}
@@ -101,10 +114,15 @@ jobs:
           path: |
             portability_raptor_${{ matrix.python-version }}.json
             portability_raptor_${{ matrix.python-version }}.pytest.log
+      - if: success() && steps.memo.outputs.run == 'true'
+        uses: ./.github/actions/memo-save
+        with:
+          name: release-test-wheel
+          digest: ${{ steps.memo.outputs.digest }}
 
   sdist-install:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v8
         with:
@@ -125,7 +143,7 @@ jobs:
   # nbexec`) and committed with outputs; nbcheck only verifies they have them.
   docs:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
@@ -155,16 +173,7 @@ jobs:
           path: eagle
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
           pins: .github/companions
-      - run: ln -s "$GITHUB_WORKSPACE/eagle" ../eagle
-      - run: |
-          python -m pip install --quiet -e .
-          grep -v '^raptor-docs' docs/requirements.txt > /tmp/docs-reqs.txt
-          python -m pip install --quiet pytest -r /tmp/docs-reqs.txt ./site
-      - run: make -C docs nbcheck
-      - run: make -C docs strict
-      - name: every public name has a page
-        run: python tools/docs_inventory_check.py docs/_build/html/objects.inv raptor
-      - run: python -m raptor_docs.fresh --check --site site
+      - run: make gate-docs SITE_SRC=site EAGLE_SRC=eagle
       - uses: actions/upload-artifact@v7
         with:
           name: site-${{ needs.build.outputs.tree }}
@@ -174,7 +183,7 @@ jobs:
   # Informational: a docs-only PR carries an already published version.
   pypi-version:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/download-artifact@v8
         with:

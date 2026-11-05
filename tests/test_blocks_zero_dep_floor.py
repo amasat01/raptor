@@ -4,7 +4,7 @@
 """``raptor.schema.blocks`` resolves and its entry point runs on a
 numpy-less, eagle-less, cupy-less interpreter.
 
-Measured that every symbol the moved ``neural_block`` clause needs already
+Measured that every symbol the moved ``graph_block`` clause needs already
 exists in raptor and imports on a numpy-blocked interpreter; this test
 productizes that measurement as raptor's own gate on the zero-dep LOCK
 ("raptor stays zero-hard-dep and numpy-less-importable").
@@ -56,7 +56,7 @@ _BLOCKED_PREAMBLE = textwrap.dedent(
 
 def test_blocks_module_resolves_and_entry_point_runs_numpy_eagle_cupy_blocked():
     """``python -I``: numpy/eagle/cupy meta_path-blocked; ``import
-    raptor.schema.blocks`` and CALL ``validate_neural_block_descriptor`` on a
+    raptor.schema.blocks`` and CALL ``validate_block_descriptor`` on a
     well-formed descriptor -- it must resolve, run, and return without ever
     touching numpy/eagle/cupy."""
     program = _BLOCKED_PREAMBLE + textwrap.dedent(
@@ -67,7 +67,7 @@ def test_blocks_module_resolves_and_entry_point_runs_numpy_eagle_cupy_blocked():
 
         meta = {{
             "schema_version": 1,
-            "pattern": blocks.NEURAL_BLOCK_PATTERN,
+            "pattern": blocks.GRAPH_BLOCK_PATTERN,
             "scalar_type": "float64",
             "forward_exec": {{"kind": "kernel", "kernel": "floor_probe_fwd"}},
             "kernel": "floor_probe",
@@ -80,7 +80,7 @@ def test_blocks_module_resolves_and_entry_point_runs_numpy_eagle_cupy_blocked():
             "scatter_policy": "unique_write",
             "arg_spec": [],
         }}
-        result = blocks.validate_neural_block_descriptor(meta, name="floor_probe")
+        result = blocks.validate_block_descriptor(meta, name="floor_probe")
         assert result is meta, result
 
         assert "numpy" not in sys.modules, sorted(sys.modules)
@@ -96,7 +96,16 @@ def test_blocks_module_resolves_and_entry_point_runs_numpy_eagle_cupy_blocked():
         timeout=60,
     )
     assert result.returncode == 0 and "A5-OK" in result.stdout, (
-        "raptor.schema.blocks must import and validate_neural_block_descriptor "
+        "raptor.schema.blocks must import and validate_block_descriptor "
         "must resolve+run with numpy/eagle/cupy blocked under `python -I`.\n"
         f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
+
+
+def test_old_pattern_name_is_refused_by_name():
+    import pytest
+
+    from raptor.schema import validate_manifest
+
+    with pytest.raises(ValueError, match="'neural_block' was renamed to 'graph_block' in 0.7.3"):
+        validate_manifest({"schema_version": 1, "pattern": "neural_block"})

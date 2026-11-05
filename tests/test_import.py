@@ -15,7 +15,7 @@ def test_import_raptor():
 def test_import_raptor_schema():
     import raptor.schema
 
-    assert raptor.schema.ALL_PATTERNS == {"vector", "pure", "neural_block"}
+    assert raptor.schema.ALL_PATTERNS == {"vector", "pure", "graph_block"}
 
 
 def test_import_raptor_protocols():

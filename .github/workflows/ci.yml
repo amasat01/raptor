@@ -49,9 +49,6 @@ jobs:
           path: eagle
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
           pins: raptor/.github/companions
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
       # companion site (amasat01.github.io): same rule
       - uses: ./raptor/.github/actions/companion
         with:
@@ -59,12 +56,32 @@ jobs:
           path: site
           token: ${{ secrets.SIBLING_READ_TOKEN || github.token }}
           pins: raptor/.github/companions
+      - id: memo
+        uses: ./raptor/.github/actions/memo
+        with:
+          name: ci-docs-fresh
+          args: >-
+            --tree raptor --skip CHANGELOG.md --skip .github/ --tree eagle --only tools/prose_claims.py --only benchmarks/_card_common.py --only benchmarks/perf_card/ --only benchmarks/device_names.json --only benchmarks/card_provenance.json --only benchmarks/cards_manifest.json --only benchmarks/sol_reference.json --tree site --skip tests/ --skip .github/ --tree raptor --only .github/actions/ --only .github/ci_digest.sh --only .github/companions --file raptor/.github/workflows/ci.yml
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: raptor/ci/constraints.txt
+        if: steps.memo.outputs.run == 'true'
       - name: documented numbers and the capability map match the committed cards
         working-directory: raptor
         run: make gate-fresh SITE_SRC=../site EAGLE_SRC=../eagle
+        if: steps.memo.outputs.run == 'true'
       - name: manifesto copy, ruff (repo config), every public name has a test or an allowlist line
         working-directory: raptor
         run: make gate-lint gate-names
+        if: steps.memo.outputs.run == 'true'
+      - if: success() && steps.memo.outputs.run == 'true'
+        uses: ./raptor/.github/actions/memo-save
+        with:
+          name: ci-docs-fresh
+          digest: ${{ steps.memo.outputs.digest }}
+
   test-python:
     needs: docs-fresh
     # The test suite.

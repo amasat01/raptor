@@ -131,6 +131,8 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - name: The sdist installs into a clean venv and imports
         run: |
           python -m venv sv

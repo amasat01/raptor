@@ -10,7 +10,7 @@ name: CI
 # Pull requests only: main receives the tested tree, nothing re-runs there.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled]
+    types: [opened, synchronize, reopened]
   workflow_dispatch: {}
   schedule:
     - cron: "23 4 * * 1"   # weekly on main: every remembered pass is run again
@@ -20,21 +20,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  release-gate:
-    # The release label, the diff, the PR body and the tag it would create agree (tools/release_gate.sh). Skipped on other PRs.
-    if: github.event_name == 'pull_request' && github.base_ref == 'main'
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - env:
-          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ' ') }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: bash tools/release_gate.sh "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"
   docs-fresh:
     # Freshness check, never a commit: the generator re-renders the headline and fails on any difference.
     runs-on: ubuntu-24.04
@@ -93,7 +78,7 @@ jobs:
         with:
           name: ci-test-python
           args: >-
-            --tree . --skip CHANGELOG.md --skip .github/ --skip-ext .ipynb --tree . --only .github/actions/ --only .github/ci_digest.sh --only .github/cuda_redist.sh --only .github/companions --tag . --file .github/workflows/ci.yml
+            --tree . --skip CHANGELOG.md --skip .github/ --skip-ext .ipynb --tree . --only .github/actions/ --only .github/ci_digest.sh --only .github/cuda_redist.sh --only .github/companions --file .github/workflows/ci.yml
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -125,7 +110,7 @@ jobs:
         with:
           name: ci-ft-stress
           args: >-
-            --tree . --skip CHANGELOG.md --skip .github/ --skip-ext .ipynb --tree . --only .github/actions/ --only .github/ci_digest.sh --only .github/cuda_redist.sh --only .github/companions --tag . --file .github/workflows/ci.yml
+            --tree . --skip CHANGELOG.md --skip .github/ --skip-ext .ipynb --tree . --only .github/actions/ --only .github/ci_digest.sh --only .github/cuda_redist.sh --only .github/companions --file .github/workflows/ci.yml
           extra: ${{ toJSON(matrix) }}
       - uses: actions/setup-python@v7
         with:

@@ -99,7 +99,7 @@ ALL_PATTERNS = manifest.BASE_PATTERNS | {GRAPH_BLOCK_PATTERN}
 # --------------------------------------------------------------------------- #
 
 #: The scalar types a ``graph_block`` descriptor may declare (an ALLOWLIST).
-#: SoftDouble is out of scope for graph blocks, and the allowlist is why that
+#: banded is out of scope for graph blocks, and the allowlist is why that
 #: stays true without a source literal naming it — the rejected value reaches
 #: a message only at runtime, from the offending input.
 _BLOCK_SCALAR_TYPES = ("float32", "float64")

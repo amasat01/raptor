@@ -38,7 +38,7 @@
       "description": "Binary-ABI tag of the by-value GRef / HandleT POD mirrors the artifact was built against: aether-abi/1 with schema v1, aether-abi/2 with v2 and v3 (see the conditional blocks). A loader rejects a mismatch before binding any by-value struct."
     },
     "scalar_type": {
-      "enum": ["float64", "float32", "softdouble"],
+      "enum": ["float64", "float32", "banded"],
       "description": "Real scalar type the kernel was compiled for."
     },
     "kernel": {

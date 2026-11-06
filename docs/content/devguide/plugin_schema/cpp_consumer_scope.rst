@@ -61,18 +61,18 @@ guard has been there from the start and is not a
 regression.
 
 It is deliberately a *different* shape of gap from the guard sitting right next
-to it in the same function, which *admits* ``scalar_type == "softdouble"``: a
-SoftDouble PTX is bit-identical IEEE-754 ``float64``
-(``aether``'s ``SoftDouble`` carries a ``static_assert(sizeof(SoftDouble) == 8)``,
-"bit-compatible with IEEE 754 double"; arrays, uniforms, and the ``GRef`` ABI
+to it in the same function, which *admits* ``scalar_type == "banded"``: a
+banded PTX uses an 8-byte emulated-FP64 cell (``aether``'s ``BandedReal`` carries a
+``static_assert(sizeof(BandedReal) == 8)``; its values match ``float64`` within a
+per-op ULP bound, not bit-identically; arrays, uniforms, and the ``GRef`` ABI
 all stay float64-shaped end to end), so it loads and launches through this same
 ``double``-typed surface with **zero widening** — confirmed by a load-and-run
 probe (``eagle/tests/test_PluginRegistryDtype.cu``,
-``PluginRegistryDtypeTest.SoftdoubleLoadsAndLaunches``). float32 is genuinely
+``PluginRegistryDtypeTest.BandedLoadsAndLaunches``). float32 is genuinely
 different: an f32 artifact needs float-*typed* buffers and 4-byte uniform
 packing, which changes the layout the registry hands the kernel — a real
 capability gap, not a wording problem. Do not read the two rejections as the
-same kind of gap: softdouble's guard was removed because the wire-layout
+same kind of gap: banded's guard was removed because the wire-layout
 assumption behind it was wrong; float32's guard stays because that assumption
 is right.
 

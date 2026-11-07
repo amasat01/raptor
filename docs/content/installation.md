@@ -26,6 +26,18 @@ For building every repo from source and the supported-version table, see [build 
 - Python 3.9 or newer
 - No GPU, no CUDA toolkit, no C or C++ compiler.
 
+## Best practices
+
+- Pin every family package you install at the same release. The packages are tested together, not across releases.
+
+```bash
+pip install "raptor-core==0.7.5" "aether-dsc==0.7.5" "raptor-hawk==0.7.5" "raptor-eagle==0.7.5"
+```
+
+- Check what you have with `pip list | grep -E "raptor|aether"` and `python -c "import raptor; print(raptor.__version__)"`.
+
+Package-specific guidance is in [hawk](https://amasat01.github.io/hawk/content/best_practices.html) and [eagle](https://amasat01.github.io/eagle/content/userguide/best_practices.html).
+
 ## Verify
 
 ```bash

@@ -13,6 +13,20 @@ and is where this file tries to spend its words.
 
 Releases after 0.3.4 are on [GitHub](https://github.com/amasat01/raptor/releases): the notes are the pull request body.
 
+## 0.7.5 (2026-11-10)
+
+This section covers what changes from 0.7.3. The manifest schema and the certification rows are unchanged; one sidecar spelling changes.
+
+### Changed
+
+- **The sidecar `scalar_type` `softdouble` is now `banded`.** `raptor.schema.SCALAR_TYPES` is `("float64", "float32", "banded")`, and `np_dtype("banded")` is `float64` (user arrays stay float64; the values match float64 within the per-op ULP bound aether states, not bit for bit). Migration: nothing in the family produced `softdouble`; if you wrote a sidecar by hand, write `banded`.
+- A release takes its version from the top heading of `CHANGELOG.md`; the release label is only checked against it, and a new release-gate workflow checks the label, the diff, the PR body and the heading together. `tools/next_version.py` with no arguments prints the heading's version, and nothing for `## Unreleased`.
+- CI skips memo steps whose real inputs did not change, caches pips, and the sdist-install job no longer asks for a pip cache it has no checkout for.
+
+### Added
+
+- The install page has a Best practices section: pin every family package at one release, and check what is installed.
+
 ## 0.7.3 (2026-11-05)
 
 This section covers what changes from 0.7.2. The schema and the certification rows are unchanged; the changes are in how the family is checked and which platforms it supports.

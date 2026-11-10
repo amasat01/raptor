@@ -20,7 +20,7 @@ Validation happens at **load time**, before any launch, and follows two rules:
    * any ``arg_spec`` role outside the 9-role vocabulary
      (:func:`eagle.roles.validate_roles` / ``is_valid_role``);
    * any ``schema_version`` **greater than** the loader supports;
-   * any ``scalar_type`` outside ``{"float64", "float32", "softdouble"}``
+   * any ``scalar_type`` outside ``{"float64", "float32", "banded"}``
      (Python: the ``SCALAR_TYPES`` enum check in
      :class:`eagle.loaded.LoadedKernel`; C++: ``validate_sidecar`` in
      ``plugin/sidecar.h``). An absent ``scalar_type`` stays backward-lenient

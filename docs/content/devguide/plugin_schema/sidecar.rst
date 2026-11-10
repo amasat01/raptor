@@ -42,7 +42,7 @@ below:
      - const ``"aether-abi/1"``
      - Binary-ABI tag (see :ref:`aether-abi-tag`).
    * - ``scalar_type``
-     - ``"float64"`` | ``"float32"`` | ``"softdouble"``
+     - ``"float64"`` | ``"float32"`` | ``"banded"``
      - Real scalar type the kernel was compiled for.
    * - ``kernel``
      - string

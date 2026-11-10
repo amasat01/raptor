@@ -13,7 +13,7 @@ and is where this file tries to spend its words.
 
 Releases after 0.3.4 are on [GitHub](https://github.com/amasat01/raptor/releases): the notes are the pull request body.
 
-## Unreleased
+## 0.7.5 (2026-11-10)
 
 This section covers what changes from 0.7.3. The manifest schema and the certification rows are unchanged; one sidecar spelling changes.
 

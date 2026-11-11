@@ -1,0 +1,1973 @@
+{
+"declare": [
+{
+"name": "base",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "name 0",
+"data": {
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind declaration: `name` is required"
+},
+{
+"name": "ext 0",
+"data": {
+"name": "acme.thing",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': extension id None is not [a-z][a-z0-9_-]*"
+},
+{
+"name": "ext 1",
+"data": {
+"name": "acme.thing",
+"ext": "A",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': extension id 'A' is not [a-z][a-z0-9_-]*"
+},
+{
+"name": "ext 2",
+"data": {
+"name": "acme.thing",
+"ext": "other",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': a third-party kind is spelled 'other.<name>': unqualified names are reserved to the core and first-party extensions"
+},
+{
+"name": "family 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': family None is not one of ('expr', 'sink', 'terminal')"
+},
+{
+"name": "family 1",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "zzz",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': family 'zzz' is not one of ('expr', 'sink', 'terminal')"
+},
+{
+"name": "family 2",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "terminal",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': a terminal takes no operands"
+},
+{
+"name": "refines 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none",
+"refines": "nope"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': refines 'nope', which is not declared"
+},
+{
+"name": "refines 1",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none",
+"refines": "node"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines='node', wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "operands 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 0,
+"max": 0
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': result operand index 0 is outside the 0 required operand(s)"
+},
+{
+"name": "operands 1",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 2
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(2, None, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "operands 3",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 1,
+"families": []
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 1, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "fields 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "name",
+"type": "int"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': field 'name' collides with a builtin or inherited name"
+},
+{
+"name": "fields 1",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k2",
+"type": "weird"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': field 'k2' has type 'weird', not one of ('int', 'float', 'bool', 'str', 'none', 'tuple')"
+},
+{
+"name": "fields 2",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "z",
+"type": "int",
+"default": "s"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': field 'z': default 's' is not a int"
+},
+{
+"name": "fields 3",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "z",
+"type": "float",
+"default": true
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': field 'z': default True is not a float"
+},
+{
+"name": "fields 4",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "z",
+"type": "bool",
+"default": 1
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': field 'z': default 1 is not a bool"
+},
+{
+"name": "fields 5",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "shape",
+"type": "int"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': identity names unknown field(s) ['k']"
+},
+{
+"name": "result 1",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"fixed",
+"f64",
+[
+2
+]
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('fixed', 'f64', [2]), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "result 2",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"carried"
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('carried',), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "result 3",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"bogus"
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': result rule 'bogus' is unknown"
+},
+{
+"name": "result 5",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+-1
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': result operand index -1 is outside the 1 required operand(s)"
+},
+{
+"name": "identity 1",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=(), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "traits 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"bad": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': unknown trait 'bad'"
+},
+{
+"name": "spelling 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "n",
+"args": [
+"ref9"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': spelling args ('ref9',) are not node|target|ref<i> within the operands"
+},
+{
+"name": "spelling 2",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "n"
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'n', ()), diff='none', no_writer=False)"
+},
+{
+"name": "no_writer 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none",
+"no_writer": true
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=True)"
+},
+{
+"name": "extra 0",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "expr",
+"operands": {
+"min": 1,
+"max": 2,
+"families": [
+"any",
+"plane-leaf"
+]
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"same_as",
+0
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none",
+"extra": 1
+},
+"fp": [],
+"want": "HawkError: kind 'acme.thing': unknown key(s) ['extra']"
+},
+{
+"name": "family sink no operands",
+"data": {
+"name": "acme.thing",
+"ext": "acme",
+"dialect": "d",
+"family": "sink",
+"operands": {
+"min": 0,
+"max": 0
+},
+"fields": [
+{
+"name": "k",
+"type": "int"
+},
+{
+"name": "tag",
+"type": "str",
+"default": "x"
+}
+],
+"result": [
+"carried"
+],
+"identity": [
+"k"
+],
+"traits": {
+"fresh_read": true
+},
+"spelling": {
+"dialect": "d",
+"name": "thing",
+"args": [
+"node",
+"ref0"
+]
+},
+"diff": "none"
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='sink', refines=None, wire='acme.thing', operands=(0, 0, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('carried',), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+},
+{
+"name": "refine assign",
+"data": {
+"name": "acme.r",
+"ext": "acme",
+"family": "sink",
+"refines": "assign",
+"fields": [
+{
+"name": "k",
+"type": "int"
+}
+]
+},
+"fp": [],
+"want": "ok KindDecl(name='acme.r', dialect='', ext='acme', family='sink', refines='assign', wire='assign', operands=(0, 0, ()), fields=(('k', 'int', None, True),), result=('carried',), identity=None, traits=(), spelling=None, diff='none', no_writer=False)"
+},
+{
+"name": "refine assign wrong family",
+"data": {
+"name": "acme.r",
+"ext": "acme",
+"family": "expr",
+"refines": "assign",
+"fields": [
+{
+"name": "k",
+"type": "int"
+}
+]
+},
+"fp": [],
+"want": "HawkError: kind 'acme.r': family expr does not agree with the family of 'assign'"
+},
+{
+"name": "refine at wrong family",
+"data": {
+"name": "acme.r",
+"ext": "acme",
+"family": "sink",
+"refines": "at",
+"fields": [
+{
+"name": "k",
+"type": "int"
+}
+]
+},
+"fp": [],
+"want": "HawkError: kind 'acme.r': family sink does not agree with the family of 'at'"
+}
+],
+"make": [
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.thing': takes 1..2 operand(s), got 0"
+},
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.thing': field 'k' is required"
+},
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"k": 1
+},
+"want": "ok ['AcmeThing', \"TensorType(shape=(), dtype='f64', tag=None)\", 'acme.thing', \"{'k': 1, 'tag': 'x'}\"]"
+},
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"k": 1.5
+},
+"want": "HawkError: kind 'acme.thing': field 'k' must be a int, got 1.5"
+},
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"k": true
+},
+"want": "HawkError: kind 'acme.thing': field 'k' must be a int, got True"
+},
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"k": 1,
+"extra": 2
+},
+"want": "HawkError: kind 'acme.thing': unknown field(s) ['extra']"
+},
+{
+"kind": "acme.thing",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"k": 1,
+"tag": 2
+},
+"want": "HawkError: kind 'acme.thing': field 'tag' must be a str, got 2"
+},
+{
+"kind": "acme.thing",
+"ttype": [
+[
+3
+],
+"f64"
+],
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.thing': type TensorType(shape=(3,), dtype='f64', tag=None) is not what its result rule derives, TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.thing",
+"ttype": "junk",
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.thing': type 'junk' is not what its result rule derives, TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.f",
+"ttype": null,
+"ops": [],
+"fields": {},
+"want": "ok ['AcmeF', \"TensorType(shape=(2,), dtype='f64', tag=None)\", 'acme.f', '{}']"
+},
+{
+"kind": "acme.f",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+],
+[
+"leaf",
+[
+3
+],
+"f64",
+"x"
+],
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.f': takes 0..2 operand(s), got 3"
+},
+{
+"kind": "acme.f",
+"ttype": [
+[],
+"f64"
+],
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.f': type TensorType(shape=(), dtype='f64', tag=None) is not what its result rule derives, TensorType(shape=(2,), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.f",
+"ttype": [
+[
+3
+],
+"f64"
+],
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.f': type TensorType(shape=(3,), dtype='f64', tag=None) is not what its result rule derives, TensorType(shape=(2,), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.f",
+"ttype": "junk",
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.f': type 'junk' is not what its result rule derives, TensorType(shape=(2,), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.sc2",
+"ttype": null,
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.sc2': takes 1..1 operand(s), got 0"
+},
+{
+"kind": "acme.sc2",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "ok ['AcmeSc2', \"TensorType(shape=(), dtype='f64', tag=None)\", 'acme.sc2', '{}']"
+},
+{
+"kind": "acme.sc2",
+"ttype": [
+[
+3
+],
+"f64"
+],
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.sc2': type TensorType(shape=(3,), dtype='f64', tag=None) is not what its result rule derives, TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.sc2",
+"ttype": "junk",
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.sc2': type 'junk' is not what its result rule derives, TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "acme.c1",
+"ttype": null,
+"ops": [],
+"fields": {
+"t": [
+1,
+2
+]
+},
+"want": "HawkError: kind 'acme.c1': carries its own type, got None"
+},
+{
+"kind": "acme.c1",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+],
+[
+"leaf",
+[
+3
+],
+"f64",
+"x"
+]
+],
+"fields": {
+"t": [
+1,
+2
+]
+},
+"want": "HawkError: kind 'acme.c1': takes 0..1 operand(s), got 2"
+},
+{
+"kind": "acme.c1",
+"ttype": [
+[],
+"f64"
+],
+"ops": [],
+"fields": {
+"t": [
+1,
+2
+]
+},
+"want": "ok ['AcmeC1', \"TensorType(shape=(), dtype='f64', tag=None)\", 'acme.c1', \"{'t': {'tuple': [1, 2]}}\"]"
+},
+{
+"kind": "acme.c1",
+"ttype": [
+[],
+"f64"
+],
+"ops": [],
+"fields": {
+"t": {
+"list": [
+1,
+2
+]
+}
+},
+"want": "HawkError: kind 'acme.c1': field 't' must be a tuple, got [1, 2]"
+},
+{
+"kind": "acme.c1",
+"ttype": [
+[
+3
+],
+"f64"
+],
+"ops": [],
+"fields": {
+"t": [
+1,
+2
+]
+},
+"want": "ok ['AcmeC1', \"TensorType(shape=(3,), dtype='f64', tag=None)\", 'acme.c1', \"{'t': {'tuple': [1, 2]}}\"]"
+},
+{
+"kind": "acme.c1",
+"ttype": "junk",
+"ops": [],
+"fields": {
+"t": [
+1,
+2
+]
+},
+"want": "HawkError: kind 'acme.c1': carries its own type, got 'junk'"
+},
+{
+"kind": "acme.sc",
+"ttype": null,
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.sc': takes 1..1 operand(s), got 0"
+},
+{
+"kind": "acme.sc",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.sc': a sink needs `name` (and `role` unless the refined core kind fixes it)"
+},
+{
+"kind": "acme.sc",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"name": "n",
+"role": "r"
+},
+"want": "HawkError: sink 'n': unknown sink role 'r', expected one of ('mutable', 'out', 'wide_out', 'accum_out')"
+},
+{
+"kind": "acme.sc",
+"ttype": "junk",
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {},
+"want": "HawkError: kind 'acme.sc': carries its own type, got 'junk'"
+},
+{
+"kind": "acme.s",
+"ttype": null,
+"ops": [],
+"fields": {
+"name": "n"
+},
+"want": "HawkError: kind 'acme.s': takes 1..1 operand(s), got 0"
+},
+{
+"kind": "acme.s",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"name": "n"
+},
+"want": "ok ['AcmeS', \"TensorType(shape=(), dtype='f64', tag=None)\", 'assign', \"{'name': 'n', 'role': 'mutable', 'q': 1}\"]"
+},
+{
+"kind": "acme.s",
+"ttype": null,
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"name": "n",
+"q": "s"
+},
+"want": "HawkError: kind 'acme.s': field 'q' must be a float, got 's'"
+},
+{
+"kind": "acme.s",
+"ttype": [
+[
+3
+],
+"f64"
+],
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"name": "n"
+},
+"want": "ok ['AcmeS', \"TensorType(shape=(3,), dtype='f64', tag=None)\", 'assign', \"{'name': 'n', 'role': 'mutable', 'q': 1}\"]"
+},
+{
+"kind": "acme.s",
+"ttype": "junk",
+"ops": [
+[
+"leaf",
+[],
+"f64",
+"x"
+]
+],
+"fields": {
+"name": "n"
+},
+"want": "HawkError: kind 'acme.s': carries its own type, got 'junk'"
+},
+{
+"kind": "acme.nope",
+"ttype": [
+[],
+"f64"
+],
+"ops": [],
+"fields": {},
+"want": "HawkError: kind 'acme.nope' is not declared"
+}
+]
+}

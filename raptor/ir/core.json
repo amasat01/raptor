@@ -1,0 +1,9071 @@
+{
+ "name": "raptor",
+ "version": "0",
+ "contract": "1",
+ "key_text": [
+  "RawBlock"
+ ],
+ "dialect": "core",
+ "consts": {
+  "LEAF_KINDS": [
+   "vocab_read",
+   "uniform",
+   "table_read",
+   "terminated",
+   "nsamples",
+   "prior_read"
+  ],
+  "LEAF_ROLES": [
+   "vec_in",
+   "mat_in",
+   "wide_in",
+   "per_sample",
+   "lookup",
+   "terminated",
+   "uniform",
+   "nsamples",
+   "mutable"
+  ],
+  "SINK_ROLES": [
+   "mutable",
+   "out",
+   "wide_out",
+   "accum_out"
+  ],
+  "QUAT_OPS": [
+   "quat_mul",
+   "quat_conj",
+   "quat_recip",
+   "quat_rotate",
+   "as_pure",
+   "as_vec3"
+  ],
+  "AT_ROLES": [
+   "lookup",
+   "wide_in",
+   "per_sample",
+   "vec_in",
+   "mat_in"
+  ],
+  "FACTOR_TAGS": [
+   "lu_factor",
+   "chol_factor",
+   "eigh_factor",
+   "qr_factor"
+  ],
+  "DISPATCH_POLICIES": [
+   "predicated",
+   "switch",
+   "segmented",
+   "auto"
+  ],
+  "POLICIES": [
+   "auto",
+   "compensated",
+   "ordered"
+  ],
+  "SCATTER_POLICIES": [
+   "auto",
+   "compensated",
+   "ordered",
+   "plain",
+   "or"
+  ],
+  "CELL_OPS": [
+   "sum",
+   "max",
+   "min"
+  ],
+  "KEYED_AUTO": "keyed_auto",
+  "PRIMITIVE_KIND": "primitive",
+  "REDUCE_KIND": "reduce",
+  "SAMPLE_INDEX_KIND": "sample_index",
+  "LANE_POSITION_KIND": "lane_position",
+  "PLANE_EXTENT_KIND": "plane_extent",
+  "DISPATCH_KIND": "dispatch",
+  "NAMESPACE_SEP": "__",
+  "FUSED_STEPS_PLANE": "fused_steps",
+  "PARAM_CELL": "param_cell",
+  "ROLE_ORDER": [
+   "mutable",
+   "out",
+   "wide_out",
+   "accum_out",
+   "vec_in",
+   "mat_in",
+   "wide_in",
+   "per_sample",
+   "lookup",
+   "terminated",
+   "uniform",
+   "nsamples"
+  ],
+  "FINISHED_PLANE": "finished_count",
+  "ELEMENTWISE_BINARY": [
+   "add",
+   "sub",
+   "mul",
+   "div",
+   "pow",
+   "min",
+   "max",
+   "atan2",
+   "hypot",
+   "copysign",
+   "fmod",
+   "remainder",
+   "fdim"
+  ],
+  "UNARY_MATH": [
+   "neg",
+   "abs",
+   "sqrt",
+   "rsqrt",
+   "exp",
+   "log",
+   "sin",
+   "cos",
+   "tan",
+   "tanh",
+   "asin",
+   "acos",
+   "atan",
+   "floor",
+   "exp2",
+   "expm1",
+   "log2",
+   "log10",
+   "log1p",
+   "cbrt",
+   "sinh",
+   "cosh",
+   "asinh",
+   "acosh",
+   "atanh",
+   "ceil",
+   "trunc",
+   "round",
+   "rint",
+   "sign",
+   "erf",
+   "erfc",
+   "spacing"
+  ],
+  "ELEMENTWISE_TERNARY": [
+   "fma",
+   "clip"
+  ],
+  "PREDICATE": [
+   "isnan",
+   "isinf",
+   "isfinite"
+  ],
+  "COMPARE": [
+   "lt",
+   "le",
+   "gt",
+   "ge",
+   "eq",
+   "ne"
+  ],
+  "LOGICAL": [
+   "land",
+   "lor",
+   "lnot"
+  ],
+  "VECTOR_OPS": [
+   "dot",
+   "cross",
+   "norm",
+   "sum",
+   "component",
+   "component_at",
+   "set_component_at",
+   "add_at",
+   "vec",
+   "splat"
+  ],
+  "MATRIX_OPS": [
+   "mv",
+   "mm",
+   "transpose",
+   "outer"
+  ],
+  "RANDOM_OPS": [
+   "random_uniform",
+   "random_normal"
+  ],
+  "INT_BINARY": [
+   "floordiv",
+   "mod",
+   "band",
+   "bor",
+   "bxor",
+   "shl",
+   "shr",
+   "clamp_index"
+  ],
+  "INT_UNARY": [
+   "invert"
+  ],
+  "CAST_TARGETS": [
+   "int32",
+   "uint32",
+   "i32",
+   "f64"
+  ],
+  "INT_PLANE_DTYPES": [
+   "int32",
+   "uint32"
+  ],
+  "LINALG_FACTORISATIONS": [
+   "lu",
+   "chol",
+   "eigh",
+   "chol_from",
+   "qr"
+  ],
+  "LINALG_CONSUMERS": [
+   "lu_solve",
+   "lu_solve_t",
+   "cho_solve",
+   "tri_lower",
+   "tri_upper_t",
+   "qr_solve",
+   "qr_gram_solve"
+  ],
+  "LINALG_PROJECTIONS": [
+   "lu_info",
+   "lu_det",
+   "chol_info",
+   "chol_factor",
+   "eigh_w",
+   "eigh_v",
+   "eigh_info",
+   "qr_info"
+  ],
+  "LSTSQ_OPS": [
+   "lstsq",
+   "lstsq_gram_solve",
+   "lstsq_info"
+  ],
+  "QR_OPS": [
+   "qr",
+   "qr_solve",
+   "qr_gram_solve",
+   "qr_info"
+  ],
+  "FACTOR_TAG_PAIRS": [
+   "lu",
+   "lu_factor",
+   "chol",
+   "chol_factor",
+   "eigh",
+   "eigh_factor",
+   "chol_from",
+   "chol_factor",
+   "qr",
+   "qr_factor"
+  ],
+  "FACTOR_NEEDS_PAIRS": [
+   "lu_solve",
+   "lu_factor",
+   "lu_solve_t",
+   "lu_factor",
+   "lu_info",
+   "lu_factor",
+   "lu_det",
+   "lu_factor",
+   "cho_solve",
+   "chol_factor",
+   "tri_lower",
+   "chol_factor",
+   "tri_upper_t",
+   "chol_factor",
+   "chol_info",
+   "chol_factor",
+   "chol_factor",
+   "chol_factor",
+   "eigh_w",
+   "eigh_factor",
+   "eigh_v",
+   "eigh_factor",
+   "eigh_info",
+   "eigh_factor",
+   "qr_solve",
+   "qr_factor",
+   "qr_gram_solve",
+   "qr_factor",
+   "qr_info",
+   "qr_factor"
+  ],
+  "RAY_OPS": [
+   "ray_tri",
+   "ray_aabb",
+   "ray_sphere"
+  ],
+  "RAY_ARITY_PAIRS": [
+   "ray_tri",
+   "6",
+   "ray_aabb",
+   "5",
+   "ray_sphere",
+   "5"
+  ],
+  "RAY_SCALAR_PAIRS": [
+   "ray_tri",
+   "5",
+   "ray_aabb",
+   "4",
+   "ray_sphere",
+   "3,4"
+  ],
+  "TAPE_READ_KIND": "tape_read",
+  "QUANTITY_PACKS": [
+   "auto",
+   "tuple"
+  ],
+  "QUANTITY_ROLE_PAIRS": [
+   "vec_in",
+   "vocab_read",
+   "mat_in",
+   "vocab_read",
+   "wide_in",
+   "vocab_read",
+   "per_sample",
+   "vocab_read",
+   "lookup",
+   "table_read",
+   "terminated",
+   "terminated",
+   "uniform",
+   "uniform",
+   "nsamples",
+   "nsamples"
+  ],
+  "RAW_KIND": "raw_device",
+  "TEAM_MAX_DIM": "4096",
+  "KIND_TRAITS": [
+   "elementwise_sink",
+   "reads_by_element",
+   "fresh_read"
+  ]
+ },
+ "records": [
+  {
+   "name": "TensorType",
+   "fields": [
+    "shape",
+    "dtype",
+    "tag=None"
+   ]
+  },
+  {
+   "name": "Wire",
+   "fields": [
+    "name",
+    "role",
+    "shape=()",
+    "dtype='f64'",
+    "tag=None"
+   ]
+  },
+  {
+   "name": "Slot",
+   "fields": [
+    "role",
+    "name",
+    "ttype"
+   ]
+  },
+  {
+   "name": "LaneMeta",
+   "fields": [
+    "name",
+    "slots",
+    "digest"
+   ]
+  },
+  {
+   "name": "Access",
+   "home": "access",
+   "kind": "namedtuple",
+   "fields": [
+    "cls",
+    "op=None"
+   ]
+  },
+  {
+   "name": "DispatchInfo",
+   "home": "walk",
+   "fields": [
+    "name",
+    "K",
+    "policy",
+    "units=()",
+    "selector_reads=()",
+    "static_selector=False"
+   ]
+  },
+  {
+   "name": "PlaneDecl",
+   "home": "unit",
+   "fields": [
+    "name",
+    "form",
+    "ttype",
+    "dims=()",
+    "staged=False",
+    "grid=()",
+    "sorted=False",
+    "shared=()",
+    "meta=()"
+   ]
+  },
+  {
+   "name": "LoweredUnit",
+   "home": "unit",
+   "eq": false,
+   "fields": [
+    "ir_version",
+    "name",
+    "walk_digest",
+    "source_digest",
+    "declaration_digest",
+    "sinks",
+    "walk",
+    "planes",
+    "returns",
+    "mode",
+    "kind",
+    "form",
+    "policy",
+    "cost",
+    "_memo={}"
+   ]
+  },
+  {
+   "name": "SegmentInfo",
+   "home": "segment",
+   "kind": "namedtuple",
+   "fields": [
+    "j",
+    "K",
+    "offsets",
+    "dispatch_name",
+    "units",
+    "static_selector=False",
+    "selector_reads=()"
+   ]
+  },
+  {
+   "name": "ClassifyUnit",
+   "home": "segment",
+   "fields": [
+    "name",
+    "sinks",
+    "walk"
+   ]
+  },
+  {
+   "name": "SegmentUnit",
+   "home": "segment",
+   "fields": [
+    "name",
+    "sinks",
+    "walk",
+    "segment"
+   ]
+  }
+ ],
+ "checks": {
+  "node_base": {
+   "params": [
+    "cls",
+    "ttype",
+    "operands"
+   ],
+   "steps": [
+    [
+     "check",
+     "not isinstance(ttype, TensorType)",
+     "{name_of(cls)}: ttype must be a TensorType, got {ttype!r}"
+    ],
+    [
+     "let",
+     "bad",
+     "first_not_node(operands)"
+    ],
+    [
+     "check",
+     "bad is not None",
+     "{name_of(cls)}: operand {bad!r} is not a Node"
+    ],
+    [
+     "check",
+     "cut_in_loop(operands)",
+     "a cut inside a `for` is not in this release (it would be one launch per iteration); hoist hawk.sum(x) out of the loop"
+    ]
+   ]
+  },
+  "refuse_factor_arms": {
+   "params": [
+    "what",
+    "ttype"
+   ],
+   "steps": [
+    [
+     "check",
+     "ttype.tag in FACTOR_TAGS",
+     "{what}: the arms are {head(ttype.tag)} factorisations, which are read through lu_solve/cho_solve and the field reads, never selected between; select between the results (the solves, the determinant, the eigenvalues) instead"
+    ]
+   ]
+  },
+  "node_sink": {
+   "params": [
+    "kind",
+    "role",
+    "name",
+    "value",
+    "index",
+    "ttype"
+   ],
+   "steps": [
+    [
+     "let",
+     "tt",
+     "coalesce(ttype, value.ttype)"
+    ],
+    [
+     "let",
+     "ops",
+     "cat((value,), opt(index))"
+    ],
+    [
+     "node",
+     "tt",
+     "ops"
+    ],
+    [
+     "check",
+     "role not in SINK_ROLES",
+     "sink {name!r}: unknown sink role {role!r}, expected one of {SINK_ROLES}"
+    ]
+   ]
+  }
+ },
+ "kinds": [
+  {
+   "name": "node",
+   "class": "Node",
+   "family": "expr",
+   "refines": null,
+   "operands": {
+    "min": 0,
+    "max": "many"
+   },
+   "refinable": true,
+   "slots": [
+    "ttype",
+    "operands"
+   ],
+   "wire_attr": "node",
+   "params": "ttype: TensorType, operands: Sequence[Node] = ()",
+   "assigns": [],
+   "binding": "none",
+   "dedup": [
+    "py"
+   ],
+   "from": [
+    "ttype",
+    "operands"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "ttype",
+      "operands"
+     ]
+    ],
+    "out": []
+   }
+  },
+  {
+   "name": "leaf",
+   "class": "Leaf",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "kind",
+    "role",
+    "name",
+    "quantity",
+    "wire_index",
+    "sorted"
+   ],
+   "params": "kind: str, role: str, name: str, ttype: TensorType, *, quantity: 'Quantity | None' = None, wire_index: int = 0, sorted: bool = False",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "quantity",
+    "wire_index",
+    "sorted"
+   ],
+   "binding": "slot",
+   "dedup": [
+    "py"
+   ],
+   "state": [
+    "kind",
+    "role",
+    "name",
+    "wire_index",
+    "sorted",
+    "quantity"
+   ],
+   "from": [
+    "@kind",
+    "@role",
+    "@name",
+    "ttype",
+    "quantity=@quantity",
+    "wire_index=@wire_index",
+    "sorted=@sorted"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "ttype",
+      "()"
+     ],
+     [
+      "check",
+      "kind not in LEAF_KINDS",
+      "leaf {name!r}: unknown leaf kind {kind!r}, expected one of {LEAF_KINDS}"
+     ],
+     [
+      "check",
+      "role not in LEAF_ROLES",
+      "leaf {name!r}: unknown leaf role {role!r}, expected one of {LEAF_ROLES}"
+     ]
+    ],
+    "out": [
+     "kind",
+     "role",
+     "name",
+     "quantity",
+     "wire_index",
+     "sorted"
+    ]
+   }
+  },
+  {
+   "name": "const",
+   "class": "Const",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "literal"
+   ],
+   "wire_attr": "constant",
+   "params": "literal: Plain, ttype: TensorType",
+   "assigns": [
+    "literal"
+   ],
+   "dedup": [
+    "one",
+    "r:literal"
+   ],
+   "state": [
+    "literal:plain"
+   ],
+   "from": [
+    "@literal:plain",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "ttype",
+      "()"
+     ]
+    ],
+    "out": [
+     "literal"
+    ]
+   }
+  },
+  {
+   "name": "role_const",
+   "class": "RoleConst",
+   "family": "expr",
+   "refines": "const",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "label"
+   ],
+   "params": "value: int, label: str, ttype: TensorType | None = None",
+   "assigns": [
+    "literal",
+    "label"
+   ],
+   "dedup": [
+    "tup",
+    "r:literal",
+    "f:label"
+   ],
+   "state": [
+    "literal",
+    "label"
+   ],
+   "from": [
+    "@literal",
+    "@label",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "v",
+      "int(value)"
+     ],
+     [
+      "let",
+      "tt",
+      "orelse(ttype, tt('i32'))"
+     ],
+     [
+      "node",
+      "tt",
+      "()"
+     ]
+    ],
+    "out": [
+     "v",
+     "label"
+    ]
+   }
+  },
+  {
+   "name": "sample_index",
+   "class": "SampleIndex",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "wire_attr": "sample_index",
+   "params": "ttype: TensorType | None = None",
+   "assigns": [],
+   "dedup": [
+    "none"
+   ],
+   "from": [
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "tt",
+      "orelse(ttype, tt('i32'))"
+     ],
+     [
+      "node",
+      "tt",
+      "()"
+     ]
+    ],
+    "out": []
+   }
+  },
+  {
+   "name": "plane_extent",
+   "class": "PlaneExtent",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "wire_attr": "plane_extent",
+   "params": "plane: Leaf, ttype: TensorType | None = None",
+   "assigns": [],
+   "dedup": [
+    "none"
+   ],
+   "from": [
+    "op:0",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "tt",
+      "orelse(ttype, tt('i32'))"
+     ],
+     [
+      "node",
+      "tt",
+      "(plane,)"
+     ]
+    ],
+    "out": []
+   },
+   "props": [
+    [
+     "role",
+     "opattr",
+     "0",
+     "role"
+    ],
+    [
+     "name",
+     "opattr",
+     "0",
+     "name"
+    ]
+   ]
+  },
+  {
+   "name": "lane_position",
+   "class": "LanePosition",
+   "family": "expr",
+   "refines": "sample_index",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "wire_attr": "lane_position"
+  },
+  {
+   "name": "op",
+   "class": "Op",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": "many"
+   },
+   "slots": [
+    "kind",
+    "literal"
+   ],
+   "params": "kind: str, operands: Sequence[Node], ttype: TensorType, literal: Plain = None",
+   "assigns": [
+    "kind",
+    "literal"
+   ],
+   "dedup": [
+    "one",
+    "r:literal"
+   ],
+   "state": [
+    "kind",
+    "literal:plain"
+   ],
+   "from": [
+    "@kind",
+    "operands",
+    "ttype",
+    "@literal:plain"
+   ],
+   "watch": "raw",
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "ttype",
+      "operands"
+     ],
+     [
+      "check",
+      "kind in QUAT_OPS and _t.shape == (4,) and _t.tag != 'quaternion'",
+      "op {kind!r} returns a 4-wide value typed {_t!r}: a quaternion-producing op must carry tag='quaternion', because the tag participates in type identity and therefore in the walk's merge check"
+     ]
+    ],
+    "out": [
+     "kind",
+     "literal"
+    ]
+   }
+  },
+  {
+   "name": "at",
+   "class": "At",
+   "family": "expr",
+   "refines": "op",
+   "operands": {
+    "min": 2,
+    "max": 2
+   },
+   "refinable": true,
+   "params": "plane: Leaf, index: Node, ttype: TensorType",
+   "assigns": [
+    "kind",
+    "literal"
+   ],
+   "from": [
+    "op:0",
+    "op:1",
+    "ttype"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "not (isinstance(plane, Leaf) and plane.role in AT_ROLES)",
+      "at(): the indexed plane must be a leaf in one of the roles {AT_ROLES}, got {plane!r}"
+     ],
+     [
+      "node",
+      "ttype",
+      "(plane, index)"
+     ]
+    ],
+    "out": [
+     "'at'",
+     "None"
+    ]
+   },
+   "props": [
+    [
+     "plane",
+     "op",
+     "0"
+    ],
+    [
+     "index",
+     "op",
+     "1"
+    ]
+   ],
+   "wire": "at"
+  },
+  {
+   "name": "primitive",
+   "class": "Primitive",
+   "family": "expr",
+   "refines": "op",
+   "operands": {
+    "min": 1,
+    "max": "many"
+   },
+   "slots": [
+    "name",
+    "input_count"
+   ],
+   "params": "name: str, value: Node, inputs: Sequence[Node] = (), ttype: TensorType | None = None",
+   "assigns": [
+    "kind",
+    "literal",
+    "name",
+    "input_count"
+   ],
+   "dedup": [
+    "tup",
+    "s:primitive",
+    "f:name"
+   ],
+   "state": [
+    "name"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "ops:1:",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "inputs",
+      "tuple(inputs)"
+     ],
+     [
+      "let",
+      "tt",
+      "coalesce(ttype, value.ttype)"
+     ],
+     [
+      "node",
+      "tt",
+      "cat((value,), inputs)"
+     ]
+    ],
+    "out": [
+     "'primitive'",
+     "None",
+     "name",
+     "len(inputs)"
+    ]
+   },
+   "props": [
+    [
+     "forward",
+     "op",
+     "0"
+    ],
+    [
+     "inputs",
+     "ops",
+     "1:"
+    ]
+   ]
+  },
+  {
+   "name": "select",
+   "class": "Select",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 3,
+    "max": 3
+   },
+   "result": [
+    "same_as",
+    1
+   ],
+   "wire_attr": "select",
+   "params": "cond: Node, on_true: Node, on_false: Node, ttype: TensorType",
+   "assigns": [],
+   "dedup": [
+    "none"
+   ],
+   "from": [
+    "*operands",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "refuse_factor_arms",
+      "'select'",
+      "ttype"
+     ],
+     [
+      "node",
+      "ttype",
+      "(cond, on_true, on_false)"
+     ]
+    ],
+    "out": []
+   }
+  },
+  {
+   "name": "dispatch",
+   "class": "Dispatch",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 3,
+    "max": "many"
+   },
+   "result": [
+    "same_as",
+    1
+   ],
+   "slots": [
+    "policy"
+   ],
+   "wire_attr": "dispatch",
+   "params": "selector: Node, branches: Sequence[Node], policy: str, ttype: TensorType",
+   "assigns": [
+    "policy"
+   ],
+   "dedup": [
+    "tup",
+    "k",
+    "f:policy"
+   ],
+   "state": [
+    "policy"
+   ],
+   "from": [
+    "op:0",
+    "ops:1:",
+    "@policy",
+    "ttype"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "br",
+      "tuple(branches)"
+     ],
+     [
+      "check",
+      "len(br) < 2",
+      "dispatch: at least 2 branches are required, got {len(br)}"
+     ],
+     [
+      "check",
+      "policy not in DISPATCH_POLICIES",
+      "dispatch: unknown policy {policy!r}; declared are {DISPATCH_POLICIES}"
+     ],
+     [
+      "check",
+      "selector.ttype.shape != () or selector.ttype.dtype != 'i32'",
+      "dispatch: kind must be a rank-0 i32 value, got {selector.ttype!r} — a compile-time constant is not a traced VALUE and a policy is an authoring decision, not something the node infers"
+     ],
+     [
+      "let",
+      "bad",
+      "first_ne_ttype(br)"
+     ],
+     [
+      "check",
+      "bad is not None",
+      "dispatch: the branches disagree — {br[0].ttype!r} vs {bad.ttype!r} (every branch shares ONE TensorType)"
+     ],
+     [
+      "call",
+      "refuse_factor_arms",
+      "'dispatch'",
+      "ttype"
+     ],
+     [
+      "node",
+      "ttype",
+      "cat((selector,), br)"
+     ]
+    ],
+    "out": [
+     "policy"
+    ]
+   },
+   "props": [
+    [
+     "selector",
+     "op",
+     "0"
+    ],
+    [
+     "branches",
+     "ops",
+     "1:"
+    ],
+    [
+     "K",
+     "nops-1"
+    ]
+   ]
+  },
+  {
+   "name": "sink",
+   "class": "Sink",
+   "family": "sink",
+   "refines": "node",
+   "operands": {
+    "min": 1,
+    "max": 2
+   },
+   "refinable": true,
+   "slots": [
+    "kind",
+    "role",
+    "name"
+   ],
+   "params": "kind: str, role: str, name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None",
+   "assigns": [
+    "kind",
+    "role",
+    "name"
+   ],
+   "binding": "slot",
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name"
+   ],
+   "state": [
+    "kind",
+    "role",
+    "name"
+   ],
+   "from": [
+    "@kind",
+    "@role",
+    "@name",
+    "op:0",
+    "opq:1",
+    "ttype"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "node_sink",
+      "kind",
+      "role",
+      "name",
+      "value",
+      "index",
+      "ttype"
+     ]
+    ],
+    "out": [
+     "kind",
+     "role",
+     "name"
+    ]
+   },
+   "props": [
+    [
+     "value",
+     "op",
+     "0"
+    ],
+    [
+     "index",
+     "opq",
+     "1"
+    ]
+   ]
+  },
+  {
+   "name": "assign",
+   "class": "Assign",
+   "family": "sink",
+   "refines": "sink",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "refinable": true,
+   "params": "name: str, value: Node, ttype: TensorType | None = None",
+   "assigns": [
+    "kind",
+    "role",
+    "name"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "node_sink",
+      "'assign'",
+      "'mutable'",
+      "name",
+      "value",
+      "None",
+      "ttype"
+     ]
+    ],
+    "out": [
+     "'assign'",
+     "'mutable'",
+     "name"
+    ]
+   },
+   "role": "mutable",
+   "wire": "assign"
+  },
+  {
+   "name": "wide_write",
+   "class": "WideWrite",
+   "family": "sink",
+   "refines": "sink",
+   "operands": {
+    "min": 1,
+    "max": 2
+   },
+   "refinable": true,
+   "params": "name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None",
+   "assigns": [
+    "kind",
+    "role",
+    "name"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "opq:1",
+    "ttype"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "node_sink",
+      "'wide_write'",
+      "'wide_out'",
+      "name",
+      "value",
+      "index",
+      "ttype"
+     ]
+    ],
+    "out": [
+     "'wide_write'",
+     "'wide_out'",
+     "name"
+    ]
+   },
+   "role": "wide_out",
+   "wire": "wide_write"
+  },
+  {
+   "name": "block_sum_write",
+   "class": "BlockSumWrite",
+   "family": "sink",
+   "refines": "wide_write",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "params": "name: str, block: Node",
+   "assigns": [
+    "kind",
+    "role",
+    "name"
+   ],
+   "from": [
+    "@name",
+    "op:0"
+   ],
+   "watch": "all",
+   "methods": [
+    [
+     "expanded",
+     "self.block.expanded(self.name)"
+    ]
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "node_sink",
+      "'wide_write'",
+      "'wide_out'",
+      "name",
+      "block",
+      "None",
+      "tt(block.ttype.dtype)"
+     ]
+    ],
+    "out": [
+     "'wide_write'",
+     "'wide_out'",
+     "name"
+    ]
+   },
+   "props": [
+    [
+     "block",
+     "op",
+     "0"
+    ]
+   ]
+  },
+  {
+   "name": "accum_write",
+   "class": "AccumWrite",
+   "family": "sink",
+   "refines": "sink",
+   "operands": {
+    "min": 1,
+    "max": 2
+   },
+   "slots": [
+    "policy",
+    "reduced"
+   ],
+   "params": "name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None, policy: str = \"auto\", reduced: Node | None = None",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "policy",
+    "reduced"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "fx:policy:auto,plain"
+   ],
+   "state": [
+    "+Sink",
+    "policy"
+   ],
+   "edges": [
+    "reduced?"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "opq:1",
+    "ttype",
+    "@policy",
+    "edge:reduced"
+   ],
+   "from_edges": true,
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "node_sink",
+      "'accum_write'",
+      "'accum_out'",
+      "name",
+      "value",
+      "index",
+      "ttype"
+     ],
+     [
+      "check",
+      "not (policy in SCATTER_POLICIES or policy == 'keyed_auto')",
+      "accum_write {name!r}: policy {policy!r} is not one of {SCATTER_POLICIES}"
+     ]
+    ],
+    "out": [
+     "'accum_write'",
+     "'accum_out'",
+     "name",
+     "policy",
+     "reduced"
+    ]
+   }
+  },
+  {
+   "name": "ordered_accum_write",
+   "class": "OrderedAccumWrite",
+   "family": "sink",
+   "refines": "accum_write",
+   "operands": {
+    "min": 3,
+    "max": 3
+   },
+   "slots": [
+    "kept"
+   ],
+   "params": "name: str, value: Node, index: Node, key: Node, kept: tuple, ttype: TensorType | None = None",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "policy",
+    "reduced",
+    "kept"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "fx:policy:auto,plain"
+   ],
+   "state": [
+    "+AccumWrite",
+    "kept:plain"
+   ],
+   "edges": [
+    "reduced?"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "op:1",
+    "op:2",
+    "@kept:plain",
+    "ttype"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "tt",
+      "coalesce(ttype, value.ttype)"
+     ],
+     [
+      "node",
+      "tt",
+      "(value, index, key)"
+     ]
+    ],
+    "out": [
+     "'accum_write'",
+     "'accum_out'",
+     "name",
+     "'ordered'",
+     "None",
+     "tuple(kept)"
+    ]
+   },
+   "props": [
+    [
+     "key",
+     "op",
+     "2"
+    ]
+   ]
+  },
+  {
+   "name": "reduce_samples",
+   "class": "ReduceSamples",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "result": [
+    "same_as",
+    0
+   ],
+   "slots": [
+    "op",
+    "key",
+    "count",
+    "policy",
+    "kept"
+   ],
+   "wire_attr": "reduce",
+   "params": "op: str, value: Node, *, key: Node | None = None, count: Node | None = None, policy: str = \"auto\", kept: tuple = ()",
+   "assigns": [
+    "op",
+    "key",
+    "count",
+    "policy",
+    "kept"
+   ],
+   "dedup": [
+    "one",
+    "f:op"
+   ],
+   "state": [
+    "op",
+    "policy",
+    "kept:plain"
+   ],
+   "edges": [
+    "key?",
+    "count?"
+   ],
+   "from": [
+    "@op",
+    "op:0",
+    "key=edge:key",
+    "count=edge:count",
+    "policy=@policy",
+    "kept=@kept:plain"
+   ],
+   "from_edges": true,
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "op not in CELL_OPS",
+      "reduce over samples: op {op!r} is not one of {CELL_OPS}"
+     ],
+     [
+      "check",
+      "value.ttype.dtype not in ('f64', 'f32') or len(value.ttype.shape) > 2",
+      "reduce over samples: an f64/f32 scalar, vector or matrix is reduced, got {value.ttype!r}"
+     ],
+     [
+      "check",
+      "key is not None and op != 'sum'",
+      "reduce over some lane axes: op {op!r} is not built, only sum"
+     ],
+     [
+      "check",
+      "policy not in POLICIES",
+      "reduce over samples: policy {policy!r} is not one of {POLICIES}"
+     ],
+     [
+      "node",
+      "value.ttype",
+      "(value,)"
+     ]
+    ],
+    "out": [
+     "op",
+     "key",
+     "count",
+     "policy",
+     "kept"
+    ]
+   }
+  },
+  {
+   "name": "block_sum",
+   "class": "BlockSum",
+   "family": "expr",
+   "refines": "reduce_samples",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "result": [
+    "same_as",
+    0
+   ],
+   "slots": [],
+   "params": "op: str, value: Node, *, key: Node | None = None, count: Node | None = None, policy: str = \"auto\", kept: tuple = ()",
+   "assigns": [
+    "op",
+    "key",
+    "count",
+    "policy",
+    "kept"
+   ],
+   "dedup": [
+    "one",
+    "f:op"
+   ],
+   "state": [
+    "op",
+    "policy",
+    "kept:plain"
+   ],
+   "edges": [
+    "key?",
+    "count?"
+   ],
+   "from": [
+    "@op",
+    "op:0",
+    "key=edge:key",
+    "count=edge:count",
+    "policy=@policy",
+    "kept=@kept:plain"
+   ],
+   "from_edges": true,
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "op not in CELL_OPS",
+      "reduce over samples: op {op!r} is not one of {CELL_OPS}"
+     ],
+     [
+      "check",
+      "value.ttype.dtype not in ('f64', 'f32') or len(value.ttype.shape) > 2",
+      "reduce over samples: an f64/f32 scalar, vector or matrix is reduced, got {value.ttype!r}"
+     ],
+     [
+      "check",
+      "key is not None and op != 'sum'",
+      "reduce over some lane axes: op {op!r} is not built, only sum"
+     ],
+     [
+      "check",
+      "policy not in POLICIES",
+      "reduce over samples: policy {policy!r} is not one of {POLICIES}"
+     ],
+     [
+      "node",
+      "value.ttype",
+      "(value,)"
+     ]
+    ],
+    "out": [
+     "op",
+     "key",
+     "count",
+     "policy",
+     "kept"
+    ]
+   },
+   "methods": [
+    [
+     "stored(name, ttype=None)",
+     "(BlockSumWrite(name, self),)"
+    ],
+    [
+     "expanded(name)",
+     "ReduceSamples.stored(self, name)"
+    ],
+    [
+     "plain()",
+     "ReduceSamples(\"sum\", self.operands[0], policy=self.policy) if not self.kept else ReduceSamples(\"sum\", self.operands[0], key=self.key, count=self.count, policy=self.policy, kept=self.kept)"
+    ]
+   ],
+   "props": [
+    [
+     "factors",
+     "core",
+     "block_factors_of"
+    ]
+   ]
+  },
+  {
+   "name": "sample_sum",
+   "class": "SampleSum",
+   "family": "sink",
+   "refines": "sink",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "slots": [
+    "op",
+    "cell",
+    "columns"
+   ],
+   "params": "name: str, value: Node, ttype: TensorType | None = None, op: str = \"sum\", cell: str | None = None, columns: int = 1",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "cell",
+    "columns",
+    "op"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "f:op",
+    "f:cell",
+    "f:columns"
+   ],
+   "state": [
+    "+Sink",
+    "op",
+    "cell",
+    "columns"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "ttype",
+    "@op",
+    "@cell",
+    "@columns"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "call",
+      "node_sink",
+      "'sample_sum'",
+      "'accum_out'",
+      "name",
+      "value",
+      "None",
+      "ttype"
+     ],
+     [
+      "let",
+      "cell_",
+      "orelse(cell, name)"
+     ],
+     [
+      "check",
+      "op not in CELL_OPS",
+      "sample_sum {name!r}: op {op!r} is not one of {CELL_OPS}"
+     ],
+     [
+      "check",
+      "_t.shape or _t.dtype not in ('f64', 'f32')",
+      "sample_sum {name!r}: sums a rank-0 f64/f32 value, got {_t!r}"
+     ]
+    ],
+    "out": [
+     "'sample_sum'",
+     "'accum_out'",
+     "name",
+     "cell_",
+     "columns",
+     "op"
+    ]
+   }
+  },
+  {
+   "name": "tape_write",
+   "class": "TapeWrite",
+   "family": "sink",
+   "refines": "sink",
+   "operands": {
+    "min": 3,
+    "max": "many"
+   },
+   "slots": [
+    "width"
+   ],
+   "params": "name: str, row: Node, on: Node, values: Sequence[Node], ttype: TensorType",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "width"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "f:width"
+   ],
+   "state": [
+    "name"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "op:1",
+    "ops:2:",
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "vs",
+      "tuple(values)"
+     ],
+     [
+      "node",
+      "ttype",
+      "cat((row, on), vs)"
+     ],
+     [
+      "let",
+      "w",
+      "width_of(vs)"
+     ],
+     [
+      "check",
+      "len(_t.shape) != 1 or not vs or rem(_t.shape[0], w) != 0 or row.ttype != tt('i32')",
+      "tape_write {name!r}: a {_t!r} plane takes whole rows of the {w} stored components at an i32 row"
+     ]
+    ],
+    "out": [
+     "'tape_write'",
+     "'out'",
+     "name",
+     "w"
+    ]
+   },
+   "props": [
+    [
+     "value",
+     "op",
+     "2"
+    ],
+    [
+     "index",
+     "none"
+    ],
+    [
+     "row",
+     "op",
+     "0"
+    ],
+    [
+     "on",
+     "op",
+     "1"
+    ],
+    [
+     "values",
+     "ops",
+     "2:"
+    ]
+   ]
+  },
+  {
+   "name": "finish",
+   "class": "Finish",
+   "family": "sink",
+   "refines": "sink",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "result": [
+    "fixed",
+    "bool",
+    []
+   ],
+   "slots": [
+    "steps"
+   ],
+   "params": "name: str, value: Node, steps: int = 1",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "steps"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "f:steps"
+   ],
+   "state": [
+    "name",
+    "steps"
+   ],
+   "from": [
+    "@name",
+    "op:0",
+    "@steps"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "tt('bool')",
+      "(value,)"
+     ],
+     [
+      "check",
+      "value.ttype != _t",
+      "finish {name!r}: the condition is typed {value.ttype!r}; a sample finishes on a traced rank-0 bool"
+     ]
+    ],
+    "out": [
+     "'finish'",
+     "'terminated'",
+     "name",
+     "auto_or_int(steps)"
+    ]
+   }
+  },
+  {
+   "name": "loop_index",
+   "class": "LoopIndex",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "depth",
+    "name",
+    "bounds"
+   ],
+   "wire_attr": "loop_index",
+   "params": "depth: int, name: str, ttype: TensorType | None = None, bounds: tuple | None = None",
+   "assigns": [
+    "depth",
+    "name",
+    "bounds"
+   ],
+   "dedup": [
+    "tup",
+    "s:loop_index",
+    "f:depth",
+    "f:name"
+   ],
+   "state": [
+    "depth",
+    "name",
+    "bounds:plain"
+   ],
+   "from": [
+    "@depth",
+    "@name",
+    "ttype",
+    "@bounds:plain"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "tt",
+      "orelse(ttype, tt('i32'))"
+     ],
+     [
+      "node",
+      "tt",
+      "()"
+     ]
+    ],
+    "out": [
+     "int(depth)",
+     "name",
+     "bounds"
+    ]
+   }
+  },
+  {
+   "name": "loop_carry",
+   "class": "LoopCarry",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "depth",
+    "slot",
+    "name"
+   ],
+   "wire_attr": "loop_carry",
+   "params": "depth: int, slot: int, name: str, ttype: TensorType",
+   "assigns": [
+    "depth",
+    "slot",
+    "name"
+   ],
+   "dedup": [
+    "tup",
+    "s:loop_carry",
+    "f:depth",
+    "f:slot",
+    "f:name"
+   ],
+   "state": [
+    "depth",
+    "slot",
+    "name"
+   ],
+   "from": [
+    "@depth",
+    "@slot",
+    "@name",
+    "ttype"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "ttype",
+      "()"
+     ]
+    ],
+    "out": [
+     "int(depth)",
+     "int(slot)",
+     "name"
+    ]
+   }
+  },
+  {
+   "name": "loop",
+   "class": "Loop",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 1,
+    "max": "many"
+   },
+   "slots": [
+    "index",
+    "carries",
+    "nexts",
+    "start",
+    "stop",
+    "step",
+    "trip",
+    "carry_count",
+    "body_sinks",
+    "_body_key",
+    "exit_cond",
+    "exit_values",
+    "count",
+    "count_tail",
+    "dynamic",
+    "_free_end"
+   ],
+   "wire_attr": "loop",
+   "params": "index: LoopIndex, carries: Sequence[LoopCarry], inits: Sequence[Node], nexts: Sequence[Node], *, start: int, stop: int, step: int, free: Sequence[Node] = (), body_sinks: Sequence[Sink] = (), exit_cond: Node | None = None, exit_values: Sequence[Node] = (), count: Node | None = None, count_tail: bool = False, dynamic: str | None = None",
+   "assigns": [
+    "index",
+    "carries",
+    "nexts",
+    "start",
+    "stop",
+    "step",
+    "trip",
+    "carry_count",
+    "body_sinks",
+    "_body_key",
+    "exit_cond",
+    "exit_values",
+    "count",
+    "count_tail",
+    "dynamic",
+    "_free_end"
+   ],
+   "dedup": [
+    "tup",
+    "s:loop",
+    "f:start",
+    "f:stop",
+    "f:step",
+    "names:carries",
+    "skeys:body_sinks",
+    "body",
+    "litif:exit:exit_cond",
+    "litif:count:count",
+    "fieldif:count_tail:count",
+    "litif:dynamic:dynamic",
+    "fieldif:dynamic:dynamic"
+   ],
+   "state": [
+    "start",
+    "stop",
+    "step",
+    "count_tail",
+    "dynamic",
+    "n_free=len(self.free)",
+    "has_count=self.count is not None"
+   ],
+   "edges": [
+    "index",
+    "carries",
+    "nexts",
+    "body_sinks",
+    "exit_cond?",
+    "exit_values"
+   ],
+   "from_edges": true,
+   "from": [
+    "edge:index",
+    "edge:carries",
+    "carry_inits",
+    "edge:nexts",
+    "start=@start",
+    "stop=@stop",
+    "step=@step",
+    "free=free_ops",
+    "body_sinks=edge:body_sinks",
+    "exit_cond=edge:exit_cond",
+    "exit_values=edge:exit_values",
+    "count=count_op",
+    "count_tail=@count_tail",
+    "dynamic=@dynamic"
+   ],
+   "props": [
+    [
+     "inits",
+     "slice",
+     "0",
+     "self.carry_count"
+    ],
+    [
+     "free",
+     "slice",
+     "self.carry_count",
+     "self._free_end"
+    ],
+    [
+     "exit_form",
+     "core",
+     "exit_form"
+    ]
+   ],
+   "methods": [
+    [
+     "body_roots",
+     "tuple(_core.body_roots(self))"
+    ],
+    [
+     "body_nodes",
+     "tuple(_core.body_nodes(self))"
+    ]
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "carries",
+      "tuple(carries)"
+     ],
+     [
+      "let",
+      "inits",
+      "tuple(inits)"
+     ],
+     [
+      "let",
+      "nexts",
+      "tuple(nexts)"
+     ],
+     [
+      "let",
+      "body_sinks",
+      "tuple(body_sinks)"
+     ],
+     [
+      "let",
+      "exit_values",
+      "tuple(exit_values)"
+     ],
+     [
+      "check",
+      "exit_cond is None and len(exit_values) > 0",
+      "Loop: exit values without an exit condition"
+     ],
+     [
+      "check",
+      "exit_cond is not None and (exit_cond.ttype.shape != () or exit_cond.ttype.dtype != 'bool')",
+      "Loop: a `break` condition must be a rank-0 bool, got {exit_cond.ttype!r}"
+     ],
+     [
+      "check",
+      "exit_cond is not None and len(exit_values) != len(carries)",
+      "Loop: {len(carries)} carried slot(s) but {len(exit_values)} value(s) at the `break`"
+     ],
+     [
+      "let",
+      "xj",
+      "first_mismatch(carries, exit_values)"
+     ],
+     [
+      "check",
+      "exit_cond is not None and not xj < 0",
+      "Loop: carried slot {xj} ({carries[xj].name!r}) is typed {carries[xj].ttype!r} but its value at the `break` is typed {exit_values[xj].ttype!r}"
+     ],
+     [
+      "check",
+      "dynamic is not None and dynamic != 'max' and dynamic != 'open'",
+      "Loop: dynamic is None, 'max' or 'open', got {dynamic!r}"
+     ],
+     [
+      "check",
+      "dynamic is not None and count is None",
+      "Loop: a run-time trip count is carried as `count`"
+     ],
+     [
+      "check",
+      "count is not None and (count.ttype.shape != () or count.ttype.dtype != 'i32')",
+      "Loop: a runtime iteration count is a rank-0 i32, got {count.ttype!r}"
+     ],
+     [
+      "let",
+      "sj",
+      "first_not_instance(body_sinks, Sink)"
+     ],
+     [
+      "check",
+      "not sj < 0",
+      "Loop: {body_sinks[sj]!r} is not a sink"
+     ],
+     [
+      "check",
+      "len(carries) == 0",
+      "Loop: a lowered `for` must carry at least one value — a body that assigns nothing the loop's consumers read computes nothing, and an empty loop is not a HAWK form"
+     ],
+     [
+      "check",
+      "len(carries) != len(inits) or len(inits) != len(nexts)",
+      "Loop: {len(carries)} carried slot(s) but {len(inits)} initial value(s) and {len(nexts)} body result(s) — the three are one tuple read three ways"
+     ],
+     [
+      "check",
+      "int(step) == 0",
+      "Loop: a `for` step of zero never terminates"
+     ],
+     [
+      "let",
+      "fault",
+      "carry_fault(carries, inits, nexts)"
+     ],
+     [
+      "check",
+      "fault is not None and fault[1] == 0",
+      "Loop: carried slot {fault[0]} ({carries[fault[0]].name!r}) is typed {carries[fault[0]].ttype!r} but its initial value is typed {inits[fault[0]].ttype!r}. A carried value has ONE type for the whole loop — it is a single C++ local the body reassigns, so a type that changed between iterations could not be declared at all"
+     ],
+     [
+      "check",
+      "fault is not None and fault[1] == 1",
+      "Loop: carried slot {fault[0]} ({carries[fault[0]].name!r}) is typed {carries[fault[0]].ttype!r} but its body result is typed {nexts[fault[0]].ttype!r}. A carried value has ONE type for the whole loop — it is a single C++ local the body reassigns, so a type that changed between iterations could not be declared at all"
+     ],
+     [
+      "check",
+      "fault is not None and fault[1] == 2",
+      "Loop: carried slot {fault[0]} ({carries[fault[0]].name!r}) is typed {carries[fault[0]].ttype!r}; a carried slot is one language value with static extents and HAWK declares none above rank 2"
+     ],
+     [
+      "let",
+      "free",
+      "tuple(free)"
+     ],
+     [
+      "node",
+      "carries[0].ttype",
+      "cat(inits, free, opt(count))"
+     ]
+    ],
+    "out": [
+     "index",
+     "carries",
+     "nexts",
+     "int(start)",
+     "int(stop)",
+     "int(step)",
+     "trip(int(start), int(stop), int(step))",
+     "len(carries)",
+     "body_sinks",
+     "None",
+     "exit_cond",
+     "exit_values",
+     "count",
+     "bool(count_tail)",
+     "dynamic",
+     "len(cat(inits, free))"
+    ]
+   }
+  },
+  {
+   "name": "loop_value",
+   "class": "LoopValue",
+   "family": "expr",
+   "refines": "op",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "params": "loop: Loop, slot: int",
+   "assigns": [
+    "kind",
+    "literal"
+   ],
+   "from": [
+    "op:0",
+    "@literal"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "not isinstance(loop, Loop)",
+      "LoopValue: {loop!r} is not a Loop"
+     ],
+     [
+      "check",
+      "slot < 0 or not slot < loop.carry_count",
+      "LoopValue: slot {slot} is outside the loop's {loop.carry_count} carried slot(s)"
+     ],
+     [
+      "node",
+      "loop.carries[slot].ttype",
+      "(loop,)"
+     ]
+    ],
+    "out": [
+     "'loop_value'",
+     "slot"
+    ]
+   },
+   "props": [
+    [
+     "loop",
+     "op",
+     "0"
+    ],
+    [
+     "slot",
+     "intlit"
+    ]
+   ]
+  },
+  {
+   "name": "loop_count",
+   "class": "LoopCount",
+   "family": "expr",
+   "refines": "op",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "params": "loop: Loop",
+   "assigns": [
+    "kind",
+    "literal"
+   ],
+   "from": [
+    "op:0"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "not isinstance(loop, Loop) or loop.exit_cond is None",
+      "LoopCount: {loop!r} is not a loop with a `break`"
+     ],
+     [
+      "node",
+      "tt('i32')",
+      "(loop,)"
+     ]
+    ],
+    "out": [
+     "'loop_count'",
+     "None"
+    ]
+   },
+   "props": [
+    [
+     "loop",
+     "op",
+     "0"
+    ]
+   ]
+  },
+  {
+   "name": "tape_read",
+   "class": "TapeRead",
+   "family": "expr",
+   "refines": "op",
+   "operands": {
+    "min": 1,
+    "max": 2
+   },
+   "params": "loop: Loop, slot: int, index: Node",
+   "assigns": [
+    "kind",
+    "literal",
+    "slot"
+   ],
+   "from": [
+    "op:0",
+    "@literal",
+    "op:1"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "not isinstance(loop, Loop)",
+      "TapeRead: {loop!r} is not a Loop"
+     ],
+     [
+      "check",
+      "slot < 0 or not slot < loop.carry_count",
+      "TapeRead: slot {slot} is outside the loop's {loop.carry_count} carried slot(s)"
+     ],
+     [
+      "node",
+      "loop.carries[slot].ttype",
+      "(loop, index)"
+     ]
+    ],
+    "out": [
+     "'tape_read'",
+     "slot",
+     "int(slot)"
+    ]
+   },
+   "props": [
+    [
+     "loop",
+     "op",
+     "0"
+    ],
+    [
+     "index",
+     "op",
+     "1"
+    ]
+   ],
+   "slots": [
+    "slot"
+   ]
+  }
+ ],
+ "rules": {
+  "unary_d": {
+   "neg": [
+    "c",
+    -1.0
+   ],
+   "abs": [
+    "abs_d",
+    "x"
+   ],
+   "sqrt": [
+    "div",
+    [
+     "c",
+     0.5
+    ],
+    "n"
+   ],
+   "rsqrt": [
+    "neg",
+    [
+     "div",
+     [
+      "mul",
+      [
+       "c",
+       0.5
+      ],
+      "n"
+     ],
+     "x"
+    ]
+   ],
+   "exp": "n",
+   "log": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    "x"
+   ],
+   "sin": [
+    "cos",
+    "x"
+   ],
+   "cos": [
+    "neg",
+    [
+     "sin",
+     "x"
+    ]
+   ],
+   "tan": [
+    "add",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "mul",
+     "n",
+     "n"
+    ]
+   ],
+   "tanh": [
+    "sub",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "mul",
+     "n",
+     "n"
+    ]
+   ],
+   "asin": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "sqrt",
+     [
+      "sub",
+      [
+       "c",
+       1.0
+      ],
+      [
+       "mul",
+       "x",
+       "x"
+      ]
+     ]
+    ]
+   ],
+   "acos": [
+    "neg",
+    [
+     "div",
+     [
+      "c",
+      1.0
+     ],
+     [
+      "sqrt",
+      [
+       "sub",
+       [
+        "c",
+        1.0
+       ],
+       [
+        "mul",
+        "x",
+        "x"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "atan": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "add",
+     [
+      "c",
+      1.0
+     ],
+     [
+      "mul",
+      "x",
+      "x"
+     ]
+    ]
+   ],
+   "exp2": [
+    "mul",
+    "n",
+    [
+     "c",
+     0.6931471805599453
+    ]
+   ],
+   "expm1": [
+    "add",
+    "n",
+    [
+     "c",
+     1.0
+    ]
+   ],
+   "log2": [
+    "div",
+    [
+     "c",
+     1.4426950408889634
+    ],
+    "x"
+   ],
+   "log10": [
+    "div",
+    [
+     "c",
+     0.43429448190325176
+    ],
+    "x"
+   ],
+   "log1p": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "add",
+     [
+      "c",
+      1.0
+     ],
+     "x"
+    ]
+   ],
+   "cbrt": [
+    "div",
+    [
+     "c",
+     0.3333333333333333
+    ],
+    [
+     "mul",
+     "n",
+     "n"
+    ]
+   ],
+   "sinh": [
+    "cosh",
+    "x"
+   ],
+   "cosh": [
+    "sinh",
+    "x"
+   ],
+   "asinh": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "hypot",
+     "x",
+     [
+      "c",
+      1.0
+     ]
+    ]
+   ],
+   "acosh": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "mul",
+     [
+      "sqrt",
+      [
+       "sub",
+       "x",
+       [
+        "c",
+        1.0
+       ]
+      ]
+     ],
+     [
+      "sqrt",
+      [
+       "add",
+       "x",
+       [
+        "c",
+        1.0
+       ]
+      ]
+     ]
+    ]
+   ],
+   "atanh": [
+    "div",
+    [
+     "c",
+     1.0
+    ],
+    [
+     "sub",
+     [
+      "c",
+      1.0
+     ],
+     [
+      "mul",
+      "x",
+      "x"
+     ]
+    ]
+   ],
+   "erf": [
+    "mul",
+    [
+     "c",
+     1.1283791670955126
+    ],
+    [
+     "exp",
+     [
+      "neg",
+      [
+       "mul",
+       "x",
+       "x"
+      ]
+     ]
+    ]
+   ],
+   "erfc": [
+    "mul",
+    [
+     "c",
+     -1.1283791670955126
+    ],
+    [
+     "exp",
+     [
+      "neg",
+      [
+       "mul",
+       "x",
+       "x"
+      ]
+     ]
+    ]
+   ]
+  },
+  "bin_vjp": {
+   "add": [
+    [
+     "a",
+     "g"
+    ],
+    [
+     "b",
+     "g"
+    ]
+   ],
+   "sub": [
+    [
+     "a",
+     "g"
+    ],
+    [
+     "b",
+     [
+      "neg",
+      "g"
+     ]
+    ]
+   ],
+   "mul": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      "b"
+     ]
+    ],
+    [
+     "b",
+     [
+      "mul",
+      "g",
+      "a"
+     ]
+    ]
+   ],
+   "div": [
+    [
+     "a",
+     [
+      "div",
+      "g",
+      "b"
+     ]
+    ],
+    [
+     "b",
+     [
+      "neg",
+      [
+       "div",
+       [
+        "mul",
+        "g",
+        "n"
+       ],
+       "b"
+      ]
+     ]
+    ]
+   ],
+   "pow": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      [
+       "mul",
+       "b",
+       [
+        "pow",
+        "a",
+        [
+         "sub",
+         "b",
+         [
+          "c",
+          1.0
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    [
+     "b",
+     [
+      "mul",
+      "g",
+      [
+       "mul",
+       "n",
+       [
+        "log",
+        "a"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "min": [
+    [
+     "a",
+     [
+      "pick",
+      "a",
+      "b",
+      "g",
+      true
+     ]
+    ],
+    [
+     "b",
+     [
+      "pick",
+      "a",
+      "b",
+      "g",
+      false
+     ]
+    ]
+   ],
+   "max": [
+    [
+     "a",
+     [
+      "pick",
+      "b",
+      "a",
+      "g",
+      true
+     ]
+    ],
+    [
+     "b",
+     [
+      "pick",
+      "b",
+      "a",
+      "g",
+      false
+     ]
+    ]
+   ],
+   "atan2": [
+    [
+     "a",
+     [
+      "div",
+      [
+       "mul",
+       "g",
+       "b"
+      ],
+      [
+       "add",
+       [
+        "mul",
+        "a",
+        "a"
+       ],
+       [
+        "mul",
+        "b",
+        "b"
+       ]
+      ]
+     ]
+    ],
+    [
+     "b",
+     [
+      "neg",
+      [
+       "div",
+       [
+        "mul",
+        "g",
+        "a"
+       ],
+       [
+        "add",
+        [
+         "mul",
+         "a",
+         "a"
+        ],
+        [
+         "mul",
+         "b",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "hypot": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      [
+       "let",
+       "q",
+       [
+        "div",
+        "a",
+        "n"
+       ],
+       [
+        "sel",
+        [
+         "eq",
+         "n",
+         [
+          "zero_like",
+          "n"
+         ]
+        ],
+        [
+         "zero_like",
+         "q"
+        ],
+        "q"
+       ]
+      ]
+     ]
+    ],
+    [
+     "b",
+     [
+      "mul",
+      "g",
+      [
+       "let",
+       "q",
+       [
+        "div",
+        "b",
+        "n"
+       ],
+       [
+        "sel",
+        [
+         "eq",
+         "n",
+         [
+          "zero_like",
+          "n"
+         ]
+        ],
+        [
+         "zero_like",
+         "q"
+        ],
+        "q"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "copysign": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      [
+       "mul",
+       [
+        "copysign",
+        [
+         "c",
+         1.0
+        ],
+        "b"
+       ],
+       [
+        "sel",
+        [
+         "ge",
+         "a",
+         [
+          "zero_like",
+          "a"
+         ]
+        ],
+        [
+         "c",
+         1.0
+        ],
+        [
+         "c",
+         -1.0
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "fmod": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      [
+       "c",
+       1.0
+      ]
+     ]
+    ],
+    [
+     "b",
+     [
+      "mul",
+      "g",
+      [
+       "neg",
+       [
+        "trunc",
+        [
+         "div",
+         "a",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "remainder": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      [
+       "c",
+       1.0
+      ]
+     ]
+    ],
+    [
+     "b",
+     [
+      "mul",
+      "g",
+      [
+       "neg",
+       [
+        "floor",
+        [
+         "div",
+         "a",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "fdim": [
+    [
+     "a",
+     [
+      "mul",
+      "g",
+      [
+       "ramp",
+       [
+        "gt",
+        "a",
+        "b"
+       ],
+       "a"
+      ]
+     ]
+    ],
+    [
+     "b",
+     [
+      "mul",
+      "g",
+      [
+       "neg",
+       [
+        "ramp",
+        [
+         "gt",
+         "a",
+         "b"
+        ],
+        "a"
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  "bin_jvp": {
+   "add": [
+    "ta",
+    "tb"
+   ],
+   "sub": [
+    "ta",
+    [
+     "when",
+     "tb",
+     [
+      "neg",
+      "tb"
+     ]
+    ]
+   ],
+   "mul": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      "b"
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "mul",
+      "a",
+      "tb"
+     ]
+    ]
+   ],
+   "div": [
+    [
+     "when",
+     "ta",
+     [
+      "div",
+      "ta",
+      "b"
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "neg",
+      [
+       "div",
+       [
+        "mul",
+        "n",
+        "tb"
+       ],
+       "b"
+      ]
+     ]
+    ]
+   ],
+   "pow": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      [
+       "mul",
+       "b",
+       [
+        "pow",
+        "a",
+        [
+         "sub",
+         "b",
+         [
+          "c",
+          1.0
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "mul",
+      "tb",
+      [
+       "mul",
+       "n",
+       [
+        "log",
+        "a"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "min": [
+    [
+     "when",
+     "ta",
+     [
+      "pick",
+      "a",
+      "b",
+      "ta",
+      true
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "pick",
+      "a",
+      "b",
+      "tb",
+      false
+     ]
+    ]
+   ],
+   "max": [
+    [
+     "when",
+     "ta",
+     [
+      "pick",
+      "b",
+      "a",
+      "ta",
+      true
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "pick",
+      "b",
+      "a",
+      "tb",
+      false
+     ]
+    ]
+   ],
+   "atan2": [
+    [
+     "when",
+     "ta",
+     [
+      "div",
+      [
+       "mul",
+       "ta",
+       "b"
+      ],
+      [
+       "add",
+       [
+        "mul",
+        "a",
+        "a"
+       ],
+       [
+        "mul",
+        "b",
+        "b"
+       ]
+      ]
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "neg",
+      [
+       "div",
+       [
+        "mul",
+        "tb",
+        "a"
+       ],
+       [
+        "add",
+        [
+         "mul",
+         "a",
+         "a"
+        ],
+        [
+         "mul",
+         "b",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "hypot": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      [
+       "let",
+       "q",
+       [
+        "div",
+        "a",
+        "n"
+       ],
+       [
+        "sel",
+        [
+         "eq",
+         "n",
+         [
+          "zero_like",
+          "n"
+         ]
+        ],
+        [
+         "zero_like",
+         "q"
+        ],
+        "q"
+       ]
+      ]
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "mul",
+      "tb",
+      [
+       "let",
+       "q",
+       [
+        "div",
+        "b",
+        "n"
+       ],
+       [
+        "sel",
+        [
+         "eq",
+         "n",
+         [
+          "zero_like",
+          "n"
+         ]
+        ],
+        [
+         "zero_like",
+         "q"
+        ],
+        "q"
+       ]
+      ]
+     ]
+    ]
+   ],
+   "copysign": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      [
+       "mul",
+       [
+        "copysign",
+        [
+         "c",
+         1.0
+        ],
+        "b"
+       ],
+       [
+        "sel",
+        [
+         "ge",
+         "a",
+         [
+          "zero_like",
+          "a"
+         ]
+        ],
+        [
+         "c",
+         1.0
+        ],
+        [
+         "c",
+         -1.0
+        ]
+       ]
+      ]
+     ]
+    ],
+    null
+   ],
+   "fmod": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      [
+       "c",
+       1.0
+      ]
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "mul",
+      "tb",
+      [
+       "neg",
+       [
+        "trunc",
+        [
+         "div",
+         "a",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "remainder": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      [
+       "c",
+       1.0
+      ]
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "mul",
+      "tb",
+      [
+       "neg",
+       [
+        "floor",
+        [
+         "div",
+         "a",
+         "b"
+        ]
+       ]
+      ]
+     ]
+    ]
+   ],
+   "fdim": [
+    [
+     "when",
+     "ta",
+     [
+      "mul",
+      "ta",
+      [
+       "ramp",
+       [
+        "gt",
+        "a",
+        "b"
+       ],
+       "a"
+      ]
+     ]
+    ],
+    [
+     "when",
+     "tb",
+     [
+      "mul",
+      "tb",
+      [
+       "neg",
+       [
+        "ramp",
+        [
+         "gt",
+         "a",
+         "b"
+        ],
+        "a"
+       ]
+      ]
+     ]
+    ]
+   ]
+  },
+  "rays": {
+   "ray_tri": {
+    "operands": [
+     "o",
+     "d",
+     "a",
+     "b",
+     "c"
+    ],
+    "lets": [
+     [
+      "e1",
+      [
+       "sub",
+       "b",
+       "a"
+      ]
+     ],
+     [
+      "e2",
+      [
+       "sub",
+       "c",
+       "a"
+      ]
+     ],
+     [
+      "p",
+      [
+       "cross",
+       "d",
+       "e2"
+      ]
+     ],
+     [
+      "det",
+      [
+       "dot",
+       "e1",
+       "p"
+      ]
+     ],
+     [
+      "ok",
+      [
+       "ne",
+       "det",
+       [
+        "c",
+        0.0
+       ]
+      ]
+     ],
+     [
+      "inv",
+      [
+       "where",
+       "ok",
+       [
+        "div",
+        [
+         "c",
+         1.0
+        ],
+        [
+         "where",
+         "ok",
+         "det",
+         [
+          "c",
+          1.0
+         ]
+        ]
+       ],
+       [
+        "c",
+        0.0
+       ]
+      ]
+     ],
+     [
+      "s",
+      [
+       "sub",
+       "o",
+       "a"
+      ]
+     ],
+     [
+      "q",
+      [
+       "cross",
+       "s",
+       "e1"
+      ]
+     ],
+     [
+      "nu",
+      [
+       "dot",
+       "s",
+       "p"
+      ]
+     ],
+     [
+      "nv",
+      [
+       "dot",
+       "d",
+       "q"
+      ]
+     ],
+     [
+      "nt",
+      [
+       "dot",
+       "e2",
+       "q"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "d_o",
+      [
+       "live",
+       "o"
+      ]
+     ],
+     [
+      "d_d",
+      [
+       "live",
+       "d"
+      ]
+     ],
+     [
+      "d_a",
+      [
+       "live",
+       "a"
+      ]
+     ],
+     [
+      "d_b",
+      [
+       "live",
+       "b"
+      ]
+     ],
+     [
+      "d_c",
+      [
+       "live",
+       "c"
+      ]
+     ],
+     [
+      "de1",
+      [
+       "sub",
+       "d_b",
+       "d_a"
+      ]
+     ],
+     [
+      "de2",
+      [
+       "sub",
+       "d_c",
+       "d_a"
+      ]
+     ],
+     [
+      "ds",
+      [
+       "sub",
+       "d_o",
+       "d_a"
+      ]
+     ],
+     [
+      "dp",
+      [
+       "add",
+       [
+        "cross",
+        "d_d",
+        "e2"
+       ],
+       [
+        "cross",
+        "d",
+        "de2"
+       ]
+      ]
+     ],
+     [
+      "ddet",
+      [
+       "add",
+       [
+        "dot",
+        "de1",
+        "p"
+       ],
+       [
+        "dot",
+        "e1",
+        "dp"
+       ]
+      ]
+     ],
+     [
+      "dq",
+      [
+       "add",
+       [
+        "cross",
+        "ds",
+        "e1"
+       ],
+       [
+        "cross",
+        "s",
+        "de1"
+       ]
+      ]
+     ],
+     [
+      "dnu",
+      [
+       "add",
+       [
+        "dot",
+        "ds",
+        "p"
+       ],
+       [
+        "dot",
+        "s",
+        "dp"
+       ]
+      ]
+     ],
+     [
+      "dnv",
+      [
+       "add",
+       [
+        "dot",
+        "d_d",
+        "q"
+       ],
+       [
+        "dot",
+        "d",
+        "dq"
+       ]
+      ]
+     ],
+     [
+      "dnt",
+      [
+       "add",
+       [
+        "dot",
+        "de2",
+        "q"
+       ],
+       [
+        "dot",
+        "e2",
+        "dq"
+       ]
+      ]
+     ],
+     [
+      "dinv",
+      [
+       "neg",
+       [
+        "mul",
+        "inv",
+        "inv",
+        "ddet"
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "vec",
+     [
+      "c",
+      0.0
+     ],
+     [
+      "add",
+      [
+       "mul",
+       "dinv",
+       "nt"
+      ],
+      [
+       "mul",
+       "inv",
+       "dnt"
+      ]
+     ],
+     [
+      "add",
+      [
+       "mul",
+       "dinv",
+       "nu"
+      ],
+      [
+       "mul",
+       "inv",
+       "dnu"
+      ]
+     ],
+     [
+      "add",
+      [
+       "mul",
+       "dinv",
+       "nv"
+      ],
+      [
+       "mul",
+       "inv",
+       "dnv"
+      ]
+     ]
+    ],
+    "vjp_lets": [
+     [
+      "gt",
+      [
+       "k",
+       "g",
+       1
+      ]
+     ],
+     [
+      "gu",
+      [
+       "k",
+       "g",
+       2
+      ]
+     ],
+     [
+      "gv",
+      [
+       "k",
+       "g",
+       3
+      ]
+     ],
+     [
+      "gnt",
+      [
+       "mul",
+       "gt",
+       "inv"
+      ]
+     ],
+     [
+      "gnu",
+      [
+       "mul",
+       "gu",
+       "inv"
+      ]
+     ],
+     [
+      "gnv",
+      [
+       "mul",
+       "gv",
+       "inv"
+      ]
+     ],
+     [
+      "ginv",
+      [
+       "add",
+       [
+        "mul",
+        "gt",
+        "nt"
+       ],
+       [
+        "mul",
+        "gu",
+        "nu"
+       ],
+       [
+        "mul",
+        "gv",
+        "nv"
+       ]
+      ]
+     ],
+     [
+      "gdet",
+      [
+       "neg",
+       [
+        "mul",
+        "inv",
+        "inv",
+        "ginv"
+       ]
+      ]
+     ],
+     [
+      "gq",
+      [
+       "add",
+       [
+        "mul",
+        "gnv",
+        "d"
+       ],
+       [
+        "mul",
+        "gnt",
+        "e2"
+       ]
+      ]
+     ],
+     [
+      "gp",
+      [
+       "add",
+       [
+        "mul",
+        "gnu",
+        "s"
+       ],
+       [
+        "mul",
+        "gdet",
+        "e1"
+       ]
+      ]
+     ],
+     [
+      "gs",
+      [
+       "add",
+       [
+        "mul",
+        "gnu",
+        "p"
+       ],
+       [
+        "cross",
+        "e1",
+        "gq"
+       ]
+      ]
+     ],
+     [
+      "ge1",
+      [
+       "add",
+       [
+        "mul",
+        "gdet",
+        "p"
+       ],
+       [
+        "cross",
+        "gq",
+        "s"
+       ]
+      ]
+     ],
+     [
+      "gd",
+      [
+       "add",
+       [
+        "mul",
+        "gnv",
+        "q"
+       ],
+       [
+        "cross",
+        "e2",
+        "gp"
+       ]
+      ]
+     ],
+     [
+      "ge2",
+      [
+       "add",
+       [
+        "mul",
+        "gnt",
+        "q"
+       ],
+       [
+        "cross",
+        "gp",
+        "d"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "o",
+      "gs"
+     ],
+     [
+      "d",
+      "gd"
+     ],
+     [
+      "a",
+      [
+       "neg",
+       [
+        "add",
+        "gs",
+        "ge1",
+        "ge2"
+       ]
+      ]
+     ],
+     [
+      "b",
+      "ge1"
+     ],
+     [
+      "c",
+      "ge2"
+     ]
+    ]
+   },
+   "ray_aabb": {
+    "operands": [
+     "o",
+     "d",
+     "lo",
+     "hi"
+    ],
+    "lets": [
+     [
+      "axes",
+      [
+       "map",
+       "k",
+       3,
+       [
+        "lets",
+        [
+         [
+          "dk",
+          [
+           "k",
+           "d",
+           "k"
+          ]
+         ],
+         [
+          "ok",
+          [
+           "ne",
+           "dk",
+           [
+            "c",
+            0.0
+           ]
+          ]
+         ],
+         [
+          "inv",
+          [
+           "where",
+           "ok",
+           [
+            "div",
+            [
+             "c",
+             1.0
+            ],
+            [
+             "where",
+             "ok",
+             "dk",
+             [
+              "c",
+              1.0
+             ]
+            ]
+           ],
+           [
+            "copysign",
+            [
+             "c",
+             1e+18
+            ],
+            "dk"
+           ]
+          ]
+         ],
+         [
+          "gap_lo",
+          [
+           "sub",
+           [
+            "k",
+            "lo",
+            "k"
+           ],
+           [
+            "k",
+            "o",
+            "k"
+           ]
+          ]
+         ],
+         [
+          "gap_hi",
+          [
+           "sub",
+           [
+            "k",
+            "hi",
+            "k"
+           ],
+           [
+            "k",
+            "o",
+            "k"
+           ]
+          ]
+         ],
+         [
+          "a",
+          [
+           "mul",
+           "gap_lo",
+           "inv"
+          ]
+         ],
+         [
+          "b",
+          [
+           "mul",
+           "gap_hi",
+           "inv"
+          ]
+         ],
+         [
+          "lt",
+          [
+           "lt",
+           "a",
+           "b"
+          ]
+         ]
+        ],
+        [
+         "rec",
+         [
+          "ok",
+          "ok"
+         ],
+         [
+          "inv",
+          "inv"
+         ],
+         [
+          "gap_lo",
+          "gap_lo"
+         ],
+         [
+          "gap_hi",
+          "gap_hi"
+         ],
+         [
+          "lt",
+          "lt"
+         ],
+         [
+          "n",
+          [
+           "where",
+           "lt",
+           "a",
+           "b"
+          ]
+         ],
+         [
+          "f",
+          [
+           "where",
+           "lt",
+           "b",
+           "a"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     [
+      "x0",
+      [
+       "nth",
+       "axes",
+       0
+      ]
+     ],
+     [
+      "x1",
+      [
+       "nth",
+       "axes",
+       1
+      ]
+     ],
+     [
+      "x2",
+      [
+       "nth",
+       "axes",
+       2
+      ]
+     ],
+     [
+      "c_in0",
+      [
+       "gt",
+       "x1.n",
+       "x0.n"
+      ]
+     ],
+     [
+      "tin1",
+      [
+       "where",
+       "c_in0",
+       "x1.n",
+       "x0.n"
+      ]
+     ],
+     [
+      "c_in1",
+      [
+       "gt",
+       "x2.n",
+       "tin1"
+      ]
+     ],
+     [
+      "c_out0",
+      [
+       "lt",
+       "x1.f",
+       "x0.f"
+      ]
+     ],
+     [
+      "tout1",
+      [
+       "where",
+       "c_out0",
+       "x1.f",
+       "x0.f"
+      ]
+     ],
+     [
+      "c_out1",
+      [
+       "lt",
+       "x2.f",
+       "tout1"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "d_o",
+      [
+       "live",
+       "o"
+      ]
+     ],
+     [
+      "d_d",
+      [
+       "live",
+       "d"
+      ]
+     ],
+     [
+      "d_lo",
+      [
+       "live",
+       "lo"
+      ]
+     ],
+     [
+      "d_hi",
+      [
+       "live",
+       "hi"
+      ]
+     ],
+     [
+      "rk",
+      [
+       "map",
+       "k",
+       3,
+       [
+        "lets",
+        [
+         [
+          "ax",
+          [
+           "nth",
+           "axes",
+           "k"
+          ]
+         ],
+         [
+          "inv_live",
+          [
+           "where",
+           "ax.ok",
+           "ax.inv",
+           [
+            "c",
+            0.0
+           ]
+          ]
+         ],
+         [
+          "dinv",
+          [
+           "where",
+           "ax.ok",
+           [
+            "neg",
+            [
+             "mul",
+             "ax.inv",
+             "ax.inv",
+             [
+              "k",
+              "d_d",
+              "k"
+             ]
+            ]
+           ],
+           [
+            "c",
+            0.0
+           ]
+          ]
+         ],
+         [
+          "da",
+          [
+           "add",
+           [
+            "mul",
+            [
+             "sub",
+             [
+              "k",
+              "d_lo",
+              "k"
+             ],
+             [
+              "k",
+              "d_o",
+              "k"
+             ]
+            ],
+            "inv_live"
+           ],
+           [
+            "mul",
+            "ax.gap_lo",
+            "dinv"
+           ]
+          ]
+         ],
+         [
+          "db",
+          [
+           "add",
+           [
+            "mul",
+            [
+             "sub",
+             [
+              "k",
+              "d_hi",
+              "k"
+             ],
+             [
+              "k",
+              "d_o",
+              "k"
+             ]
+            ],
+            "inv_live"
+           ],
+           [
+            "mul",
+            "ax.gap_hi",
+            "dinv"
+           ]
+          ]
+         ]
+        ],
+        [
+         "rec",
+         [
+          "dn",
+          [
+           "where",
+           "ax.lt",
+           "da",
+           "db"
+          ]
+         ],
+         [
+          "df",
+          [
+           "where",
+           "ax.lt",
+           "db",
+           "da"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     [
+      "r0",
+      [
+       "nth",
+       "rk",
+       0
+      ]
+     ],
+     [
+      "r1",
+      [
+       "nth",
+       "rk",
+       1
+      ]
+     ],
+     [
+      "r2",
+      [
+       "nth",
+       "rk",
+       2
+      ]
+     ],
+     [
+      "dtin1",
+      [
+       "where",
+       "c_in0",
+       "r1.dn",
+       "r0.dn"
+      ]
+     ],
+     [
+      "dtout1",
+      [
+       "where",
+       "c_out0",
+       "r1.df",
+       "r0.df"
+      ]
+     ]
+    ],
+    "jvp": [
+     "vec",
+     [
+      "c",
+      0.0
+     ],
+     [
+      "where",
+      "c_in1",
+      "r2.dn",
+      "dtin1"
+     ],
+     [
+      "where",
+      "c_out1",
+      "r2.df",
+      "dtout1"
+     ],
+     [
+      "c",
+      0.0
+     ]
+    ],
+    "vjp_lets": [
+     [
+      "zero",
+      [
+       "c",
+       0.0
+      ]
+     ],
+     [
+      "g_in",
+      [
+       "k",
+       "g",
+       1
+      ]
+     ],
+     [
+      "g_out",
+      [
+       "k",
+       "g",
+       2
+      ]
+     ],
+     [
+      "gn2",
+      [
+       "where",
+       "c_in1",
+       "g_in",
+       "zero"
+      ]
+     ],
+     [
+      "gtin1",
+      [
+       "where",
+       "c_in1",
+       "zero",
+       "g_in"
+      ]
+     ],
+     [
+      "gn1",
+      [
+       "where",
+       "c_in0",
+       "gtin1",
+       "zero"
+      ]
+     ],
+     [
+      "gn0",
+      [
+       "where",
+       "c_in0",
+       "zero",
+       "gtin1"
+      ]
+     ],
+     [
+      "gf2",
+      [
+       "where",
+       "c_out1",
+       "g_out",
+       "zero"
+      ]
+     ],
+     [
+      "gtout1",
+      [
+       "where",
+       "c_out1",
+       "zero",
+       "g_out"
+      ]
+     ],
+     [
+      "gf1",
+      [
+       "where",
+       "c_out0",
+       "gtout1",
+       "zero"
+      ]
+     ],
+     [
+      "gf0",
+      [
+       "where",
+       "c_out0",
+       "zero",
+       "gtout1"
+      ]
+     ],
+     [
+      "gnl",
+      [
+       "list",
+       "gn0",
+       "gn1",
+       "gn2"
+      ]
+     ],
+     [
+      "gfl",
+      [
+       "list",
+       "gf0",
+       "gf1",
+       "gf2"
+      ]
+     ],
+     [
+      "rr",
+      [
+       "map",
+       "k",
+       3,
+       [
+        "lets",
+        [
+         [
+          "ax",
+          [
+           "nth",
+           "axes",
+           "k"
+          ]
+         ],
+         [
+          "gn",
+          [
+           "nth",
+           "gnl",
+           "k"
+          ]
+         ],
+         [
+          "gf",
+          [
+           "nth",
+           "gfl",
+           "k"
+          ]
+         ],
+         [
+          "ga",
+          [
+           "add",
+           [
+            "where",
+            "ax.lt",
+            "gn",
+            "zero"
+           ],
+           [
+            "where",
+            "ax.lt",
+            "zero",
+            "gf"
+           ]
+          ]
+         ],
+         [
+          "gb",
+          [
+           "add",
+           [
+            "where",
+            "ax.lt",
+            "zero",
+            "gn"
+           ],
+           [
+            "where",
+            "ax.lt",
+            "gf",
+            "zero"
+           ]
+          ]
+         ],
+         [
+          "inv",
+          [
+           "where",
+           "ax.ok",
+           "ax.inv",
+           "zero"
+          ]
+         ],
+         [
+          "ginv",
+          [
+           "add",
+           [
+            "mul",
+            "ga",
+            "ax.gap_lo"
+           ],
+           [
+            "mul",
+            "gb",
+            "ax.gap_hi"
+           ]
+          ]
+         ]
+        ],
+        [
+         "rec",
+         [
+          "lo",
+          [
+           "mul",
+           "ga",
+           "inv"
+          ]
+         ],
+         [
+          "hi",
+          [
+           "mul",
+           "gb",
+           "inv"
+          ]
+         ],
+         [
+          "o",
+          [
+           "neg",
+           [
+            "mul",
+            [
+             "add",
+             "ga",
+             "gb"
+            ],
+            "inv"
+           ]
+          ]
+         ],
+         [
+          "d",
+          [
+           "where",
+           "ax.ok",
+           [
+            "neg",
+            [
+             "mul",
+             "ax.inv",
+             "ax.inv",
+             "ginv"
+            ]
+           ],
+           "zero"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ],
+     [
+      "q0",
+      [
+       "nth",
+       "rr",
+       0
+      ]
+     ],
+     [
+      "q1",
+      [
+       "nth",
+       "rr",
+       1
+      ]
+     ],
+     [
+      "q2",
+      [
+       "nth",
+       "rr",
+       2
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "o",
+      [
+       "vec",
+       "q0.o",
+       "q1.o",
+       "q2.o"
+      ]
+     ],
+     [
+      "d",
+      [
+       "vec",
+       "q0.d",
+       "q1.d",
+       "q2.d"
+      ]
+     ],
+     [
+      "lo",
+      [
+       "vec",
+       "q0.lo",
+       "q1.lo",
+       "q2.lo"
+      ]
+     ],
+     [
+      "hi",
+      [
+       "vec",
+       "q0.hi",
+       "q1.hi",
+       "q2.hi"
+      ]
+     ]
+    ]
+   },
+   "ray_sphere": {
+    "operands": [
+     "o",
+     "d",
+     "c",
+     "r"
+    ],
+    "lets": [
+     [
+      "oc",
+      [
+       "sub",
+       "o",
+       "c"
+      ]
+     ],
+     [
+      "qa",
+      [
+       "dot",
+       "d",
+       "d"
+      ]
+     ],
+     [
+      "hb",
+      [
+       "dot",
+       "oc",
+       "d"
+      ]
+     ],
+     [
+      "qc",
+      [
+       "sub",
+       [
+        "dot",
+        "oc",
+        "oc"
+       ],
+       [
+        "mul",
+        "r",
+        "r"
+       ]
+      ]
+     ],
+     [
+      "disc",
+      [
+       "sub",
+       [
+        "mul",
+        "hb",
+        "hb"
+       ],
+       [
+        "mul",
+        "qa",
+        "qc"
+       ]
+      ]
+     ],
+     [
+      "pos",
+      [
+       "gt",
+       "qa",
+       [
+        "c",
+        0.0
+       ]
+      ]
+     ],
+     [
+      "ok",
+      [
+       "land",
+       "pos",
+       [
+        "ge",
+        "disc",
+        [
+         "c",
+         0.0
+        ]
+       ]
+      ]
+     ],
+     [
+      "sq",
+      [
+       "sqrt",
+       [
+        "where",
+        "ok",
+        "disc",
+        [
+         "c",
+         1.0
+        ]
+       ]
+      ]
+     ],
+     [
+      "sq_pos",
+      [
+       "gt",
+       "sq",
+       [
+        "c",
+        0.0
+       ]
+      ]
+     ],
+     [
+      "sq2",
+      [
+       "where",
+       "sq_pos",
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        "sq"
+       ],
+       [
+        "c",
+        1.0
+       ]
+      ]
+     ],
+     [
+      "inv",
+      [
+       "div",
+       [
+        "c",
+        1.0
+       ],
+       [
+        "where",
+        "pos",
+        "qa",
+        [
+         "c",
+         1.0
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "d_o",
+      [
+       "live",
+       "o"
+      ]
+     ],
+     [
+      "d_d",
+      [
+       "live",
+       "d"
+      ]
+     ],
+     [
+      "d_c",
+      [
+       "live",
+       "c"
+      ]
+     ],
+     [
+      "d_r",
+      [
+       "live",
+       "r"
+      ]
+     ],
+     [
+      "d_oc",
+      [
+       "sub",
+       "d_o",
+       "d_c"
+      ]
+     ],
+     [
+      "dqa",
+      [
+       "mul",
+       [
+        "c",
+        2.0
+       ],
+       [
+        "dot",
+        "d",
+        "d_d"
+       ]
+      ]
+     ],
+     [
+      "dhb",
+      [
+       "add",
+       [
+        "dot",
+        "d_oc",
+        "d"
+       ],
+       [
+        "dot",
+        "oc",
+        "d_d"
+       ]
+      ]
+     ],
+     [
+      "dqc",
+      [
+       "sub",
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        [
+         "dot",
+         "oc",
+         "d_oc"
+        ]
+       ],
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        "r",
+        "d_r"
+       ]
+      ]
+     ],
+     [
+      "ddisc",
+      [
+       "sub",
+       [
+        "sub",
+        [
+         "mul",
+         [
+          "c",
+          2.0
+         ],
+         "hb",
+         "dhb"
+        ],
+        [
+         "mul",
+         "dqa",
+         "qc"
+        ]
+       ],
+       [
+        "mul",
+        "qa",
+        "dqc"
+       ]
+      ]
+     ],
+     [
+      "dsq",
+      [
+       "where",
+       "sq_pos",
+       [
+        "div",
+        "ddisc",
+        "sq2"
+       ],
+       [
+        "c",
+        0.0
+       ]
+      ]
+     ],
+     [
+      "dinv",
+      [
+       "neg",
+       [
+        "mul",
+        "inv",
+        "inv",
+        "dqa"
+       ]
+      ]
+     ],
+     [
+      "zero",
+      [
+       "c",
+       0.0
+      ]
+     ],
+     [
+      "root0",
+      [
+       "where",
+       "ok",
+       [
+        "add",
+        [
+         "mul",
+         [
+          "add",
+          [
+           "neg",
+           "dhb"
+          ],
+          [
+           "mul",
+           [
+            "c",
+            -1.0
+           ],
+           "dsq"
+          ]
+         ],
+         "inv"
+        ],
+        [
+         "mul",
+         [
+          "add",
+          [
+           "neg",
+           "hb"
+          ],
+          [
+           "mul",
+           [
+            "c",
+            -1.0
+           ],
+           "sq"
+          ]
+         ],
+         "dinv"
+        ]
+       ],
+       "zero"
+      ]
+     ],
+     [
+      "root1",
+      [
+       "where",
+       "ok",
+       [
+        "add",
+        [
+         "mul",
+         [
+          "add",
+          [
+           "neg",
+           "dhb"
+          ],
+          [
+           "mul",
+           [
+            "c",
+            1.0
+           ],
+           "dsq"
+          ]
+         ],
+         "inv"
+        ],
+        [
+         "mul",
+         [
+          "add",
+          [
+           "neg",
+           "hb"
+          ],
+          [
+           "mul",
+           [
+            "c",
+            1.0
+           ],
+           "sq"
+          ]
+         ],
+         "dinv"
+        ]
+       ],
+       "zero"
+      ]
+     ]
+    ],
+    "jvp": [
+     "vec",
+     "zero",
+     "root0",
+     "root1",
+     "zero"
+    ],
+    "vjp_lets": [
+     [
+      "zero",
+      [
+       "c",
+       0.0
+      ]
+     ],
+     [
+      "gt0",
+      [
+       "where",
+       "ok",
+       [
+        "k",
+        "g",
+        1
+       ],
+       "zero"
+      ]
+     ],
+     [
+      "gt1",
+      [
+       "where",
+       "ok",
+       [
+        "k",
+        "g",
+        2
+       ],
+       "zero"
+      ]
+     ],
+     [
+      "ginv",
+      [
+       "add",
+       [
+        "mul",
+        "gt0",
+        [
+         "sub",
+         [
+          "neg",
+          "hb"
+         ],
+         "sq"
+        ]
+       ],
+       [
+        "mul",
+        "gt1",
+        [
+         "add",
+         [
+          "neg",
+          "hb"
+         ],
+         "sq"
+        ]
+       ]
+      ]
+     ],
+     [
+      "ghb0",
+      [
+       "neg",
+       [
+        "mul",
+        [
+         "add",
+         "gt0",
+         "gt1"
+        ],
+        "inv"
+       ]
+      ]
+     ],
+     [
+      "gsq",
+      [
+       "mul",
+       [
+        "sub",
+        "gt1",
+        "gt0"
+       ],
+       "inv"
+      ]
+     ],
+     [
+      "gqa0",
+      [
+       "neg",
+       [
+        "mul",
+        "inv",
+        "inv",
+        "ginv"
+       ]
+      ]
+     ],
+     [
+      "gdisc",
+      [
+       "where",
+       "sq_pos",
+       [
+        "div",
+        "gsq",
+        "sq2"
+       ],
+       "zero"
+      ]
+     ],
+     [
+      "ghb",
+      [
+       "add",
+       "ghb0",
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        "hb",
+        "gdisc"
+       ]
+      ]
+     ],
+     [
+      "gqa",
+      [
+       "sub",
+       "gqa0",
+       [
+        "mul",
+        "qc",
+        "gdisc"
+       ]
+      ]
+     ],
+     [
+      "gqc",
+      [
+       "neg",
+       [
+        "mul",
+        "qa",
+        "gdisc"
+       ]
+      ]
+     ],
+     [
+      "goc",
+      [
+       "add",
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        "gqc",
+        "oc"
+       ],
+       [
+        "mul",
+        "ghb",
+        "d"
+       ]
+      ]
+     ],
+     [
+      "gr",
+      [
+       "neg",
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        "r",
+        "gqc"
+       ]
+      ]
+     ],
+     [
+      "gd",
+      [
+       "add",
+       [
+        "mul",
+        "ghb",
+        "oc"
+       ],
+       [
+        "mul",
+        [
+         "c",
+         2.0
+        ],
+        "gqa",
+        "d"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "o",
+      "goc"
+     ],
+     [
+      "d",
+      "gd"
+     ],
+     [
+      "c",
+      [
+       "neg",
+       "goc"
+      ]
+     ],
+     [
+      "r",
+      "gr"
+     ]
+    ]
+   }
+  },
+  "core": {
+   "fma": {
+    "operands": [
+     "a",
+     "b",
+     "c"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "mul",
+       "g",
+       "b"
+      ]
+     ],
+     [
+      "b",
+      [
+       "mul",
+       "g",
+       "a"
+      ]
+     ],
+     [
+      "c",
+      "g"
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ],
+     [
+      "tc",
+      [
+       "t",
+       "c"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "mul",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "mul",
+       "a",
+       "tb"
+      ]
+     ],
+     "tc"
+    ]
+   },
+   "clip": {
+    "operands": [
+     "x",
+     "lo",
+     "hi"
+    ],
+    "lets": [
+     [
+      "inside",
+      [
+       "land",
+       [
+        "ge",
+        "x",
+        "lo"
+       ],
+       [
+        "le",
+        "x",
+        "hi"
+       ]
+      ]
+     ],
+     [
+      "above",
+      [
+       "lor",
+       [
+        "gt",
+        "x",
+        "hi"
+       ],
+       [
+        "gt",
+        "lo",
+        "hi"
+       ]
+      ]
+     ],
+     [
+      "below",
+      [
+       "land",
+       [
+        "lt",
+        "x",
+        "lo"
+       ],
+       [
+        "le",
+        "lo",
+        "hi"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "x",
+      [
+       "sel",
+       "inside",
+       "g",
+       [
+        "zero_like",
+        "g"
+       ]
+      ]
+     ],
+     [
+      "lo",
+      [
+       "sel",
+       "below",
+       "g",
+       [
+        "zero_like",
+        "g"
+       ]
+      ]
+     ],
+     [
+      "hi",
+      [
+       "sel",
+       "above",
+       "g",
+       [
+        "zero_like",
+        "g"
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "tx",
+      [
+       "t",
+       "x"
+      ]
+     ],
+     [
+      "tlo",
+      [
+       "t",
+       "lo"
+      ]
+     ],
+     [
+      "thi",
+      [
+       "t",
+       "hi"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "tx",
+      [
+       "sel",
+       "inside",
+       "tx",
+       [
+        "zero_like",
+        "tx"
+       ]
+      ]
+     ],
+     [
+      "when",
+      "tlo",
+      [
+       "sel",
+       "below",
+       "tlo",
+       [
+        "zero_like",
+        "tlo"
+       ]
+      ]
+     ],
+     [
+      "when",
+      "thi",
+      [
+       "sel",
+       "above",
+       "thi",
+       [
+        "zero_like",
+        "thi"
+       ]
+      ]
+     ]
+    ]
+   },
+   "dot": {
+    "operands": [
+     "a",
+     "b"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "mul",
+       "g",
+       "b"
+      ]
+     ],
+     [
+      "b",
+      [
+       "mul",
+       "g",
+       "a"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "dot",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "dot",
+       "a",
+       "tb"
+      ]
+     ]
+    ]
+   },
+   "cross": {
+    "operands": [
+     "a",
+     "b"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "cross",
+       "b",
+       "g"
+      ]
+     ],
+     [
+      "b",
+      [
+       "cross",
+       "g",
+       "a"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "cross",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "cross",
+       "a",
+       "tb"
+      ]
+     ]
+    ]
+   },
+   "norm": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "mul",
+       [
+        "div",
+        "g",
+        "n"
+       ],
+       "a"
+      ]
+     ]
+    ],
+    "jvp": [
+     "div",
+     [
+      "dot",
+      "a",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     "n"
+    ]
+   },
+   "sum": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "opl",
+       "splat",
+       [
+        "shape",
+        "a"
+       ],
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sum",
+     [
+      "t",
+      "a"
+     ]
+    ]
+   },
+   "splat": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "sum",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "opl",
+     "splat",
+     [
+      "shape",
+      "n"
+     ],
+     [
+      "t",
+      "a"
+     ]
+    ]
+   },
+   "component": {
+    "operands": [
+     "a"
+    ],
+    "lets": [],
+    "vjp_lets": [
+     [
+      "z",
+      [
+       "scalar_zero",
+       "a"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "opl",
+       "vec",
+       [
+        "vlit",
+        [
+         "shape",
+         "a"
+        ]
+       ],
+       [
+        "...",
+        [
+         "map_list",
+         "i",
+         [
+          "entries",
+          [
+           "shape",
+           "a"
+          ]
+         ],
+         [
+          "ifeq",
+          "i",
+          [
+           "lit"
+          ],
+          "g",
+          "z"
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "opl",
+     "component",
+     [
+      "lit"
+     ],
+     [
+      "t",
+      "a"
+     ]
+    ]
+   },
+   "component_at": {
+    "operands": [
+     "v",
+     "index"
+    ],
+    "vjp": [
+     [
+      "v",
+      [
+       "add_at",
+       [
+        "zero_like",
+        "v"
+       ],
+       "index",
+       "g"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "tv",
+      [
+       "t",
+       "v"
+      ]
+     ]
+    ],
+    "jvp": [
+     "when",
+     "tv",
+     [
+      "component_at",
+      "tv",
+      "index"
+     ]
+    ]
+   },
+   "add_at": {
+    "operands": [
+     "v",
+     "index",
+     "value"
+    ],
+    "vjp": [
+     [
+      "v",
+      "g"
+     ],
+     [
+      "value",
+      [
+       "component_at",
+       "g",
+       "index"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "tv",
+      [
+       "t",
+       "v"
+      ]
+     ],
+     [
+      "tw",
+      [
+       "t",
+       "value"
+      ]
+     ]
+    ],
+    "jvp": [
+     "when_any",
+     [
+      "tv",
+      "tw"
+     ],
+     [
+      "add_at",
+      [
+       "or",
+       "tv",
+       [
+        "zero_like",
+        "v"
+       ]
+      ],
+      "index",
+      [
+       "or",
+       "tw",
+       [
+        "zero_like",
+        "value"
+       ]
+      ]
+     ]
+    ]
+   },
+   "set_component_at": {
+    "operands": [
+     "v",
+     "index",
+     "value"
+    ],
+    "vjp_lets": [
+     [
+      "zero",
+      [
+       "scalar_zero",
+       "v"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "v",
+      [
+       "set_component_at",
+       "g",
+       "index",
+       "zero"
+      ]
+     ],
+     [
+      "value",
+      [
+       "component_at",
+       "g",
+       "index"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "tv",
+      [
+       "t",
+       "v"
+      ]
+     ],
+     [
+      "tw",
+      [
+       "t",
+       "value"
+      ]
+     ]
+    ],
+    "jvp": [
+     "when_any",
+     [
+      "tv",
+      "tw"
+     ],
+     [
+      "set_component_at",
+      [
+       "or",
+       "tv",
+       [
+        "zero_like",
+        "v"
+       ]
+      ],
+      "index",
+      [
+       "or",
+       "tw",
+       [
+        "zero_like",
+        "value"
+       ]
+      ]
+     ]
+    ]
+   },
+   "vec": {
+    "operands": [],
+    "vjp_expr": [
+     "zipmap",
+     "i",
+     [
+      "entries",
+      [
+       "shape",
+       "n"
+      ]
+     ],
+     "c",
+     "ops",
+     [
+      "pair",
+      "c",
+      [
+       "opl",
+       "component",
+       "i",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "opl",
+     "vec",
+     [
+      "vlit",
+      [
+       "shape",
+       "n"
+      ]
+     ],
+     [
+      "...",
+      [
+       "map_list",
+       "c",
+       "ops",
+       [
+        "or",
+        [
+         "t",
+         "c"
+        ],
+        [
+         "zero_like",
+         "c"
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "mv": {
+    "operands": [
+     "a",
+     "b"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "outer",
+       "g",
+       "b"
+      ]
+     ],
+     [
+      "b",
+      [
+       "mv",
+       [
+        "transpose",
+        "a"
+       ],
+       "g"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "mv",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "mv",
+       "a",
+       "tb"
+      ]
+     ]
+    ]
+   },
+   "mm": {
+    "operands": [
+     "a",
+     "b"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "mm",
+       "g",
+       [
+        "transpose",
+        "b"
+       ]
+      ]
+     ],
+     [
+      "b",
+      [
+       "mm",
+       [
+        "transpose",
+        "a"
+       ],
+       "g"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "mm",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "mm",
+       "a",
+       "tb"
+      ]
+     ]
+    ]
+   },
+   "outer": {
+    "operands": [
+     "a",
+     "b"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "mv",
+       "g",
+       "b"
+      ]
+     ],
+     [
+      "b",
+      [
+       "mv",
+       [
+        "transpose",
+        "g"
+       ],
+       "a"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "outer",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "outer",
+       "a",
+       "tb"
+      ]
+     ]
+    ]
+   },
+   "transpose": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "transpose",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "transpose",
+     [
+      "t",
+      "a"
+     ]
+    ]
+   },
+   "select": {
+    "operands": [
+     "cond",
+     "a",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "z",
+      [
+       "zero_like",
+       "g"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "sel",
+       "cond",
+       "g",
+       "z"
+      ]
+     ],
+     [
+      "b",
+      [
+       "sel",
+       "cond",
+       "z",
+       "g"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "or",
+       [
+        "t",
+        "a"
+       ],
+       [
+        "zero_like",
+        "a"
+       ]
+      ]
+     ],
+     [
+      "tb",
+      [
+       "or",
+       [
+        "t",
+        "b"
+       ],
+       [
+        "zero_like",
+        "b"
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "sel",
+     "cond",
+     "ta",
+     "tb"
+    ]
+   },
+   "quat_mul": {
+    "operands": [
+     "a",
+     "b"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "quat_mul",
+       "g",
+       [
+        "quat_conj",
+        "b"
+       ]
+      ]
+     ],
+     [
+      "b",
+      [
+       "quat_mul",
+       [
+        "quat_conj",
+        "a"
+       ],
+       "g"
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "ta",
+      [
+       "t",
+       "a"
+      ]
+     ],
+     [
+      "tb",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "sumn",
+     [
+      "when",
+      "ta",
+      [
+       "quat_mul",
+       "ta",
+       "b"
+      ]
+     ],
+     [
+      "when",
+      "tb",
+      [
+       "quat_mul",
+       "a",
+       "tb"
+      ]
+     ]
+    ]
+   },
+   "quat_conj": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "quat_conj",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "quat_conj",
+     [
+      "t",
+      "a"
+     ]
+    ]
+   },
+   "quat_recip": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "neg",
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         [
+          "quat_conj",
+          "n"
+         ],
+         "g"
+        ],
+        [
+         "quat_conj",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "neg",
+     [
+      "quat_mul",
+      [
+       "quat_mul",
+       "n",
+       [
+        "t",
+        "a"
+       ]
+      ],
+      "n"
+     ]
+    ]
+   },
+   "quat_rotate": {
+    "operands": [
+     "q",
+     "v"
+    ],
+    "vjp_lets": [
+     [
+      "pv",
+      [
+       "as_pure",
+       "v"
+      ]
+     ],
+     [
+      "pg",
+      [
+       "as_pure",
+       "g"
+      ]
+     ],
+     [
+      "dq",
+      [
+       "add",
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         "pg",
+         "q"
+        ],
+        [
+         "quat_conj",
+         "pv"
+        ]
+       ],
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         [
+          "quat_conj",
+          "pg"
+         ],
+         "q"
+        ],
+        "pv"
+       ]
+      ]
+     ],
+     [
+      "dv",
+      [
+       "as_vec3",
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         [
+          "quat_conj",
+          "q"
+         ],
+         "pg"
+        ],
+        "q"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "q",
+      "dq"
+     ],
+     [
+      "v",
+      "dv"
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "tq",
+      [
+       "t",
+       "q"
+      ]
+     ],
+     [
+      "tv",
+      [
+       "t",
+       "v"
+      ]
+     ],
+     [
+      "pv",
+      [
+       "as_pure",
+       "v"
+      ]
+     ]
+    ],
+    "jvp": [
+     "as_vec3",
+     [
+      "sumn",
+      [
+       "when",
+       "tq",
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         "tq",
+         "pv"
+        ],
+        [
+         "quat_conj",
+         "q"
+        ]
+       ]
+      ],
+      [
+       "when",
+       "tq",
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         "q",
+         "pv"
+        ],
+        [
+         "quat_conj",
+         "tq"
+        ]
+       ]
+      ],
+      [
+       "when",
+       "tv",
+       [
+        "quat_mul",
+        [
+         "quat_mul",
+         "q",
+         [
+          "as_pure",
+          "tv"
+         ]
+        ],
+        [
+         "quat_conj",
+         "q"
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "as_pure": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "as_vec3",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "as_pure",
+     [
+      "t",
+      "a"
+     ]
+    ]
+   },
+   "as_vec3": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      [
+       "as_pure",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "as_vec3",
+     [
+      "t",
+      "a"
+     ]
+    ]
+   }
+  },
+  "defs": {
+   "sym": {
+    "params": [
+     "m"
+    ],
+    "body": [
+     "mul",
+     [
+      "add",
+      "m",
+      [
+       "transpose",
+       "m"
+      ]
+     ],
+     [
+      "c",
+      0.5
+     ]
+    ]
+   },
+   "times": {
+    "params": [
+     "a",
+     "b"
+    ],
+    "body": [
+     "rank1",
+     "b",
+     [
+      "mv",
+      "a",
+      "b"
+     ],
+     [
+      "mm",
+      "a",
+      "b"
+     ]
+    ]
+   },
+   "outer": {
+    "params": [
+     "a",
+     "b"
+    ],
+    "body": [
+     "rank1",
+     "a",
+     [
+      "outer",
+      "a",
+      "b"
+     ],
+     [
+      "mm",
+      "a",
+      [
+       "transpose",
+       "b"
+      ]
+     ]
+    ]
+   },
+   "live_chol_info": {
+    "params": [
+     "f",
+     "value"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "ok",
+       [
+        "lt",
+        [
+         "chol_info",
+         "f"
+        ],
+        [
+         "ci",
+         1
+        ]
+       ]
+      ]
+     ],
+     [
+      "sel",
+      "ok",
+      "value",
+      [
+       "zero_f64",
+       "value"
+      ]
+     ]
+    ]
+   },
+   "live_eigh_info": {
+    "params": [
+     "f",
+     "value"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "ok",
+       [
+        "lt",
+        [
+         "eigh_info",
+         "f"
+        ],
+        [
+         "ci",
+         2
+        ]
+       ]
+      ]
+     ],
+     [
+      "sel",
+      "ok",
+      "value",
+      [
+       "zero_f64",
+       "value"
+      ]
+     ]
+    ]
+   },
+   "live_qr_info": {
+    "params": [
+     "f",
+     "value"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "ok",
+       [
+        "lt",
+        [
+         "qr_info",
+         "f"
+        ],
+        [
+         "ci",
+         1
+        ]
+       ]
+      ]
+     ],
+     [
+      "sel",
+      "ok",
+      "value",
+      [
+       "zero_f64",
+       "value"
+      ]
+     ]
+    ]
+   },
+   "lsq_live": {
+    "params": [
+     "j",
+     "value"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "ok",
+       [
+        "lt",
+        [
+         "lstsq_info",
+         "j"
+        ],
+        [
+         "ci",
+         1
+        ]
+       ]
+      ]
+     ],
+     [
+      "sel",
+      "ok",
+      "value",
+      [
+       "zero_f64",
+       "value"
+      ]
+     ]
+    ]
+   },
+   "at": {
+    "params": [
+     "m",
+     "i",
+     "j"
+    ],
+    "body": [
+     "opl",
+     "component",
+     [
+      "tup",
+      "i",
+      "j"
+     ],
+     "m"
+    ]
+   },
+   "eye": {
+    "params": [
+     "f"
+    ],
+    "body": [
+     "grid",
+     "f",
+     "i",
+     "j",
+     [
+      "ifcmp",
+      "eq",
+      "i",
+      "j",
+      [
+       "c",
+       1.0
+      ],
+      [
+       "c",
+       0.0
+      ]
+     ]
+    ]
+   },
+   "phi": {
+    "params": [
+     "f"
+    ],
+    "body": [
+     "grid",
+     "f",
+     "i",
+     "j",
+     [
+      "ifcmp",
+      "gt",
+      "i",
+      "j",
+      [
+       "c",
+       1.0
+      ],
+      [
+       "ifcmp",
+       "eq",
+       "i",
+       "j",
+       [
+        "c",
+        0.5
+       ],
+       [
+        "c",
+        0.0
+       ]
+      ]
+     ]
+    ]
+   },
+   "tril": {
+    "params": [
+     "f",
+     "m"
+    ],
+    "body": [
+     "grid",
+     "f",
+     "i",
+     "j",
+     [
+      "ifcmp",
+      "le",
+      "j",
+      "i",
+      [
+       "call",
+       "at",
+       "m",
+       "i",
+       "j"
+      ],
+      [
+       "c",
+       0.0
+      ]
+     ]
+    ]
+   },
+   "gaps": {
+    "params": [
+     "f"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "w",
+       [
+        "eigh_w",
+        "f"
+       ]
+      ]
+     ],
+     [
+      "grid",
+      "f",
+      "i",
+      "j",
+      [
+       "ifcmp",
+       "eq",
+       "i",
+       "j",
+       [
+        "c",
+        0.0
+       ],
+       [
+        "div",
+        [
+         "c",
+         1.0
+        ],
+        [
+         "sub",
+         [
+          "opl",
+          "component",
+          "j",
+          "w"
+         ],
+         [
+          "opl",
+          "component",
+          "i",
+          "w"
+         ]
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "diag": {
+    "params": [
+     "f",
+     "vector"
+    ],
+    "body": [
+     "grid",
+     "f",
+     "i",
+     "j",
+     [
+      "ifcmp",
+      "eq",
+      "i",
+      "j",
+      [
+       "opl",
+       "component",
+       "i",
+       "vector"
+      ],
+      [
+       "c",
+       0.0
+      ]
+     ]
+    ]
+   },
+   "chol_tangent": {
+    "params": [
+     "f",
+     "da"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "w",
+       [
+        "tri_lower",
+        "f",
+        [
+         "call",
+         "sym",
+         "da"
+        ]
+       ]
+      ],
+      [
+       "x",
+       [
+        "tri_lower",
+        "f",
+        [
+         "transpose",
+         "w"
+        ]
+       ]
+      ]
+     ],
+     [
+      "call",
+      "live_chol_info",
+      "f",
+      [
+       "mm",
+       [
+        "chol_factor",
+        "f"
+       ],
+       [
+        "mul",
+        "x",
+        [
+         "call",
+         "phi",
+         "f"
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "chol_adjoint": {
+    "params": [
+     "f",
+     "lbar"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "p",
+       [
+        "mul",
+        [
+         "mm",
+         [
+          "transpose",
+          [
+           "chol_factor",
+           "f"
+          ]
+         ],
+         "lbar"
+        ],
+        [
+         "call",
+         "phi",
+         "f"
+        ]
+       ]
+      ],
+      [
+       "y",
+       [
+        "tri_upper_t",
+        "f",
+        "p"
+       ]
+      ],
+      [
+       "g",
+       [
+        "transpose",
+        [
+         "tri_upper_t",
+         "f",
+         [
+          "transpose",
+          "y"
+         ]
+        ]
+       ]
+      ]
+     ],
+     [
+      "call",
+      "live_chol_info",
+      "f",
+      [
+       "call",
+       "sym",
+       "g"
+      ]
+     ]
+    ]
+   },
+   "rotated": {
+    "params": [
+     "f",
+     "da"
+    ],
+    "body": [
+     "lets",
+     [
+      [
+       "v",
+       [
+        "eigh_v",
+        "f"
+       ]
+      ]
+     ],
+     [
+      "mm",
+      [
+       "mm",
+       [
+        "transpose",
+        "v"
+       ],
+       [
+        "call",
+        "sym",
+        "da"
+       ]
+      ],
+      "v"
+     ]
+    ]
+   }
+  },
+  "linalg": {
+   "lu": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      "g"
+     ]
+    ],
+    "jvp": [
+     "t",
+     "a"
+    ]
+   },
+   "chol": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      "g"
+     ]
+    ],
+    "jvp": [
+     "t",
+     "a"
+    ]
+   },
+   "eigh": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      "g"
+     ]
+    ],
+    "jvp": [
+     "t",
+     "a"
+    ]
+   },
+   "qr": {
+    "operands": [
+     "a"
+    ],
+    "vjp": [
+     [
+      "a",
+      "g"
+     ]
+    ],
+    "jvp": [
+     "t",
+     "a"
+    ]
+   },
+   "chol_from": {
+    "operands": [
+     "lower"
+    ],
+    "vjp": [
+     [
+      "lower",
+      [
+       "call",
+       "tril",
+       "n",
+       [
+        "mm",
+        [
+         "add",
+         "g",
+         [
+          "transpose",
+          "g"
+         ]
+        ],
+        [
+         "chol_factor",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "dl",
+      [
+       "t",
+       "lower"
+      ]
+     ]
+    ],
+    "jvp": [
+     "when",
+     "dl",
+     [
+      "lets",
+      [
+       [
+        "half",
+        [
+         "mm",
+         [
+          "call",
+          "tril",
+          "n",
+          "dl"
+         ],
+         [
+          "transpose",
+          [
+           "chol_factor",
+           "n"
+          ]
+         ]
+        ]
+       ]
+      ],
+      [
+       "add",
+       "half",
+       [
+        "transpose",
+        "half"
+       ]
+      ]
+     ]
+    ]
+   },
+   "lu_solve": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "lam",
+      [
+       "lu_solve_t",
+       "f",
+       "g"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      "lam"
+     ],
+     [
+      "f",
+      [
+       "neg",
+       [
+        "call",
+        "outer",
+        "lam",
+        "n"
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "da",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "lu_solve",
+     "f",
+     [
+      "sumn",
+      "db",
+      [
+       "when",
+       "da",
+       [
+        "neg",
+        [
+         "call",
+         "times",
+         "da",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "lu_solve_t": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "lam",
+      [
+       "lu_solve",
+       "f",
+       "g"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      "lam"
+     ],
+     [
+      "f",
+      [
+       "neg",
+       [
+        "call",
+        "outer",
+        "n",
+        "lam"
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "da",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "lu_solve_t",
+     "f",
+     [
+      "sumn",
+      "db",
+      [
+       "when",
+       "da",
+       [
+        "neg",
+        [
+         "call",
+         "times",
+         [
+          "transpose",
+          "da"
+         ],
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "cho_solve": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "lam",
+      [
+       "cho_solve",
+       "f",
+       "g"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      "lam"
+     ],
+     [
+      "f",
+      [
+       "neg",
+       [
+        "call",
+        "sym",
+        [
+         "call",
+         "outer",
+         "lam",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "da",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "cho_solve",
+     "f",
+     [
+      "sumn",
+      "db",
+      [
+       "when",
+       "da",
+       [
+        "neg",
+        [
+         "call",
+         "times",
+         [
+          "call",
+          "sym",
+          "da"
+         ],
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "tri_lower": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "bbar",
+      [
+       "call",
+       "live_chol_info",
+       "f",
+       [
+        "tri_upper_t",
+        "f",
+        "g"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      "bbar"
+     ],
+     [
+      "f",
+      [
+       "call",
+       "chol_adjoint",
+       "f",
+       [
+        "neg",
+        [
+         "call",
+         "outer",
+         "bbar",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "da",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "call",
+     "live_chol_info",
+     "f",
+     [
+      "tri_lower",
+      "f",
+      [
+       "sumn",
+       "db",
+       [
+        "when",
+        "da",
+        [
+         "neg",
+         [
+          "call",
+          "times",
+          [
+           "call",
+           "chol_tangent",
+           "f",
+           "da"
+          ],
+          "n"
+         ]
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "tri_upper_t": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "bbar",
+      [
+       "call",
+       "live_chol_info",
+       "f",
+       [
+        "tri_lower",
+        "f",
+        "g"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      "bbar"
+     ],
+     [
+      "f",
+      [
+       "call",
+       "chol_adjoint",
+       "f",
+       [
+        "neg",
+        [
+         "call",
+         "outer",
+         "n",
+         "bbar"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "da",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ]
+    ],
+    "jvp": [
+     "call",
+     "live_chol_info",
+     "f",
+     [
+      "tri_upper_t",
+      "f",
+      [
+       "sumn",
+       "db",
+       [
+        "when",
+        "da",
+        [
+         "neg",
+         [
+          "call",
+          "times",
+          [
+           "transpose",
+           [
+            "call",
+            "chol_tangent",
+            "f",
+            "da"
+           ]
+          ],
+          "n"
+         ]
+        ]
+       ]
+      ]
+     ]
+    ]
+   },
+   "lu_det": {
+    "operands": [
+     "f"
+    ],
+    "vjp": [
+     [
+      "f",
+      [
+       "mul",
+       [
+        "mul",
+        "g",
+        "n"
+       ],
+       [
+        "lu_solve_t",
+        "f",
+        [
+         "call",
+         "eye",
+         "f"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "solved",
+      [
+       "lu_solve",
+       "f",
+       [
+        "t",
+        "f"
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "mul",
+     "n",
+     [
+      "foldl",
+      "add",
+      [
+       "map",
+       "i",
+       [
+        "dim",
+        "f"
+       ],
+       [
+        "call",
+        "at",
+        "solved",
+        "i",
+        "i"
+       ]
+      ]
+     ]
+    ]
+   },
+   "chol_factor": {
+    "operands": [
+     "f"
+    ],
+    "vjp": [
+     [
+      "f",
+      [
+       "call",
+       "chol_adjoint",
+       "f",
+       "g"
+      ]
+     ]
+    ],
+    "jvp": [
+     "call",
+     "chol_tangent",
+     "f",
+     [
+      "t",
+      "f"
+     ]
+    ]
+   },
+   "eigh_w": {
+    "operands": [
+     "f"
+    ],
+    "vjp_lets": [
+     [
+      "v",
+      [
+       "eigh_v",
+       "f"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "f",
+      [
+       "mm",
+       [
+        "mm",
+        "v",
+        [
+         "call",
+         "diag",
+         "f",
+         "g"
+        ]
+       ],
+       [
+        "transpose",
+        "v"
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "m",
+      [
+       "call",
+       "rotated",
+       "f",
+       [
+        "t",
+        "f"
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "opl",
+     "vec",
+     null,
+     [
+      "...",
+      [
+       "map",
+       "i",
+       [
+        "dim",
+        "f"
+       ],
+       [
+        "call",
+        "at",
+        "m",
+        "i",
+        "i"
+       ]
+      ]
+     ]
+    ]
+   },
+   "eigh_v": {
+    "operands": [
+     "f"
+    ],
+    "vjp_lets": [
+     [
+      "v",
+      [
+       "eigh_v",
+       "f"
+      ]
+     ],
+     [
+      "inner",
+      [
+       "mul",
+       [
+        "call",
+        "gaps",
+        "f"
+       ],
+       [
+        "mm",
+        [
+         "transpose",
+         "v"
+        ],
+        "g"
+       ]
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "f",
+      [
+       "call",
+       "live_eigh_info",
+       "f",
+       [
+        "call",
+        "sym",
+        [
+         "mm",
+         [
+          "mm",
+          "v",
+          "inner"
+         ],
+         [
+          "transpose",
+          "v"
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "v",
+      [
+       "eigh_v",
+       "f"
+      ]
+     ],
+     [
+      "dv",
+      [
+       "mm",
+       "v",
+       [
+        "mul",
+        [
+         "call",
+         "gaps",
+         "f"
+        ],
+        [
+         "call",
+         "rotated",
+         "f",
+         [
+          "t",
+          "f"
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "call",
+     "live_eigh_info",
+     "f",
+     "dv"
+    ]
+   },
+   "qr_solve": {
+    "operands": [
+     "f",
+     "r"
+    ],
+    "vjp_lets": [
+     [
+      "j",
+      [
+       "operand",
+       "f",
+       0
+      ]
+     ],
+     [
+      "w",
+      [
+       "qr_gram_solve",
+       "f",
+       "g"
+      ]
+     ],
+     [
+      "jw",
+      [
+       "call",
+       "times",
+       "j",
+       "w"
+      ]
+     ],
+     [
+      "res",
+      [
+       "sub",
+       "r",
+       [
+        "call",
+        "times",
+        "j",
+        "n"
+       ]
+      ]
+     ],
+     [
+      "rbar",
+      [
+       "call",
+       "live_qr_info",
+       "f",
+       "jw"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "r",
+      "rbar"
+     ],
+     [
+      "f",
+      [
+       "call",
+       "live_qr_info",
+       "f",
+       [
+        "sub",
+        [
+         "call",
+         "outer",
+         "res",
+         "w"
+        ],
+        [
+         "call",
+         "outer",
+         "jw",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "j",
+      [
+       "operand",
+       "f",
+       0
+      ]
+     ],
+     [
+      "dj",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "dr",
+      [
+       "t",
+       "r"
+      ]
+     ],
+     [
+      "o1",
+      [
+       "when",
+       "dj",
+       [
+        "lets",
+        [
+         [
+          "res",
+          [
+           "sub",
+           "r",
+           [
+            "call",
+            "times",
+            "j",
+            "n"
+           ]
+          ]
+         ],
+         [
+          "rhs",
+          [
+           "sub",
+           [
+            "call",
+            "times",
+            [
+             "transpose",
+             "dj"
+            ],
+            "res"
+           ],
+           [
+            "call",
+            "times",
+            [
+             "transpose",
+             "j"
+            ],
+            [
+             "call",
+             "times",
+             "dj",
+             "n"
+            ]
+           ]
+          ]
+         ]
+        ],
+        [
+         "qr_gram_solve",
+         "f",
+         "rhs"
+        ]
+       ]
+      ]
+     ],
+     [
+      "o2",
+      [
+       "when",
+       "dr",
+       [
+        "qr_solve",
+        "f",
+        "dr"
+       ]
+      ]
+     ],
+     [
+      "out",
+      [
+       "sumn",
+       "o1",
+       "o2"
+      ]
+     ]
+    ],
+    "jvp": [
+     "when",
+     "out",
+     [
+      "call",
+      "live_qr_info",
+      "f",
+      "out"
+     ]
+    ]
+   },
+   "qr_gram_solve": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "j",
+      [
+       "operand",
+       "f",
+       0
+      ]
+     ],
+     [
+      "w",
+      [
+       "qr_gram_solve",
+       "f",
+       "g"
+      ]
+     ],
+     [
+      "cross",
+      [
+       "call",
+       "outer",
+       "w",
+       "n"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      [
+       "call",
+       "live_qr_info",
+       "f",
+       "w"
+      ]
+     ],
+     [
+      "f",
+      [
+       "call",
+       "live_qr_info",
+       "f",
+       [
+        "neg",
+        [
+         "call",
+         "times",
+         "j",
+         [
+          "add",
+          "cross",
+          [
+           "transpose",
+           "cross"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "j",
+      [
+       "operand",
+       "f",
+       0
+      ]
+     ],
+     [
+      "dj",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ],
+     [
+      "rhs",
+      [
+       "sumn",
+       "db",
+       [
+        "when",
+        "dj",
+        [
+         "neg",
+         [
+          "call",
+          "times",
+          [
+           "transpose",
+           "dj"
+          ],
+          [
+           "call",
+           "times",
+           "j",
+           "n"
+          ]
+         ]
+        ]
+       ],
+       [
+        "when",
+        "dj",
+        [
+         "neg",
+         [
+          "call",
+          "times",
+          [
+           "transpose",
+           "j"
+          ],
+          [
+           "call",
+           "times",
+           "dj",
+           "n"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "when",
+     "rhs",
+     [
+      "call",
+      "live_qr_info",
+      "f",
+      [
+       "qr_gram_solve",
+       "f",
+       "rhs"
+      ]
+     ]
+    ]
+   },
+   "lstsq": {
+    "operands": [
+     "f",
+     "r"
+    ],
+    "vjp_lets": [
+     [
+      "j",
+      "f"
+     ],
+     [
+      "w",
+      [
+       "lstsq_gram_solve",
+       "f",
+       "g"
+      ]
+     ],
+     [
+      "jw",
+      [
+       "call",
+       "times",
+       "j",
+       "w"
+      ]
+     ],
+     [
+      "res",
+      [
+       "sub",
+       "r",
+       [
+        "call",
+        "times",
+        "j",
+        "n"
+       ]
+      ]
+     ],
+     [
+      "rbar",
+      [
+       "call",
+       "lsq_live",
+       "f",
+       "jw"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "r",
+      "rbar"
+     ],
+     [
+      "f",
+      [
+       "call",
+       "lsq_live",
+       "f",
+       [
+        "sub",
+        [
+         "call",
+         "outer",
+         "res",
+         "w"
+        ],
+        [
+         "call",
+         "outer",
+         "jw",
+         "n"
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "j",
+      "f"
+     ],
+     [
+      "dj",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "dr",
+      [
+       "t",
+       "r"
+      ]
+     ],
+     [
+      "o1",
+      [
+       "when",
+       "dj",
+       [
+        "lets",
+        [
+         [
+          "res",
+          [
+           "sub",
+           "r",
+           [
+            "call",
+            "times",
+            "j",
+            "n"
+           ]
+          ]
+         ],
+         [
+          "rhs",
+          [
+           "sub",
+           [
+            "call",
+            "times",
+            [
+             "transpose",
+             "dj"
+            ],
+            "res"
+           ],
+           [
+            "call",
+            "times",
+            [
+             "transpose",
+             "j"
+            ],
+            [
+             "call",
+             "times",
+             "dj",
+             "n"
+            ]
+           ]
+          ]
+         ]
+        ],
+        [
+         "lstsq_gram_solve",
+         "f",
+         "rhs"
+        ]
+       ]
+      ]
+     ],
+     [
+      "o2",
+      [
+       "when",
+       "dr",
+       [
+        "lstsq",
+        "f",
+        "dr"
+       ]
+      ]
+     ],
+     [
+      "out",
+      [
+       "sumn",
+       "o1",
+       "o2"
+      ]
+     ]
+    ],
+    "jvp": [
+     "when",
+     "out",
+     [
+      "call",
+      "lsq_live",
+      "f",
+      "out"
+     ]
+    ]
+   },
+   "lstsq_gram_solve": {
+    "operands": [
+     "f",
+     "b"
+    ],
+    "vjp_lets": [
+     [
+      "j",
+      "f"
+     ],
+     [
+      "w",
+      [
+       "lstsq_gram_solve",
+       "f",
+       "g"
+      ]
+     ],
+     [
+      "cross",
+      [
+       "call",
+       "outer",
+       "w",
+       "n"
+      ]
+     ]
+    ],
+    "vjp": [
+     [
+      "b",
+      [
+       "call",
+       "lsq_live",
+       "f",
+       "w"
+      ]
+     ],
+     [
+      "f",
+      [
+       "call",
+       "lsq_live",
+       "f",
+       [
+        "neg",
+        [
+         "call",
+         "times",
+         "j",
+         [
+          "add",
+          "cross",
+          [
+           "transpose",
+           "cross"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp_lets": [
+     [
+      "j",
+      "f"
+     ],
+     [
+      "dj",
+      [
+       "t",
+       "f"
+      ]
+     ],
+     [
+      "db",
+      [
+       "t",
+       "b"
+      ]
+     ],
+     [
+      "rhs",
+      [
+       "sumn",
+       "db",
+       [
+        "when",
+        "dj",
+        [
+         "neg",
+         [
+          "call",
+          "times",
+          [
+           "transpose",
+           "dj"
+          ],
+          [
+           "call",
+           "times",
+           "j",
+           "n"
+          ]
+         ]
+        ]
+       ],
+       [
+        "when",
+        "dj",
+        [
+         "neg",
+         [
+          "call",
+          "times",
+          [
+           "transpose",
+           "j"
+          ],
+          [
+           "call",
+           "times",
+           "dj",
+           "n"
+          ]
+         ]
+        ]
+       ]
+      ]
+     ]
+    ],
+    "jvp": [
+     "when",
+     "rhs",
+     [
+      "call",
+      "lsq_live",
+      "f",
+      [
+       "lstsq_gram_solve",
+       "f",
+       "rhs"
+      ]
+     ]
+    ]
+   }
+  },
+  "modes": {
+   "zero": [
+    "@COMPARE",
+    "@LOGICAL",
+    "@RANDOM_OPS",
+    "@PREDICATE",
+    "@INT_BINARY",
+    "@INT_UNARY",
+    "cast",
+    "floor",
+    "ceil",
+    "trunc",
+    "round",
+    "rint",
+    "sign",
+    "spacing",
+    "lu_info",
+    "chol_info",
+    "eigh_info",
+    "qr_info",
+    "lstsq_info"
+   ],
+   "walker": [
+    "at",
+    "dispatch"
+   ]
+  }
+ }
+}

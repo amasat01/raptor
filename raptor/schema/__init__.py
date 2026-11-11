@@ -17,6 +17,7 @@ schema_version, pattern vocabulary) — it is NOT a port of eagle's deep
 
 from __future__ import annotations
 
+from .. import _core
 from . import blocks, dtypes, manifest
 
 #: the full recognized pattern vocabulary (base + the graph_block extension).
@@ -63,40 +64,4 @@ def validate_manifest(doc: dict) -> None:
        ``plugins``) is not order-checked here — that is eagle's deep validator's job,
        not this shape check's.
     """
-    if not isinstance(doc, dict):
-        raise TypeError(f"expected a dict, got {type(doc).__name__}")
-
-    version = manifest.check_schema_version(
-        doc, name="<document>", allow_legacy_version_key=True
-    )
-    manifest.check_execution_axis(doc, version, name="<document>")
-    manifest.check_lane_space(doc, name="<document>")
-    manifest.check_launch_fields(doc, name="<document>")
-    manifest.check_team_fields(doc, name="<document>")
-    manifest.check_index_planes(doc, name="<document>")
-
-    pattern = doc.get("pattern")
-    if pattern == "neural_block":
-        raise ValueError(
-            "pattern 'neural_block' was renamed to 'graph_block' in 0.7.3"
-        )
-    if pattern is not None and pattern not in ALL_PATTERNS:
-        raise ValueError(
-            f"pattern {pattern!r} is not recognized; expected one of "
-            f"{sorted(ALL_PATTERNS)}"
-        )
-
-    if "plugins" in doc:
-        if "blocks" in doc:
-            expected = blocks.BLOCK_TOP_LEVEL_KEY_ORDER
-        elif version >= 2:
-            expected = manifest.TOP_LEVEL_KEY_ORDER_V2
-        else:
-            expected = manifest.TOP_LEVEL_KEY_ORDER
-        present_in_doc_order = [k for k in doc if k in expected]
-        present_in_expected_order = [k for k in expected if k in doc]
-        if present_in_doc_order != present_in_expected_order:
-            raise ValueError(
-                "manifest top-level key order violates the key-order contract: got "
-                f"{present_in_doc_order}, expected {present_in_expected_order}"
-            )
+    _core.schema_check("document", doc)

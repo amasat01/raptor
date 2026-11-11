@@ -13,3 +13,7 @@
 
 # Sphinx autosummary output (regenerated on every build)
 docs/content/api/generated/
+target/
+__pycache__/
+*.so
+*.whl

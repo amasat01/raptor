@@ -50,7 +50,7 @@ def exec_source(text: str, ns: dict | None = None, name: str | None = None) -> d
 
 def lift_dash_c(*fns) -> bool:
     """Under ``python -c "<source>"`` code is labelled ``<string>`` and has no text; the text is the
-    argument after ``-c`` in ``sys.orig_argv`` (3.10+).
+    argument after ``-c`` in ``sys.orig_argv`` (which exists from 3.10: on 3.9 this returns False).
 
     Every ``<string>`` code object shares that label, so the text is registered only when each
     ``fns`` entry is verified to live in it (its ``def`` line matches at ``co_firstlineno``).

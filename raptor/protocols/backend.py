@@ -78,10 +78,9 @@ class Executable(Protocol):
 class Backend(Protocol):
     """A program-level execution substrate.
 
-    ``EagleBackend`` / ``TorchBackend`` / ``ReferenceBackend`` implement this;
-    ``Layer.to(name)`` selects one by :attr:`name`. ``TorchBackend`` COMPOSES
+    A backend implements this; ``Layer.to(name)`` selects one by :attr:`name`. A framework backend COMPOSES
     the existing engines by tensor device — CPU tensors route to the
-    host-JIT engine, CUDA tensors route to eagle, and any other device raises
+    host-JIT engine, device tensors route to the device runtime, and any other device raises
     :class:`CapabilityError`; it is not an interpretive substrate of its
     own."""
 

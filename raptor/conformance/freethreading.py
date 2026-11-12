@@ -3,14 +3,14 @@
 
 """Free-threaded CPython conformance harness (the ``FT-*`` row family).
 
-Pure standard library, importable on every interpreter. ``pytest`` is imported
-function-locally, exactly as :mod:`raptor.conformance.interop` does, so the
-rest of :mod:`raptor.conformance` stays importable without it.
+Pure standard library, importable on every interpreter. It names no test framework: the skip and fail gates that
+turn :func:`masking_problem`, :func:`free_threaded_problem` and :func:`not_vacuous_problem` into outcomes live with
+the tests.
 
 The harness is written for reuse by every package in the family that ships a
 module to be run under 3.14t / 3.15t. Its pieces:
 
-* :func:`require_free_threaded` -- skip on a GIL build, **fail** when the GIL
+* :func:`masking_problem` -- a test-side gate skips on a GIL build and **fails** when the GIL
   state is forced from outside (``-X gil=...`` or ``PYTHON_GIL``): a forced
   state hides a missing ``FREE_THREADED`` declaration, so a run under it
   certifies nothing.
@@ -18,14 +18,14 @@ module to be run under 3.14t / 3.15t. Its pieces:
 * :func:`assert_gil_free` (row class FT-1) -- import a module in a clean
   subprocess under ``-W error::RuntimeWarning`` and require that the GIL is
   still off afterwards.
-* :func:`measure_loss` / :func:`canary_python` / :func:`require_not_vacuous`
+* :func:`measure_loss` / :func:`canary_python` / :func:`not_vacuous_problem`
   (row class FT-2) -- a *planted* race that the schedule must expose. A
   schedule that cannot lose updates on a known-racy counter cannot certify
   that a real counter is race-free, so the run is RED as vacuous, never green.
   A package supplies its own compiled canary (conventionally
   ``_unsynchronised_bump``) through :func:`measure_loss`.
 
-FT-3..FT-6 (global state, distinct objects, shared-object misuse, GPU) are
+FT-3..FT-6 (global state, distinct objects, shared-object misuse, device) are
 package-specific; packages build them from :func:`hammer` and register their
 row ids with :func:`declare_ft_row` / :func:`register_ft_row`.
 """
@@ -53,8 +53,8 @@ __all__ = [
     "hammer",
     "measure_loss",
     "register_ft_row",
-    "require_free_threaded",
-    "require_not_vacuous",
+    "masking_problem",
+    "not_vacuous_problem",
 ]
 
 #: Default hammer shape of the vacuity canary (threads x iterations per thread).
@@ -100,24 +100,12 @@ def _masking_reason() -> str | None:
     return None
 
 
-def require_free_threaded() -> None:
-    """Skip on a GIL build; FAIL when the GIL state is forced from outside.
+def masking_problem() -> str | None:
+    """The reason the GIL state is forced from outside (``-X gil=0`` / ``PYTHON_GIL``), or ``None``.
 
-    ``-X gil=0`` / ``PYTHON_GIL=0`` report the GIL as off even for an
-    extension that never declared support, so they mask exactly the defect
-    these rows exist to catch. ``=1`` is refused too: a run with the GIL forced
-    on certifies nothing either.
-    """
-    import pytest
-
-    if free_threaded_problem() is not None:
-        pytest.skip(free_threaded_problem())
-    reason = _masking_reason()
-    if reason is not None:
-        pytest.fail(
-            f"free-threading gate refused: {reason}; this masks a missing "
-            "free-threading declaration. Unset it and rerun."
-        )
+    Both ``=0`` and ``=1`` mask what the free-threading rows exist to catch, so a gate must FAIL on this, never skip.
+    A test-side gate turns :func:`free_threaded_problem` into a skip and this into a failure."""
+    return _masking_reason()
 
 
 def hammer(
@@ -292,23 +280,20 @@ def canary_python(
 _PREFLIGHT: dict[str, CanaryResult] = {}
 
 
-def require_not_vacuous(
+def not_vacuous_problem(
     result: CanaryResult | None = None, min_lost: float = MIN_LOST_FRACTION
-) -> CanaryResult:
-    """Fail (RED, never skip) unless the canary lost at least ``min_lost``.
+) -> tuple[CanaryResult, str | None]:
+    """The canary result and, unless it lost at least ``min_lost``, the reason the run is vacuous.
 
-    With no argument the Python canary is measured once per process and
-    cached (it escalates contention first, see :func:`measure_loss`). Pass a package's own :func:`measure_loss` result to certify its
-    compiled canary. Call after :func:`require_free_threaded`.
-    """
-    import pytest
-
+    With no argument the Python canary is measured once per process and cached (it escalates contention first, see
+    :func:`measure_loss`). Pass a package's own :func:`measure_loss` result to judge its compiled canary. A test-side
+    gate fails (RED, never skips) on the reason."""
     if result is None:
         if "python" not in _PREFLIGHT:
             _PREFLIGHT["python"] = canary_python()
         result = _PREFLIGHT["python"]
     if result.lost_fraction < min_lost:
-        pytest.fail(
+        return result, (
             f"free-threading run is VACUOUS: the planted race lost only "
             f"{result.lost_fraction:.1%} of {result.expected} updates "
             f"(< {min_lost:.0%}) after {result.attempts} attempt(s) "
@@ -317,7 +302,7 @@ def require_not_vacuous(
             "expose a known race cannot certify the real code. Few usable "
             "cores points at a weak runner, many at a broken instrument."
         )
-    return result
+    return result, None
 
 
 @dataclass(frozen=True)

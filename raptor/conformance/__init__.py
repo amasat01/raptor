@@ -20,7 +20,7 @@ from .interop import (
     assert_doc_rows_match,
     assert_no_skip_tokens,
     assert_rows_complete,
-    certified_framework,
+    certified_framework_problem,
     register_row,
     roadmap_framework,
 )
@@ -48,7 +48,7 @@ __all__ = [
     "assert_doc_rows_match",
     "assert_no_skip_tokens",
     "assert_rows_complete",
-    "certified_framework",
+    "certified_framework_problem",
     "register_row",
     "roadmap_framework",
 ]

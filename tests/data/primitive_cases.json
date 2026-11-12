@@ -1,0 +1,651 @@
+[
+{
+"name": "vjp plain",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in1"
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "ok [[2, 4], [['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'g', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a1', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 1]], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a0', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 3]]]]"
+},
+{
+"name": "vjp shared",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"add",
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in1"
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in1"
+]
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "ok [[4, 6], [['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'g', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a1', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 1]], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 1]], ['Op', 'add', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [2, 3]], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a0', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 5]]]]"
+},
+{
+"name": "vjp loop",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"loop",
+[
+"add",
+[
+"carry"
+],
+[
+"mul",
+[
+"ph",
+"in0"
+],
+[
+"ph",
+"cot"
+]
+]
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "ok [[4, 5], [['Const', 'constant', \"TensorType(shape=(), dtype='f64', tag=None)\", '', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a0', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'g', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [1, 2]], ['Loop', 'loop', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 3]], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [2, 1]]]]"
+},
+{
+"name": "vjp loop index",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"loop",
+[
+"add",
+[
+"carry"
+],
+[
+"idx"
+]
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "ok [[1, 4], [['Const', 'constant', \"TensorType(shape=(), dtype='f64', tag=None)\", '', []], ['Loop', 'loop', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0]], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'g', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a0', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [2, 3]]]]"
+},
+{
+"name": "jvp plain",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "jvp",
+"templates": [
+[
+"add",
+[
+"mul",
+[
+"ph",
+"dot0"
+],
+[
+"ph",
+"in1"
+]
+],
+[
+"mul",
+[
+"ph",
+"in0"
+],
+[
+"ph",
+"dot1"
+]
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "ok [[6], [['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 't0', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a1', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 1]], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a0', []], ['Const', 'constant', \"TensorType(shape=(), dtype='f64', tag=None)\", '', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [3, 4]], ['Op', 'add', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [2, 5]]]]"
+},
+{
+"name": "jvp loop",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "jvp",
+"templates": [
+[
+"loop",
+[
+"add",
+[
+"carry"
+],
+[
+"mul",
+[
+"ph",
+"dot0"
+],
+[
+"ph",
+"in1"
+]
+]
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "ok [[4], [['Const', 'constant', \"TensorType(shape=(), dtype='f64', tag=None)\", '', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 't0', []], ['Leaf', 'uniform', \"TensorType(shape=(), dtype='f64', tag=None)\", 'a1', []], ['Op', 'mul', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [1, 2]], ['Loop', 'loop', \"TensorType(shape=(), dtype='f64', tag=None)\", '', [0, 3]]]]"
+},
+{
+"name": "vjp short",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in1"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': its vjp returned 1 gradient(s) for 2 input(s). A reverse rule returns ONE adjoint per declared input, in call order \u2014 a short tuple would silently leave an input's gradient at zero"
+},
+{
+"name": "vjp free leaf",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"mul",
+[
+"leaf",
+"zz"
+],
+[
+"ph",
+"cot"
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': a rule template reads uniform 'zz': only its inputs, the incoming adjoint and the input tangents may be free in a rule (['$cot', '$in0', '$in1', '$out'])"
+},
+{
+"name": "vjp free leaf in loop",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"loop",
+[
+"add",
+[
+"carry"
+],
+[
+"leaf",
+"zz"
+]
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': a rule template reads uniform 'zz' inside a loop body: only its inputs, the incoming adjoint and the input tangents may be free in a rule (['$cot', '$in0', '$in1', '$out'])"
+},
+{
+"name": "jvp foreign placeholder",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "jvp",
+"templates": [
+[
+"ph",
+"cot"
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': a rule template reads uniform '$cot': only its inputs, the incoming adjoint and the input tangents may be free in a rule (['$dot0', '$dot1', '$in0', '$in1', '$out'])"
+},
+{
+"name": "index outside its loop",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"add",
+[
+"const",
+1
+],
+[
+"index"
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': a rule template reads the index or a carry of a loop outside that loop"
+},
+{
+"name": "tape read",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"add",
+[
+"tape"
+],
+[
+"ph",
+"cot"
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': a rule template may not read a tape (it belongs to a loop outside the template)"
+},
+{
+"name": "vjp type",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[
+3
+],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "vjp",
+"templates": [
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in1"
+]
+],
+[
+"const",
+1
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': its vjp produced a value typed TensorType(shape=(), dtype='f64', tag=None) where TensorType(shape=(3,), dtype='f64', tag=None) was owed. A supplied rule is checked against the type it stands in for, because a rank or dtype mismatch here reaches the emitter as a shape error far from the declaration that caused it"
+},
+{
+"name": "bad direction",
+"ins": [
+[
+[],
+"f64"
+],
+[
+[],
+"f64"
+]
+],
+"out": [
+[],
+"f64"
+],
+"dir": "xyz",
+"templates": [
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in1"
+]
+],
+[
+"mul",
+[
+"ph",
+"cot"
+],
+[
+"ph",
+"in0"
+]
+]
+],
+"sup": [
+true,
+false
+],
+"want": "RaptorError: primitive 'p': unknown direction 'xyz'"
+}
+]

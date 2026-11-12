@@ -16,6 +16,9 @@ from pathlib import Path
 
 import pytest
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _ft_gate import require_free_threaded, require_not_vacuous  # noqa: E402
+
 from raptor.conformance import freethreading as ft
 from raptor.conformance.freethreading import register_ft_row
 
@@ -42,15 +45,12 @@ _REPO_ROOT = str(Path(__file__).resolve().parent.parent)
 
 def _child_env(**extra: str) -> dict[str, str]:
     env = {k: v for k, v in os.environ.items() if k != "PYTHON_GIL"}
-    env["PYTHONPATH"] = _REPO_ROOT
+    env["PYTHONPATH"] = os.pathsep.join([_REPO_ROOT, str(Path(__file__).resolve().parent)])
     env.update(extra)
     return env
 
 
-_REFUSE = (
-    "from raptor.conformance.freethreading import require_free_threaded;"
-    "require_free_threaded()"
-)
+_REFUSE = "from _ft_gate import require_free_threaded; require_free_threaded()"
 
 
 def test_manifest_all_tests_collected(request):
@@ -79,7 +79,7 @@ def test_hammer_runs_every_iteration_and_propagates_errors():
 
 @register_ft_row("FT-0-REFUSE-MASKED-GIL")
 def test_gate_refuses_masked_gil_x_option():
-    ft.require_free_threaded()
+    require_free_threaded()
     for val in ("0", "1"):
         proc = subprocess.run(
             [sys.executable, "-X", f"gil={val}", "-c", _REFUSE],
@@ -90,7 +90,7 @@ def test_gate_refuses_masked_gil_x_option():
 
 @register_ft_row("FT-0-REFUSE-MASKED-GIL")
 def test_gate_refuses_masked_gil_env():
-    ft.require_free_threaded()
+    require_free_threaded()
     for val in ("0", "1"):
         proc = subprocess.run(
             [sys.executable, "-c", _REFUSE],
@@ -102,7 +102,7 @@ def test_gate_refuses_masked_gil_env():
 
 @register_ft_row("FT-1-GIL-FREE-PURE")
 def test_gil_free_pure_python_module():
-    ft.require_free_threaded()
+    require_free_threaded()
     ft.assert_gil_free("raptor.conformance.freethreading")
 
 
@@ -110,23 +110,23 @@ def test_gil_free_pure_python_module():
 def test_gil_required_case_fails():
     # Stand-in for an extension that re-enables the GIL: the child runs with
     # the GIL forced on, so the check's own verdict must be RED.
-    ft.require_free_threaded()
+    require_free_threaded()
     with pytest.raises(AssertionError, match="GIL is enabled"):
         ft.assert_gil_free("raptor.conformance.freethreading", ("-X", "gil=1"))
 
 
 @register_ft_row("FT-2-CANARY-PYTHON")
 def test_python_canary_loses_updates():
-    ft.require_free_threaded()
-    res = ft.require_not_vacuous()
+    require_free_threaded()
+    res = require_not_vacuous()
     assert res.lost_fraction >= ft.MIN_LOST_FRACTION
     print(f"python canary lost {res.lost_fraction:.1%} of {res.expected}")
 
 
 def test_vacuous_canary_is_red():
-    ft.require_free_threaded()
+    require_free_threaded()
     with pytest.raises(pytest.fail.Exception, match="VACUOUS"):
-        ft.require_not_vacuous(ft.CanaryResult(1000, 1000))
+        require_not_vacuous(ft.CanaryResult(1000, 1000))
 
 
 def _lossy_counter(drop_every):
@@ -168,7 +168,7 @@ def test_vacuous_message_carries_evidence():
     res = ft.measure_loss(bump, read, threads=2, iterations=100, time_cap=0.2)
     assert res.attempts >= 1 and res.lost_fraction < ft.MIN_LOST_FRACTION
     with pytest.raises(pytest.fail.Exception) as exc:
-        ft.require_not_vacuous(res)
+        require_not_vacuous(res)
     msg = str(exc.value)
     for field in (
         f"{res.attempts} attempt(s)",

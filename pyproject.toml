@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 [build-system]
-requires = ["setuptools>=77", "setuptools-scm>=8"]
-build-backend = "setuptools.build_meta"
+requires = ["maturin>=1.5"]
+build-backend = "maturin"
 
 [project]
 # DIST name vs IMPORT name. The import name stays flat and unchanged
@@ -16,8 +16,9 @@ build-backend = "setuptools.build_meta"
 # package) is a namespace string keyed to the IMPORT name — it is NOT a dist
 # name and must never gain the prefix.
 name = "raptor-core"
-dynamic = ["version"]
-description = "raptor — the protocol spine of the family: schema, typing.Protocols, golden conformance suite"
+# the one home of the version string (maturin cannot read setuptools-scm): raptor/version.py reads it back when run from a checkout
+version = "0.8.0.dev0"
+description = "raptor: the IR, its rules and its checks; the core is Rust behind a pyo3 binding; schema, typing.Protocols, golden conformance suite"
 readme = "README.md"
 requires-python = ">=3.9"
 license = "Apache-2.0"
@@ -27,8 +28,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
 ]
 # raptor is the pure-contract package the whole family depends DOWN on — zero
-# hard deps, by design. numpy is imported function-local only, so the
-# package stays importable on a numpy-less interpreter.
+# hard deps, by design. No third-party package is imported anywhere in raptor.
 dependencies = []
 
 [project.optional-dependencies]
@@ -40,14 +40,11 @@ Homepage = "https://github.com/amasat01/raptor"
 Documentation = "https://amasat01.github.io/raptor/"
 Repository = "https://github.com/amasat01/raptor"
 
-[tool.setuptools_scm]
-# the version is the latest vX.Y.Z tag (a PR build tags its checkout first); sdists carry it in PKG-INFO
-
-[tool.setuptools.packages.find]
-include = ["raptor*"]
-
-[tool.setuptools.package-data]
-raptor = ["py.typed"]
+[tool.maturin]
+manifest-path = "rs/binding/Cargo.toml"
+module-name = "raptor._core"
+python-source = "."
+include = ["raptor/**/*.py"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

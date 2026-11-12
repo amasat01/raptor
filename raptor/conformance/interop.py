@@ -225,18 +225,14 @@ ROWS: dict[str, RowDecl] = {
 }
 
 
-def certified_framework(fw: str) -> None:
-    """Assert ``fw`` (a name in :data:`CERTIFIED`) is importable here.
+def certified_framework_problem(fw: str) -> str | None:
+    """The failure text when ``fw`` (a name in :data:`CERTIFIED`) is not importable here, else ``None``.
 
-    Never skips: an absent certified framework is a hard failure of the gate
-    environment, not a reason to skip the row (a pytest SKIP is RC=0 and
-    certifies nothing). ``pytest`` is imported here, not at module level, so
-    the rest of :mod:`raptor.conformance` stays importable without it.
-    """
-    import pytest
-
+    An absent certified framework is a hard failure of the gate environment, never a skip (a skip is RC=0 and
+    certifies nothing); the test-side gate fails on the text."""
     if importlib.util.find_spec(fw) is None:
-        pytest.fail("certified framework absent from the gate environment")
+        return "certified framework absent from the gate environment"
+    return None
 
 
 def roadmap_framework(fw: str) -> None:

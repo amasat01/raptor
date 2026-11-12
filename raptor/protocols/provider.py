@@ -3,11 +3,11 @@
 
 """The kernel-provider protocol.
 
-``ManifestProvider`` (the ``compiled`` facet) duck-types hawk's ``Bundle`` —
+``ManifestProvider`` (the ``compiled`` facet) duck-types the front end's ``Bundle`` —
 "facet" was design jargon, not API. This protocol keeps this ONE facet: an
 earlier ``symbolic`` evaluable-trace facet was deleted outright — zero
 implementers, and the interpreter mechanism it declared is deliberately
-forbidden; ``TorchBackend`` composes the existing engines instead, see
+forbidden; a framework backend composes the existing engines instead, see
 :mod:`raptor.protocols.backend`.
 
 A toy implementation, just enough to satisfy the protocol::
@@ -29,7 +29,7 @@ from typing import Any, Protocol, runtime_checkable
 class ManifestProvider(Protocol):
     """The ``compiled`` facet: emits a manifest.
 
-    Duck-types hawk's ``Bundle`` — consumed by the launch/marshal engines."""
+    Duck-types the front end's ``Bundle`` — consumed by the launch/marshal engines."""
 
     def build(self, directory: Any) -> Any:
         """Compile/emit this provider's kernels into ``directory``.

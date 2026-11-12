@@ -38,13 +38,16 @@ def test_scalar_types_verbatim():
     assert dtypes.SCALAR_TYPES == eagle_dtypes.SCALAR_TYPES
 
 
-def test_np_dtype_mapping_matches_for_every_tag():
-    # eagle names the dtype of a scalar type (eagle.DType); raptor's numpy mirror names the same one
-    import numpy as np
-
+def test_user_dtype_names_match_eagle_for_every_tag():
+    # eagle names the dtype of a scalar type (eagle.DType); raptor's plain-data table names the user-facing one. They agree
+    # except for banded, whose eagle dtype is the 8-byte cell (named "banded") while user arrays are float64.
     eagle_dtypes = import_eagle_module("dtypes")
     for tag in dtypes.SCALAR_TYPES:
-        assert np.dtype(dtypes.np_dtype(tag)).name == eagle_dtypes.dtype_name(eagle_dtypes.dtype_of(tag))
+        eagle_name = eagle_dtypes.dtype_name(eagle_dtypes.dtype_of(tag))
+        if tag == "banded":
+            assert eagle_name == "banded" and dtypes.USER_DTYPE[tag]["name"] == "float64"
+        else:
+            assert dtypes.USER_DTYPE[tag]["name"] == eagle_name
 
 
 def test_kernel_name_verbatim():

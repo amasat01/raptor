@@ -3,21 +3,21 @@
 
 """The kernel-level launch/marshal protocols.
 
-Names mirror eagle's EXISTING public surface 1:1 (``eagle.launch`` /
-``eagle.marshal``) so binding an implementation is mechanical.
+Names mirror the device runtime's EXISTING public surface 1:1 (its launch and
+marshal modules) so binding an implementation is mechanical.
 ``DEFAULT_BLOCK`` is deliberately NOT lifted here — it belongs to a later
-LaunchPolicy layer. ``LaunchMixin`` has NO protocol twin: hawk's
+LaunchPolicy layer. ``LaunchMixin`` has NO protocol twin: the front end's
 ``CompiledKernel(LaunchMixin)`` inheritance becomes composition over
 :class:`KernelLauncher`.
 
-``dt=None`` below stands in for eagle's ``np.float64`` default (the resolved
+``dt=None`` below stands in for the runtime's ``np.float64`` default (the resolved
 Real dtype) — raptor has zero hard deps, so no module here imports numpy;
 ``None`` means "the implementation's default Real dtype".
 
 A toy caller, just enough to show the shape (a real :class:`KernelLauncher`
-is eagle's; this is not a runnable implementation)::
+is the runtime's; this is not a runnable implementation)::
 
-    launcher: KernelLauncher = ...  # e.g. eagle's launch module
+    launcher: KernelLauncher = ...  # e.g. the runtime's launch module
     launcher.launch("pure", my_fn, arg_spec, vector_inputs={"r": r},
                      params={}, per_sample={}, kw={}, grid=blocks, block=256)
 """
@@ -29,9 +29,8 @@ from typing import Any, Protocol, runtime_checkable
 
 @runtime_checkable
 class KernelLauncher(Protocol):
-    """Mirrors ``eagle.launch``'s capturable launch verb + the pure
-    allocate-and-launch body (``eagle/python/eagle/launch.py``: ``launch``:253,
-    ``assemble_args``:67, ``pure_origin``:284, ``pure_prepare``:299)."""
+    """Mirrors the runtime's capturable launch verb + the pure
+    allocate-and-launch body (``launch``, ``assemble_args``, ``pure_origin``, ``pure_prepare``)."""
 
     def launch(
         self,
@@ -95,8 +94,7 @@ class KernelLauncher(Protocol):
 
 @runtime_checkable
 class Marshal(Protocol):
-    """Mirrors ``eagle.marshal``'s per-role input coercion functions
-    (``eagle/python/eagle/marshal.py``)."""
+    """Mirrors the runtime's per-role input coercion functions."""
 
     def coerce_vec_inputs(self, kw, names, n=None, widths=None, dt=None) -> Any:
         """State vectors -> contiguous ``(W, N)`` device arrays.

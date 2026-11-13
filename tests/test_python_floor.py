@@ -7,14 +7,13 @@
 spelled ``A | B`` outside an annotation, ``zip(strict=)``, ``dataclass(slots=/kw_only=)``, a 3.10+ stdlib name, a parenthesised
 ``with``); (c) the four packages of the family state the same floor and the stable-ABI feature of this package names it.
 
-(c) reads the sibling pyprojects from the conventional places beside this repository's workspace, or from environment variables:
+(c) reads the sibling pyprojects ONLY from environment variables (a test does not depend on a path outside its repository):
 
-    RAPTOR_FLOOR_HAWK    hawk's pyproject.toml      default: <workspace>/tree/pyproject.toml
-    RAPTOR_FLOOR_EAGLE   eagle's pyproject.toml     default: <workspace>/eagle/python/pyproject.toml
-    RAPTOR_FLOOR_AETHER  aether's python pyproject  default: <workspace>/aether/dsc/pyproject.toml
+    RAPTOR_FLOOR_HAWK    hawk's pyproject.toml
+    RAPTOR_FLOOR_EAGLE   eagle's pyproject.toml
+    RAPTOR_FLOOR_AETHER  aether's python pyproject
 
-where <workspace> is the folder that holds this repository (``..`` of the repository root) and the repository itself is raptor_src or
-raptor. A pyproject that is not found fails that test with the paths looked for (there is no skip)."""
+A variable that is unset skips its test, naming the variable; one that names a missing file fails."""
 
 import ast
 import os
@@ -163,13 +162,13 @@ def _requires(path: Path) -> str:
     return m.group(1).replace(" ", "")
 
 
-def _sibling(env: str, *default: str) -> Path:
+def _sibling(env: str) -> Path:
     got = os.environ.get(env)
-    cands = [Path(got)] if got else [_PKG.parent / d for d in default] + [_PKG.parent.parent / d for d in default]
-    for c in cands:
-        if c.is_file():
-            return c
-    pytest.fail(f"{env}: no pyproject found; looked for {', '.join(str(c) for c in cands)} (set {env} to the file)")
+    if not got:
+        pytest.skip(f"{env} is not set: it names the sibling repository's pyproject.toml")
+    if not Path(got).is_file():
+        pytest.fail(f"{env}={got}: no such file")
+    return Path(got)
 
 
 def test_this_package_says_3_9():
@@ -182,11 +181,7 @@ def test_the_stable_abi_feature_names_py39():
     assert "abi3-py310" not in t
 
 
-@pytest.mark.parametrize("env, default", [
-    ("RAPTOR_FLOOR_HAWK", ("tree/pyproject.toml", "pyproject.toml")),
-    ("RAPTOR_FLOOR_EAGLE", ("eagle/python/pyproject.toml",)),
-    ("RAPTOR_FLOOR_AETHER", ("aether/dsc/pyproject.toml",)),
-])
-def test_the_family_states_the_same_floor(env, default):
-    p = _sibling(env, *default)
+@pytest.mark.parametrize("env", ["RAPTOR_FLOOR_HAWK", "RAPTOR_FLOOR_EAGLE", "RAPTOR_FLOOR_AETHER"])
+def test_the_family_states_the_same_floor(env):
+    p = _sibling(env)
     assert _requires(p) == ">=3.9", f"{p}: requires-python is not >=3.9"

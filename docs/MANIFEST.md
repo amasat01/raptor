@@ -8,7 +8,7 @@ one takes it as an argument, and raptor keeps no module-level table of kinds or 
 uses is created and held by the front end (hawk).
 ## 2. Declaring a node kind (KindDecl), all plain data
 - `name`, `dialect`, `ext`; `family`: `expr`, `sink` or `terminal`; `refines`: one core or earlier-declared kind or null
-  (depth <= 3). A refining kind IS that kind for every query `is_a(node, K)`; it inherits operands, result rule, identity, traits,
+  (depth <= 3). A refining kind IS that kind for every query `is_a(node, K)`; it inherits operands, result rule, identity, feathers,
   spelling and fields of what it refines unless it states its own (fields append).
 - `wire`: the kind string the node carries in the walk key (default: the refined kind's wire, else `name`). Declaration identity
   (`name`, used by `is_a`) and walk identity (`wire`) are distinct, so a refinement keeps the digest of its base.
@@ -17,10 +17,10 @@ uses is created and held by the front end (hawk).
   fields `name` and `role`.
 - `result`: `same_as(i)`, `scalar_of(i)`, `fixed(dtype, shape)` or `carried` (the node holds its own type).
 - `identity`: the ordered field names (builtins included) that, with wire, type and operand positions, key the walk's dedup.
-- `traits`: map of known trait names (`elementwise_sink`, `reads_by_element`, `fresh_read`) to booleans; a pass asks `trait(node, t)`.
 - `spelling`: `{dialect, name, args}`, args from `node`, `target`, `ref<i>` (the writer-side text of operand i). A kind with no
   spelling and no refined one is not renderable and a build that reaches it refuses by name.
 - `diff`: `none` (default: differentiating it refuses by name) or `core:<kind>`.
+- `feathers`: named properties of the kind, from the CLOSED list the core table owns (`KIND_FEATHERS`, one line of meaning each; an unknown one is refused by name). A reader asks `has_feather(node, name)` and never a wing; a refining kind has the feathers of what it refines; a feather is no part of identity or of the walk. An operation of the generic op kind states feathers in the table arm `op_feathers` (`{op: [names]}`).
 ## 2b. Core kinds in the same format
 raptor's own manifest (`raptor/ir/core.json`, extension id `raptor`, dialect `core`) is a manifest like any other: its `kinds` arm declares the core kinds, and
 `kinds.load_manifest(registry, manifest, first_party)` loads it and every extension's (simt through the same call). A row that names a `class` is a CORE kind: its
@@ -35,12 +35,12 @@ class is read back: `@k`, `@k:plain`, `op:N`, `opq:N`, `ops:N:`, `edge:k`, `ttyp
 Steps: `["let", name, expr]`, `["check", expr, template]` (refuse with the rendered template when the expression is true), `["node", ttype_expr, operands_expr]`
 (the base rules of every node: the named check `node_base`, then `_t` and `_o` are set), `["call", name, args...]` (a named check; `_t`/`_o` set inside come back).
 Expressions: names (parameters, `let`s, constants, class names), integers, `'strings'`, `None`/`True`/`False`, tuples, `.attr`, `[i]`, `not and or`, `== != < > in
-not in is is not`, and the builtins `len isinstance tt width_of rem int tuple cat opt head first_ne_ttype first_not_node cut_in_loop coalesce orelse
+not in is is not`, and the builtins `len isinstance tt width_of rem int tuple cat opt head first_ne_ttype first_not_node coalesce orelse
 auto_or_int name_of bool trip first_mismatch first_not_instance carry_fault ttype_fault literal_fault` (the list is `BUILTINS` in `rs/binding/src/lib.rs`). A template substitutes `{expr}` (str) and `{expr!r}` (repr). `check_manifest` reports an unknown name, function or check, and a wrong argument count; the message names the manifest row and lists what that row may use.
 ## 3. What the verifier checks
 At declaration: name unique over core and all extensions; extension id `[a-z][a-z0-9_-]*`; `refines` resolves, no cycle; `family`
 agrees with the refined kind; field types, defaults, collisions with builtin names; result index < `operands.min`; identity and
-traits name known things; spelling args within the operands. The writer's spelling is looked up at first render, by name.
+feathers name known things; spelling args within the operands. The writer's spelling is looked up at first render, by name.
 At node build: operand count and families; each field present, typed, no extra; the type equals what `result` derives.
 ## 4. Canonical text of a node
 The walk key of a node is (wire, dtype, shape, tag, operand positions, identity values), so a declared kind and the class it

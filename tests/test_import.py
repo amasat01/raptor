@@ -16,9 +16,3 @@ def test_import_raptor_schema():
     import raptor.schema
 
     assert raptor.schema.ALL_PATTERNS == {"vector", "pure", "graph_block"}
-
-
-def test_import_raptor_protocols():
-    import raptor.protocols
-
-    assert raptor.protocols.Backend is not None

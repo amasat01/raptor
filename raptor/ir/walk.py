@@ -24,26 +24,24 @@ from typing import Any
 from .types import Slot, TensorType
 from . import access as _access
 from .access import Access
-from .nodes import ADJOINT_PREFIX, COMPANION_SUFFIX, NAMESPACE_SEP, SAMPLE_SUM_COMP, AccumWrite, compensates, param_cell_names
+from .nodes import ADJOINT_PREFIX, COMPANION_SUFFIX, NAMESPACE_SEP, AccumWrite, compensates, has_feather, param_cell_names
 from .compound import Quantity, QuantitySpan
 from .nodes import Loop, LoopCarry, LoopCount, LoopValue, TapeRead
 from .nodes import (
     WideWrite,
     Assign,
-    FINISHED_TTYPE,
     NAMESPACE_SEP,
     ROLE_ORDER,
     At,
     Dispatch,
     Finish,
-    LanePosition,
+    SamplePosition,
     PlaneExtent,
     Leaf,
     Node,
     SampleSum,
     Op,
     Primitive,
-    ReduceSamples,
     Select,
     Sink,
 )
@@ -69,7 +67,7 @@ class Walk:
     content hash of all of the above (sidecar only); ``dispatches`` the
     per-kernel dispatch listing, positionally named; ``prior_reads`` the
     ``mutable``-role names read before their first store; ``finish`` is
-    ``(mask, steps)`` for a self-finishing kernel, else ``None``."""
+    the mask a self-finishing kernel finishes through, else ``None``."""
 
     order: tuple[Node, ...]
     leaves: tuple[Slot, ...]
@@ -81,7 +79,7 @@ class Walk:
     digest: str
     dispatches: tuple[DispatchInfo, ...] = ()
     prior_reads: frozenset[str] = frozenset()
-    finish: tuple[str, int | str] | None = None
+    finish: str | None = None
 
     @property
     def sample_sums(self) -> tuple[str, ...]:
@@ -95,16 +93,16 @@ class Walk:
         return frozenset(getattr(n, "kind", None) for n in self.order)
 
     @property
-    def reads_lane_position(self) -> bool:
-        """``True`` when the body reads ``hawk.lane_position()`` (:class:`~hawk.ir.nodes.LanePosition`)."""
-        return any(isinstance(n, LanePosition) for n in self.order)
+    def reads_sample_position(self) -> bool:
+        """``True`` when the body reads ``hawk.sample_position()`` (:class:`~hawk.ir.nodes.SamplePosition`)."""
+        return any(isinstance(n, SamplePosition) for n in self.order)
 
     @property
     def reduces(self) -> bool:
         """``True`` when the kernel reduces over samples
-        (:class:`~hawk.ir.nodes.ReduceSamples`) — its access class stays
+        (a node with the ``reduces_samples`` feather) — its access class stays
         ``sample_local``, so the reduction is only visible here."""
-        return any(isinstance(n, ReduceSamples) for n in self.order)
+        return any(has_feather(n, "reduces_samples") for n in self.order)
 
     @property
     def cells(self) -> dict:
@@ -117,10 +115,10 @@ class Walk:
     @property
     def companions(self) -> dict:
         """The companion planes the runtime owns: ``<plane>_c`` to ``<plane>``
-        for each ``policy="compensated"`` keyed accumulate. The caller never
+        for each ``contract="compensated"`` keyed accumulate. The caller never
         binds them."""
         return {n.name + COMPANION_SUFFIX: n.name for n in self.order
-                if isinstance(n, AccumWrite) and compensates(n.policy)}
+                if isinstance(n, AccumWrite) and compensates(n.contract)}
 
     @property
     def adjoint_like(self) -> dict:
@@ -152,21 +150,21 @@ class Walk:
         return param_cell_names(self.order)
 
 
-_ENV = (Slot, QuantitySpan, TensorType, FINISHED_TTYPE, NAMESPACE_SEP, SAMPLE_SUM_COMP)
+_ENV = (Slot, QuantitySpan, TensorType, NAMESPACE_SEP)
 
 
 def canonical(sinks: Sequence[Sink], declared: Sequence[Slot] = (), *,
-             force_access: str | None = None) -> Walk:
+             force_access: str | None = None, exempt_planes: Sequence[str] = ()) -> Walk:
     """The ONE traversal. Refuses a mixed sink set and a total-merge collision before it returns anything.
 
     ``declared`` are slots a DECLARATION binds whether or not the body reaches them (the guard's ``terminated`` mask, like a compound
-    quantity's unread wires); ``force_access`` FLOORS the inferred access class before the digest is computed (a ``segmented`` UNIT is
+    quantity's unread wires); ``exempt_planes`` names the ``lookup`` planes whose constant-index read is the loop's own trip count, not a cross-sample read (the access class skips it); ``force_access`` FLOORS the inferred access class before the digest is computed (a ``segmented`` UNIT is
     ``cross_sample_write``). Everything happens in the core (``_core.canonical``: traversal, dedup, total merge, declared slots, compensation
     planes, role order and quantity spans, access, dispatch listing, digest); this builds the frozen :class:`Walk` record from its fields."""
     (order, leaves, arg_spec, slot_of, slot_types, cls, quantities, digest, dispatches, prior, finish) = _core.canonical(
-        list(sinks), list(declared), force_access, _ENV)
+        list(sinks), list(declared), force_access, _ENV, list(exempt_planes))
     return Walk(order, leaves, arg_spec, MappingProxyType(slot_of), MappingProxyType(slot_types), Access(cls, None), MappingProxyType(quantities),
-                digest, tuple(DispatchInfo(n, K, p, selector_reads=tuple(r), static_selector=s) for n, K, p, r, s in dispatches), frozenset(prior), finish)
+                digest, tuple(DispatchInfo(n, K, "", selector_reads=tuple(r), static_selector=s) for n, K, r, s in dispatches), frozenset(prior), finish)
 
 
 def canonical_nodes(sinks: Sequence[Sink]) -> tuple[tuple[Node, ...],
@@ -184,13 +182,6 @@ def canonical_nodes(sinks: Sequence[Sink]) -> tuple[tuple[Node, ...],
 
 # --------------------------------------------------------------------------
 # the per-kernel dispatch listing
-
-
-def _dispatches(order: tuple[Node, ...]) -> tuple[DispatchInfo, ...]:
-    """The ``{name, K, policy}`` record per Dispatch node reached, POSITIONALLY named in the canonical order the digest hashes over; the
-    listing is the core's (``_core.dispatch_listing``), DispatchInfo is its pure-data record."""
-    return tuple(DispatchInfo(name, K, policy, selector_reads=reads, static_selector=static)
-                 for name, K, policy, reads, static in _core.dispatch_listing(list(order)))
 
 
 def _dispatch_nodes(order: Sequence[Node]) -> list:

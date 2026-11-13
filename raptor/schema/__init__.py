@@ -32,10 +32,13 @@ __all__ = [
 ]
 
 
-def validate_manifest(doc: dict) -> None:
+def validate_manifest(doc: dict, vocab: dict | None = None) -> None:
     """Validate the SHAPE of a manifest or sidecar document; raise on failure.
 
     Checks, in order:
+
+    ``vocab`` is the vocabulary the caller implements for the launch and team fields: ``team_grids``, ``default_grid``,
+    ``team_dtypes`` and ``local_sources`` (none given: a document carrying those fields is refused).
 
     1. ``doc`` is a ``dict``.
     2. ``schema_version`` (or the legacy ``version`` key) is present-or-absent
@@ -64,4 +67,4 @@ def validate_manifest(doc: dict) -> None:
        ``plugins``) is not order-checked here — that is eagle's deep validator's job,
        not this shape check's.
     """
-    _core.schema_check("document", doc)
+    _core.schema_check("document", doc, vocab=vocab)

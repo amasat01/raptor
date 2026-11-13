@@ -16,6 +16,7 @@ wide/accum sink with an index operand).
 from __future__ import annotations
 
 from collections.abc import Sequence
+from types import MappingProxyType
 from typing import Any, Union
 
 from .types import Slot, TensorType
@@ -57,6 +58,22 @@ _core.setup(TensorType, Node, Leaf, _CLASSES)
 _core.set_loop(Loop)
 _core.set_loop_carry(LoopCarry)
 
+#: The closed list of feathers (named properties of a kind or an operation) with the meaning of each: ``KIND_FEATHERS`` of the core table.
+FEATHERS = MappingProxyType(dict(line.split(": ", 1) for line in KIND_FEATHERS))
+#: The feathers an operation of the generic op kind states, by operation name (the core table's ``op_feathers``; a name list per op).
+OP_FEATHERS = MappingProxyType({op: frozenset(names) for op, names in _TABLE["man"].get("op_feathers", {}).items()})
+Node.feathers = frozenset()
+for _row in _TABLE["man"]["kinds"]:
+    if "class" in _row and "feathers" in _row:
+        _CLASSES[_row["class"]].feathers = frozenset(_row["feathers"])
+
+
+def has_feather(node: Any, name: str) -> bool:
+    """Whether the kind of ``node`` (or, for the generic op kind, its operation) states the feather ``name``; a feather is no part of identity."""
+    if name not in FEATHERS:
+        raise RaptorError(f"unknown feather {name!r}")
+    return name in node.feathers or (isinstance(node, Op) and name in OP_FEATHERS.get(node.kind, ()))
+
 #: the width of a structural body key (hex digits of the hash kept), fixed in the core
 BODY_KEY_HEX = _facts("ir")["BODY_KEY_HEX"]
 
@@ -81,7 +98,7 @@ def extent_of(node: Any) -> str:
     """The extent of ``node``: ``all_samples`` for a reduction over samples,
     ``shared`` when nothing under it depends on the sample (constants, uniforms,
     the sample count), else ``per_sample``."""
-    if isinstance(node, ReduceSamples):
+    if has_feather(node, "reduces_samples"):
         return "all_samples"
     stack, seen = [node], set()
     while stack:
@@ -124,23 +141,15 @@ def param_cell_names(nodes: Any) -> tuple:
             out.setdefault(node.plane.name, None)
     return tuple(out)
 
-#: The policies the renderer lowers as a ``switch`` statement.
-SWITCH_RENDERED = ("switch", "auto")
-
-
-def compensates(policy: str) -> bool:
-    """Whether an accumulate under ``policy`` commits through a companion plane."""
-    return policy in ("compensated", KEYED_AUTO)
+def compensates(contract: str) -> bool:
+    """Whether an accumulate under ``contract`` commits through a companion plane."""
+    return contract in ("compensated", KEYED_AUTO)
 
 #: The suffix of a compensated accumulate plane's companion.
 COMPANION_SUFFIX = "_c"
 
 #: The prefix of a vjp's adjoint plane (``bar_<plane>``).
 ADJOINT_PREFIX = "bar"
-
-
-#: The suffix of a ``sample_sum`` plane's compensation companion.
-SAMPLE_SUM_COMP = "_comp"
 
 
 
@@ -158,17 +167,8 @@ def element_count(ttype: TensorType) -> int:
     return out
 
 
-#: The reserved ``lookup`` plane a finishing kernel counts its newly finished
-#: samples into: ONE ``uint32`` cell. eagle's ``eagle.FINISHED_PLANE``
-#: names the same plane.
-FINISHED_TTYPE = TensorType((), "uint32")
 
-#: The reserved ``lookup`` plane a ``steps="auto"`` kernel reads its trip
-#: count from (:func:`hawk.steps`): set on the device by the runner, never
-#: by the host; eagle's ``eagle.FUSED_STEPS_PLANE`` names the same plane.
-
-
-def _through(node: Node) -> Node:
+def through(node: Node) -> Node:
     """The node a reference to ``node`` is a reference TO: a Primitive
     stands for its forward and is never rendered itself."""
     while isinstance(node, Primitive):
@@ -193,7 +193,7 @@ def same_index(a: Node, b: Node, seen: dict | None = None) -> bool:
     elif out:
         out = (isinstance(a, (Op, At)) and getattr(a, "kind", None) == getattr(b, "kind", None)
                and getattr(a, "literal", None) == getattr(b, "literal", None)
-               and all(same_index(_through(x), _through(y), seen)
+               and all(same_index(through(x), through(y), seen)
                        for x, y in zip(a.operands, b.operands)))
     seen[pair] = out
     return out
@@ -226,49 +226,3 @@ def _ReduceSamples_recount(self, count: Node) -> ReduceSamples:
     """The same keyed reduction over ``count`` kept coordinates."""
     return self.rebuilt(self.operands, {**self.edges(), "count": count})
 ReduceSamples.recount = _ReduceSamples_recount
-
-def _ReduceSamples_stored(self, name: str, ttype: TensorType | None = None) -> tuple:
-    """The cell sinks that store this reduction to the plane ``name``: one
-    for a scalar, one per component (planes ``name_0``, ``name_1``, ...)
-    for a vector or matrix."""
-    value = self.operands[0]
-    shape = value.ttype.shape
-    if self.key is not None:
-        return self._keyed(name)
-    if not shape:
-        return (SampleSum(name, value, ttype, self.op),)
-    scalar = TensorType((), value.ttype.dtype)
-    index = [(r,) if len(shape) == 1 else (r, c)
-             for r in range(shape[0]) for c in range(shape[-1] if len(shape) == 2 else 1)]
-    width = len(index)
-    return tuple(SampleSum(f"{name}_{k}", Op("component", (value,), scalar, ix if len(shape) == 2 else ix[0]),
-                           scalar, self.op, cell=name, columns=width)
-                 for k, ix in enumerate(index))
-ReduceSamples.stored = _ReduceSamples_stored
-
-def _ReduceSamples_keyed(self, name: str) -> tuple:
-    """The accumulates of a reduction over some lane axes: entry ``k`` of
-    the payload (row-major) adds into ``name`` at ``key + k * count``, so the
-    plane is ``(*payload, *kept)``, payload first."""
-    value = self.operands[0]
-    shape = value.ttype.shape
-    scalar = TensorType((), value.ttype.dtype)
-    if not shape:
-        return (AccumWrite(name, value, self.key, scalar, self.policy, self),)
-    index = [(r,) if len(shape) == 1 else (r, c)
-             for r in range(shape[0]) for c in range(shape[-1] if len(shape) == 2 else 1)]
-    from .ops import make
-
-    out = []
-    for k, ix in enumerate(index):
-        entry = Op("component", (value,), scalar, ix if len(shape) == 2 else ix[0])
-        at = self.key if k == 0 else make("add", (self.key, make(
-            "mul", (Const(k, self.count.ttype), self.count))))
-        out.append(AccumWrite(name, entry, at, scalar, self.policy))
-    return tuple(out)
-ReduceSamples._keyed = _ReduceSamples_keyed
-
-def _SampleSum_companion(self) -> Slot:
-    """The compensation plane's slot (a sum only)."""
-    return _core.companion(self, Slot, SAMPLE_SUM_COMP)
-SampleSum.companion = property(_SampleSum_companion)

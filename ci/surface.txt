@@ -1,0 +1,435 @@
+# raptor's surface (see tests/test_surface.py). Removing a line is always fine; an added line goes in section 2.
+# base, generated 2026-11-13
+core.json check node_base
+core.json check node_sink
+core.json check refuse_factor_arms
+core.json class AccumWrite
+core.json class Assign
+core.json class At
+core.json class Const
+core.json class Dispatch
+core.json class Finish
+core.json class Leaf
+core.json class Loop
+core.json class LoopCarry
+core.json class LoopCount
+core.json class LoopIndex
+core.json class LoopValue
+core.json class Node
+core.json class Op
+core.json class PlaneExtent
+core.json class Primitive
+core.json class ReduceSamples
+core.json class RoleConst
+core.json class SampleIndex
+core.json class SamplePosition
+core.json class SampleSum
+core.json class Select
+core.json class Sink
+core.json class TapeRead
+core.json class TapeWrite
+core.json class WideWrite
+core.json const AT_ROLES
+core.json const CAST_TARGETS
+core.json const CELL_OPS
+core.json const COMPARE
+core.json const CONTRACTS
+core.json const DISPATCH_KIND
+core.json const ELEMENTWISE_BINARY
+core.json const ELEMENTWISE_TERNARY
+core.json const FACTOR_NEEDS_PAIRS
+core.json const FACTOR_TAGS
+core.json const FACTOR_TAG_PAIRS
+core.json const INT_BINARY
+core.json const INT_PLANE_DTYPES
+core.json const INT_UNARY
+core.json const KEYED_AUTO
+core.json const KIND_FEATHERS
+core.json const LEAF_KINDS
+core.json const LEAF_ROLES
+core.json const LINALG_CONSUMERS
+core.json const LINALG_FACTORISATIONS
+core.json const LINALG_PROJECTIONS
+core.json const LOGICAL
+core.json const LSTSQ_OPS
+core.json const MATRIX_OPS
+core.json const MINTED_OPS
+core.json const NAMESPACE_SEP
+core.json const PARAM_CELL
+core.json const PLANE_EXTENT_KIND
+core.json const PREDICATE
+core.json const PRIMITIVE_KIND
+core.json const QR_OPS
+core.json const QUANTITY_PACKS
+core.json const QUANTITY_ROLE_PAIRS
+core.json const QUAT_OPS
+core.json const RANDOM_OPS
+core.json const RAW_KIND
+core.json const RAY_ARITY_PAIRS
+core.json const RAY_OPS
+core.json const RAY_SCALAR_PAIRS
+core.json const REDUCE_KIND
+core.json const ROLE_ORDER
+core.json const SAMPLE_INDEX_KIND
+core.json const SAMPLE_POSITION_KIND
+core.json const SCATTER_CONTRACTS
+core.json const SINK_ROLES
+core.json const TAPE_READ_KIND
+core.json const UNARY_MATH
+core.json const VECTOR_OPS
+core.json const ir.ACCESS_RANK
+core.json const ir.BODY_KEY_HEX
+core.json const ir.DTYPES
+core.json const schema.AETHER_ABI_V1
+core.json const schema.AETHER_ABI_V2
+core.json const schema.ALL_PATTERNS
+core.json const schema.BASE_PATTERNS
+core.json const schema.BLOCK_EXEC_REF_FIELDS
+core.json const schema.BLOCK_FORBIDDEN_FIELDS
+core.json const schema.BLOCK_REQUIRED_FIELDS
+core.json const schema.BLOCK_TOP_LEVEL_KEY_ORDER
+core.json const schema.EXEC_ACCESS_CLASSES
+core.json const schema.EXEC_KEYS
+core.json const schema.EXEC_OPS
+core.json const schema.EXEC_REF_KINDS
+core.json const schema.EXEC_TARGETS
+core.json const schema.GRAPH_BLOCK_PATTERN
+core.json const schema.MAX_SCHEMA_VERSION
+core.json const schema.SCATTER_POLICIES
+core.json const schema.SCHEMA_VERSION
+core.json const schema.TOP_LEVEL_KEY_ORDER
+core.json const schema.TOP_LEVEL_KEY_ORDER_V2
+core.json feather reduces_samples
+core.json key_text RawBlock
+core.json kind accum_write
+core.json kind assign
+core.json kind at
+core.json kind const
+core.json kind dispatch
+core.json kind finish
+core.json kind leaf
+core.json kind loop
+core.json kind loop_carry
+core.json kind loop_count
+core.json kind loop_index
+core.json kind loop_value
+core.json kind node
+core.json kind op
+core.json kind plane_extent
+core.json kind primitive
+core.json kind reduce_samples
+core.json kind role_const
+core.json kind sample_index
+core.json kind sample_position
+core.json kind sample_sum
+core.json kind select
+core.json kind sink
+core.json kind tape_read
+core.json kind tape_write
+core.json kind wide_write
+core.json record Access
+core.json record ClassifyUnit
+core.json record DispatchInfo
+core.json record LoweredUnit
+core.json record PlaneDecl
+core.json record SegmentInfo
+core.json record SegmentUnit
+core.json record Slot
+core.json record TensorType
+core.json record Wire
+core.json rule bin_jvp
+core.json rule bin_vjp
+core.json rule core
+core.json rule defs
+core.json rule linalg
+core.json rule modes
+core.json rule rays
+core.json rule unary_d
+module raptor
+module raptor._facts
+module raptor.conformance
+module raptor.conformance.doc_includes
+module raptor.conformance.freethreading
+module raptor.conformance.interop
+module raptor.conformance.public_names
+module raptor.conformance.pytest_rows
+module raptor.errors
+module raptor.ir
+module raptor.ir._gen
+module raptor.ir.access
+module raptor.ir.cells
+module raptor.ir.compound
+module raptor.ir.fold
+module raptor.ir.kinds
+module raptor.ir.lanes
+module raptor.ir.linalg
+module raptor.ir.loops
+module raptor.ir.nodes
+module raptor.ir.ops
+module raptor.ir.rays
+module raptor.ir.segment
+module raptor.ir.types
+module raptor.ir.walk
+module raptor.protocols
+module raptor.rules
+module raptor.rules.core
+module raptor.rules.linalg
+module raptor.rules.primitive
+module raptor.rules.rays
+module raptor.schema
+module raptor.schema.blocks
+module raptor.schema.dtypes
+module raptor.schema.manifest
+module raptor.version
+raptor __version__
+raptor._facts facts
+raptor.conformance CERTIFIED
+raptor.conformance FT_ROWS
+raptor.conformance FtRowDecl
+raptor.conformance LEGS
+raptor.conformance ROADMAP
+raptor.conformance ROWS
+raptor.conformance ROW_KINDS
+raptor.conformance RowDecl
+raptor.conformance UNIVERSE
+raptor.conformance assert_doc_rows_match
+raptor.conformance assert_ft_rows_complete
+raptor.conformance assert_no_skip_tokens
+raptor.conformance assert_rows_complete
+raptor.conformance certified_framework_problem
+raptor.conformance declare_ft_row
+raptor.conformance register_ft_row
+raptor.conformance register_row
+raptor.conformance roadmap_framework
+raptor.conformance.doc_includes BrokenInclude
+raptor.conformance.doc_includes DocsScanReport
+raptor.conformance.doc_includes SOURCE_SUFFIXES
+raptor.conformance.doc_includes main
+raptor.conformance.doc_includes resolve_target
+raptor.conformance.doc_includes scan_docs
+raptor.conformance.freethreading CanaryResult
+raptor.conformance.freethreading FT_ROWS
+raptor.conformance.freethreading FtRowDecl
+raptor.conformance.freethreading assert_ft_rows_complete
+raptor.conformance.freethreading assert_gil_free
+raptor.conformance.freethreading canary_python
+raptor.conformance.freethreading declare_ft_row
+raptor.conformance.freethreading free_threaded_problem
+raptor.conformance.freethreading hammer
+raptor.conformance.freethreading masking_problem
+raptor.conformance.freethreading measure_loss
+raptor.conformance.freethreading not_vacuous_problem
+raptor.conformance.freethreading register_ft_row
+raptor.conformance.interop CERTIFIED
+raptor.conformance.interop LEGS
+raptor.conformance.interop ROADMAP
+raptor.conformance.interop ROWS
+raptor.conformance.interop ROW_KINDS
+raptor.conformance.interop RowDecl
+raptor.conformance.interop UNIVERSE
+raptor.conformance.interop assert_doc_rows_match
+raptor.conformance.interop assert_no_skip_machinery
+raptor.conformance.interop assert_no_skip_tokens
+raptor.conformance.interop assert_rows_complete
+raptor.conformance.interop certified_framework_problem
+raptor.conformance.interop discover_matrix_modules
+raptor.conformance.interop register_row
+raptor.conformance.interop roadmap_framework
+raptor.conformance.public_names main
+raptor.conformance.pytest_rows pytest_collection_modifyitems
+raptor.conformance.pytest_rows pytest_configure
+raptor.conformance.pytest_rows pytest_deselected
+raptor.conformance.pytest_rows pytest_itemcollected
+raptor.conformance.pytest_rows pytest_runtest_logreport
+raptor.conformance.pytest_rows unfinished
+raptor.errors RaptorError
+raptor.ir AccumWrite
+raptor.ir Assign
+raptor.ir At
+raptor.ir Const
+raptor.ir Op
+raptor.ir canonical
+raptor.ir infer
+raptor.ir make
+raptor.ir._gen class_source
+raptor.ir._gen classes
+raptor.ir._gen parse
+raptor.ir._gen records
+raptor.ir.access ACCESS_CLASSES
+raptor.ir.access IndexForm
+raptor.ir.access index_form
+raptor.ir.access infer
+raptor.ir.access infer_over
+raptor.ir.cells CELL_PLANE
+raptor.ir.cells param_cell
+raptor.ir.cells planes
+raptor.ir.cells swap
+raptor.ir.cells with_value
+raptor.ir.compound Quantity
+raptor.ir.compound QuantitySpan
+raptor.ir.fold exceeds
+raptor.ir.fold rolled
+raptor.ir.kinds CORE
+raptor.ir.kinds KindDecl
+raptor.ir.kinds Registry
+raptor.ir.kinds declare
+raptor.ir.kinds has_feather
+raptor.ir.kinds is_a
+raptor.ir.kinds kind_name
+raptor.ir.kinds load_manifest
+raptor.ir.kinds make_kind
+raptor.ir.lanes AxisForm
+raptor.ir.lanes Eval
+raptor.ir.lanes LaneAxis
+raptor.ir.lanes LaneFacts
+raptor.ir.lanes ReadFact
+raptor.ir.lanes SinkFact
+raptor.ir.lanes axes_from
+raptor.ir.lanes axis_forms
+raptor.ir.lanes divisors
+raptor.ir.lanes facts
+raptor.ir.lanes key_facts
+raptor.ir.lanes nodes_of
+raptor.ir.lanes varies_along
+raptor.ir.linalg CONSUMERS
+raptor.ir.linalg FACTORISATIONS
+raptor.ir.linalg FACTOR_TAG
+raptor.ir.linalg LINALG_OPS
+raptor.ir.linalg PROJECTIONS
+raptor.ir.linalg as_matrix
+raptor.ir.linalg dimension
+raptor.ir.linalg factor_bytes
+raptor.ir.linalg is_linalg
+raptor.ir.linalg op_bytes
+raptor.ir.linalg op_count
+raptor.ir.linalg sweeps
+raptor.ir.loops ACCUMULATOR
+raptor.ir.loops LOOP_CLASSES
+raptor.ir.loops LoopClass
+raptor.ir.loops RECURRENCE
+raptor.ir.loops addends
+raptor.ir.loops boundary
+raptor.ir.loops build_loop
+raptor.ir.loops classify_loop
+raptor.ir.loops exit_kwargs
+raptor.ir.loops refuse_unsupported_nesting
+raptor.ir.nodes ADJOINT_PREFIX
+raptor.ir.nodes BODY_KEY_HEX
+raptor.ir.nodes COMPANION_SUFFIX
+raptor.ir.nodes FEATHERS
+raptor.ir.nodes GATHER_ROLES
+raptor.ir.nodes OP_FEATHERS
+raptor.ir.nodes Plain
+raptor.ir.nodes RAW_LANGUAGE
+raptor.ir.nodes body_key_widths
+raptor.ir.nodes compensates
+raptor.ir.nodes element_count
+raptor.ir.nodes extent_of
+raptor.ir.nodes has_feather
+raptor.ir.nodes is_param_cell
+raptor.ir.nodes param_cell_names
+raptor.ir.nodes peel_clamp
+raptor.ir.nodes plain_in
+raptor.ir.nodes plain_out
+raptor.ir.nodes refuse_factor_arms
+raptor.ir.nodes replace
+raptor.ir.nodes same_index
+raptor.ir.nodes sample_sums
+raptor.ir.nodes through
+raptor.ir.ops CAST
+raptor.ir.ops CAST_TARGETS
+raptor.ir.ops COMPARE
+raptor.ir.ops ELEMENTWISE_BINARY
+raptor.ir.ops ELEMENTWISE_TERNARY
+raptor.ir.ops INT_BINARY
+raptor.ir.ops INT_UNARY
+raptor.ir.ops LINALG_OPS
+raptor.ir.ops LOGICAL
+raptor.ir.ops LSTSQ_OPS
+raptor.ir.ops MATRIX_OPS
+raptor.ir.ops MINTED_OPS
+raptor.ir.ops OP_KINDS
+raptor.ir.ops PREDICATE
+raptor.ir.ops RANDOM_OPS
+raptor.ir.ops RAY_OPS
+raptor.ir.ops UNARY_MATH
+raptor.ir.ops VECTOR_OPS
+raptor.ir.ops make
+raptor.ir.ops promote
+raptor.ir.ops result_type
+raptor.ir.rays op_count
+raptor.ir.types DTYPES
+raptor.ir.types INT_PLANE_DTYPES
+raptor.ir.types PER_SAMPLE_ROLES
+raptor.ir.walk Walk
+raptor.ir.walk canonical
+raptor.ir.walk canonical_nodes
+raptor.ir.walk dispatch_groups
+raptor.ir.walk loop_body_groups
+raptor.ir.walk post_order
+raptor.ir.walk rebuild
+raptor.ir.walk resink
+raptor.ir.walk static_selectors
+raptor.ir.walk structural_keys
+raptor.ir.walk substitute
+raptor.ir.walk written_names
+raptor.rules.core DiffRule
+raptor.rules.core RULES
+raptor.rules.core rule_for
+raptor.rules.core zero_like
+raptor.rules.linalg LINALG_RULES
+raptor.rules.linalg Tangent
+raptor.rules.primitive DIRECTIONS
+raptor.rules.primitive PREFIX
+raptor.rules.primitive PrimitiveDecl
+raptor.rules.primitive declare_primitive
+raptor.rules.primitive has_rule
+raptor.rules.primitive jvp_tangent
+raptor.rules.primitive placeholder
+raptor.rules.primitive register_rule
+raptor.rules.primitive signature_of
+raptor.rules.primitive substitute
+raptor.rules.primitive vjp_contributions
+raptor.rules.rays RAY_RULES
+raptor.rules.rays Tangent
+raptor.schema ALL_PATTERNS
+raptor.schema blocks
+raptor.schema dtypes
+raptor.schema manifest
+raptor.schema validate_manifest
+raptor.schema.blocks ALL_PATTERNS
+raptor.schema.blocks BLOCK_EXEC_REF_FIELDS
+raptor.schema.blocks BLOCK_FORBIDDEN_FIELDS
+raptor.schema.blocks BLOCK_REQUIRED_FIELDS
+raptor.schema.blocks BLOCK_TOP_LEVEL_KEY_ORDER
+raptor.schema.blocks BUFFER_KINDS
+raptor.schema.blocks GRAPH_BLOCK_PATTERN
+raptor.schema.blocks SCATTER_POLICIES
+raptor.schema.blocks validate_block_descriptor
+raptor.schema.dtypes SCALAR_TYPES
+raptor.schema.dtypes USER_DTYPE
+raptor.schema.manifest AETHER_ABI_FIELD
+raptor.schema.manifest AETHER_ABI_V1
+raptor.schema.manifest AETHER_ABI_V2
+raptor.schema.manifest BASE_PATTERNS
+raptor.schema.manifest EXEC_ACCESS_CLASSES
+raptor.schema.manifest EXEC_KEYS
+raptor.schema.manifest EXEC_OPS
+raptor.schema.manifest EXEC_REF_KINDS
+raptor.schema.manifest EXEC_TARGETS
+raptor.schema.manifest KERNEL_NAME
+raptor.schema.manifest MAX_SCHEMA_VERSION
+raptor.schema.manifest SCHEMA_VERSION
+raptor.schema.manifest TOP_LEVEL_KEY_ORDER
+raptor.schema.manifest TOP_LEVEL_KEY_ORDER_V2
+raptor.schema.manifest check_execution_axis
+raptor.schema.manifest check_index_planes
+raptor.schema.manifest check_lane_space
+raptor.schema.manifest check_launch_fields
+raptor.schema.manifest check_schema_version
+raptor.schema.manifest check_team_fields
+
+# added by ruling
+# every line below ends with ' # U-<number>'
+
+module raptor.protocols.unit # U-65

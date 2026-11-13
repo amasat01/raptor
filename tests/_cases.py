@@ -1,4 +1,4 @@
-"""Replays the recorded cases of tests/data/{kinds,primitive,block}_cases.json: the specs are JSON, the outcome is a verdict string."""
+"""Replays the recorded cases of tests/data/{kinds,primitive}_cases.json: the specs are JSON, the outcome is a verdict string."""
 from raptor.ir import kinds as K, make
 from raptor.ir.loops import build_loop
 from raptor.ir.nodes import Const, Leaf, LoopCarry, LoopIndex, Primitive, TapeRead
@@ -7,7 +7,7 @@ from raptor.rules import primitive as P
 
 BASE = {"name": "acme.thing", "ext": "acme", "dialect": "d", "family": "expr", "operands": {"min": 1, "max": 2, "families": ["any", "plane-leaf"]},
         "fields": [{"name": "k", "type": "int"}, {"name": "tag", "type": "str", "default": "x"}], "result": ["same_as", 0], "identity": ["k"],
-        "traits": {"fresh_read": True}, "spelling": {"dialect": "d", "name": "thing", "args": ["node", "ref0"]}, "diff": "none"}
+        "feathers": ["fresh_read"], "spelling": {"dialect": "d", "name": "thing", "args": ["node", "ref0"]}, "diff": "none"}
 KINDS = [BASE, {"name": "acme.sc", "ext": "acme", "family": "sink", "operands": {"min": 1, "max": 1}, "result": ["carried"]},
          {"name": "acme.s", "ext": "acme", "family": "sink", "refines": "assign", "operands": {"min": 1, "max": 1}, "fields": [{"name": "q", "type": "float", "default": 1}], "result": ["carried"]},
          {"name": "acme.f", "ext": "acme", "family": "expr", "operands": {"min": 0, "max": 2}, "result": ["fixed", "f64", [2]]},
@@ -44,17 +44,6 @@ def registry():
 def run_make(kind, ttype, ops, fields):
     fields = {k: (tuple(v) if isinstance(v, list) else v["list"] if isinstance(v, dict) else v) for k, v in fields.items()}
     return out(lambda: (lambda n: [type(n).__name__, repr(n.ttype), n.kind, repr(n.state())])(K.make_kind(registry(), kind, tt(ttype), [leaf(o) for o in ops], **fields)))
-
-
-def block_node(spec):
-    if spec[0] == "leaf":
-        return leaf(spec)
-    return make(spec[0], tuple(block_node(s) for s in spec[1:]))
-
-
-def run_block(payload, policy):
-    from raptor.ir.block import block_shaped, ordered_case
-    return out(lambda: [block_shaped(block_node(payload), policy), ordered_case(block_node(payload), policy)])
 
 
 T = TensorType((), "f64")

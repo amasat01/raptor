@@ -133,12 +133,6 @@ BASE_PATTERNS = frozenset(_F["BASE_PATTERNS"])
 #: artifact is a plain plugin kernel.
 EXEC_REF_KINDS = frozenset(_F["EXEC_REF_KINDS"])
 
-#: the manifest-entry ``format`` vocabulary (schema v1) — the artifact
-#: container a plugin manifest entry names. ``host`` is a host shared library
-#: (a CPU plugin); the others are device artifacts.
-MANIFEST_FORMATS = frozenset({"ptx", "cubin", "fatbin", "host"})
-
-
 def check_schema_version(
     meta: dict, *, name: str = "<document>", allow_legacy_version_key: bool = False
 ) -> int:
@@ -212,23 +206,21 @@ def check_lane_space(meta: dict, *, name: str = "<document>") -> None:
 
 
 
-def check_launch_fields(meta: dict, *, name: str = "<document>") -> None:
+def check_launch_fields(meta: dict, *, name: str = "<document>", vocab: dict | None = None) -> None:
     """Validate the optional ``launch.box``, ``launch.index_set`` and ``launch.local_*`` fields (shape only; absent = valid).
 
     ``box``: exactly ``{"axis": int >= 0, "T": int >= 2, "stride": int >= 1}``.
 
     ``index_set``: ``{"width": 32 | 64}`` (a map of lane numbers), or the prefix form
     ``{"width": 32, "prefix": true, "count": <plane name>}`` (no map; the named plane holds how
-    many leading lanes run). ``local_bytes`` (int >= 0), ``local_source`` (``"ptxas"`` | ``"ptx"``)
+    many leading lanes run). ``local_bytes`` (int >= 0), ``local_source`` (one of ``vocab["local_sources"]``)
     and ``local_limit`` (int >= 1) come together. Unknown ``index_set`` keys are refused. Mirrors
     ``launch`` in ``docs/schemas/sidecar-v1.schema.json``.
     """
 
-    _core.schema_check("launch_fields", meta, name)
+    _core.schema_check("launch_fields", meta, name, vocab=vocab)
 
 
-TEAM_GRIDS = frozenset(_F["TEAM_GRIDS"])
-TEAM_PLANE_DTYPES = frozenset(_F["TEAM_PLANE_DTYPES"])
 
 
 
@@ -242,16 +234,16 @@ def check_index_planes(meta: dict, *, name: str = "<document>") -> None:
 
     _core.schema_check("index_planes", meta, name)
 
-def check_team_fields(meta: dict, *, name: str = "<document>") -> None:
+def check_team_fields(meta: dict, *, name: str = "<document>", vocab: dict | None = None) -> None:
     """Validate the optional team-stage fields of a split kernel (shape only; absent = valid).
 
-    ``stages[k].team``: ``{"threads": int >= 1, "grid"?: lanes | keys | chunks | targets, ...}``;
-    grid ``keys`` carries ``keyed`` (a keyed record), ``chunks`` and ``targets`` carry ``of`` (the
-    ordered-add target plane) and ``chunks`` also ``status`` (the out-of-range flag plane).
-    ``team_planes``: ``{plane: {"dtype": real | int32, "per_lane": int >= 1, ...}}`` with at most
+    ``stages[k].team``: ``{"threads": int >= 1, "grid"?: a grid of ``vocab["team_grids"]``, ...}``; a grid names
+    its extra keys, each a keyed ``record`` or a ``plane`` name (``vocab["team_grids"][grid]``), and ``vocab["default_grid"]``
+    is the grid of a team that names none.
+    ``team_planes``: ``{plane: {"dtype": one of vocab["team_dtypes"], "per_lane": int >= 1, ...}}`` with at most
     one of ``keys`` (keyed record), ``per_target`` (plane name) and ``once`` (true), and an optional
     integer ``fill``. ``keyed``: ``{plane: keyed record}``. Unknown keys of these records are
     refused. Mirrors ``docs/schemas/sidecar-v1.schema.json``.
     """
 
-    _core.schema_check("team_fields", meta, name)
+    _core.schema_check("team_fields", meta, name, vocab=vocab)

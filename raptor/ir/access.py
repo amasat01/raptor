@@ -31,7 +31,6 @@ from .._facts import facts as _facts
 from .nodes import Loop
 from .nodes import (
     peel_clamp,
-    FUSED_STEPS_PLANE,
     RAW_KIND,
     AccumWrite,
     At,
@@ -63,7 +62,7 @@ from .. import _core
 globals().update(_gen.records(_gen.parse(_core.manifest()), __name__, 'access'))
 
 
-def infer_over(order: Iterable[Node]) -> Access:
+def infer_over(order: Iterable[Node], exempt_planes: Iterable[str] = ()) -> Access:
     """The classifier proper, over a canonical node ORDER.
 
     A :class:`~hawk.ir.nodes.Loop`'s body is NOT in that order (it's a
@@ -74,10 +73,10 @@ def infer_over(order: Iterable[Node]) -> Access:
     reads — a wrong answer, not a placement cost.
 
     One read is NOT a form of the body: a ``steps="auto"`` loop's trip
-    count, the reserved ``fused_steps`` word the runner sets (one cell, the
+    count, a word the runner sets and the caller names in ``exempt_planes`` (one cell, the
     same for every sample). It is the loop's ``count`` operand, which no
     traced body can mint, so a kernel's class is its single step's."""
-    return Access(_core.infer_access(list(order)), None)
+    return Access(_core.infer_access(list(order), list(exempt_planes)), None)
 
 
 def infer(walk: Walk) -> Access:

@@ -5,10 +5,55 @@ use crate::pjson::Json;
 
 // every vocabulary below is a fact of raptor/ir/core.json (consts, group "schema"), read by the Python side too
 pub use crate::facts::{AETHER_ABI_V1, AETHER_ABI_V2, MAX_SCHEMA_VERSION, SCHEMA_VERSION};
-use crate::facts::{ALL_PATTERNS, EXEC_ACCESS_CLASSES as EXEC_ACCESS, EXEC_KEYS, EXEC_OPS, EXEC_TARGETS, TEAM_GRIDS, TEAM_PLANE_DTYPES as TEAM_DTYPES,
+use crate::facts::{ALL_PATTERNS, EXEC_ACCESS_CLASSES as EXEC_ACCESS, EXEC_KEYS, EXEC_OPS, EXEC_TARGETS, 
     TOP_LEVEL_KEY_ORDER as ORDER_V1, TOP_LEVEL_KEY_ORDER_V2 as ORDER_V2, BLOCK_TOP_LEVEL_KEY_ORDER as ORDER_BLOCKS};
 
 type R = Result<(), String>;
+
+/// The vocabulary a caller states and raptor validates against: `team_grids` (grid -> its extra keys, each `"record"` or `"plane"`),
+/// the `default_grid` of a team that names none, `team_dtypes` and `local_sources`. Empty by default: nothing is accepted.
+#[derive(Default, Clone)]
+pub struct Vocab {
+    pub grids: Vec<(String, Vec<(String, String)>)>,
+    pub default_grid: String,
+    pub dtypes: Vec<String>,
+    pub local_sources: Vec<String>,
+}
+
+impl Vocab {
+    pub fn from_json(j: &Json) -> Result<Vocab, String> {
+        let strs = |k: &str| -> Result<Vec<String>, String> {
+            match j.get(k) {
+                None => Ok(vec![]),
+                Some(Json::Arr(a)) => a.iter().map(|x| match x { Json::Str(s) => Ok(s.clone()), _ => ve(format!("vocabulary '{k}' holds strings only")) }).collect(),
+                Some(_) => ve(format!("vocabulary '{k}' must be a list")),
+            }
+        };
+        let mut grids = vec![];
+        if let Some(Json::Obj(items)) = j.get("team_grids") {
+            for (g, spec) in items {
+                let Json::Obj(extra) = spec else { return ve(format!("vocabulary team_grids[{g:?}] must be an object")) };
+                let mut e = vec![];
+                for (k, kind) in extra {
+                    match kind { Json::Str(x) if x == "record" || x == "plane" => e.push((k.clone(), x.clone())), _ => return ve(format!("vocabulary team_grids[{g:?}].{k} must be 'record' or 'plane'")) }
+                }
+                grids.push((g.clone(), e));
+            }
+        }
+        let default_grid = match j.get("default_grid") { Some(Json::Str(s)) => s.clone(), _ => String::new() };
+        Ok(Vocab { grids, default_grid, dtypes: strs("team_dtypes")?, local_sources: strs("local_sources")? })
+    }
+}
+/// `'a'`, `'a' or 'b'`, `'a', 'b' or 'c'`: the words in the order the caller gave them.
+fn or_list(v: &[String]) -> String {
+    let q: Vec<String> = v.iter().map(|w| format!("'{w}'")).collect();
+    match q.split_last() { None => String::new(), Some((last, [])) => last.clone(), Some((last, head)) => format!("{} or {}", head.join(", "), last) }
+}
+fn refs(v: &[String]) -> Vec<&str> {
+    let mut r: Vec<&str> = v.iter().map(String::as_str).collect();
+    r.sort();
+    r
+}
 
 fn ve<T>(m: String) -> Result<T, String> {
     Err(format!("ValueError: {m}"))
@@ -40,7 +85,7 @@ fn nonempty_str(v: &Json) -> bool {
     matches!(v, Json::Str(s) if !s.is_empty())
 }
 
-pub fn validate(doc: &Json) -> R {
+pub fn validate(doc: &Json, voc: &Vocab) -> R {
     let nm = "'<document>'";
     if !matches!(doc, Json::Obj(_)) {
         return Err(format!("TypeError: expected a dict, got {}", doc.type_name()));
@@ -48,16 +93,10 @@ pub fn validate(doc: &Json) -> R {
     let version = check_schema_version(doc, nm, true)?;
     check_execution_axis(doc, version, nm)?;
     check_lane_space(doc, nm)?;
-    check_launch_fields(doc, nm)?;
-    check_team_fields(doc, nm)?;
+    check_launch_fields(doc, nm, voc)?;
+    check_team_fields(doc, nm, voc)?;
     check_index_planes(doc, nm)?;
-    let pattern = doc.get("pattern");
-    if let Some(Json::Str(s)) = pattern {
-        if s == "neural_block" {
-            return ve("pattern 'neural_block' was renamed to 'graph_block' in 0.7.3".into());
-        }
-    }
-    if let Some(p) = pattern {
+    if let Some(p) = doc.get("pattern") {
         if *p != Json::Null && !in_set(p, &ALL_PATTERNS)? {
             return ve(format!("pattern {} is not recognized; expected one of {}", p.repr(), lst(&ALL_PATTERNS)));
         }
@@ -203,7 +242,7 @@ pub fn check_lane_space(meta: &Json, nm: &str) -> R {
     Ok(())
 }
 
-pub fn check_launch_fields(meta: &Json, nm: &str) -> R {
+pub fn check_launch_fields(meta: &Json, nm: &str, voc: &Vocab) -> R {
     let Some(launch @ Json::Obj(_)) = meta.get("launch") else { return Ok(()) };
     let bad = |what: &str, why: String| -> R { ve(format!("{nm}: launch.{what} {why}")) };
     if let Some(b) = launch.get("box") {
@@ -254,8 +293,8 @@ pub fn check_launch_fields(meta: &Json, nm: &str) -> R {
         if !int_ge(b, 0) {
             return bad("local_bytes", format!("must be an integer >= 0; got {}", b.repr()));
         }
-        if !matches!(s, Json::Str(x) if x == "ptxas" || x == "ptx") {
-            return bad("local_source", format!("must be 'ptxas' or 'ptx'; got {}", s.repr()));
+        if !matches!(s, Json::Str(x) if voc.local_sources.contains(x)) {
+            return bad("local_source", format!("must be {}; got {}", or_list(&voc.local_sources), s.repr()));
         }
         if !int_ge(l, 1) {
             return bad("local_limit", format!("must be an integer >= 1; got {}", l.repr()));
@@ -292,7 +331,7 @@ fn keyed_record(rec: &Json, whr: &str, nm: &str) -> R {
     Ok(())
 }
 
-pub fn check_team_fields(meta: &Json, nm: &str) -> R {
+pub fn check_team_fields(meta: &Json, nm: &str, voc: &Vocab) -> R {
     let bad = |whr: &str, why: String| -> R { ve(format!("{nm}: {whr} {why}")) };
     if let Some(Json::Arr(stages)) = meta.get("stages") {
         for (k, st) in stages.iter().enumerate() {
@@ -305,29 +344,33 @@ pub fn check_team_fields(meta: &Json, nm: &str) -> R {
             if !int_ge(th, 1) {
                 return bad(&whr, format!("threads must be an integer >= 1; got {}", th.repr()));
             }
-            let gj = team.get("grid").cloned().unwrap_or(Json::Str("lanes".into()));
-            if !in_set(&gj, &TEAM_GRIDS)? {
-                return bad(&whr, format!("grid {} is not one of {}", gj.repr(), lst(&TEAM_GRIDS)));
+            let gj = team.get("grid").cloned().unwrap_or(Json::Str(voc.default_grid.clone()));
+            let names: Vec<&str> = { let mut n: Vec<&str> = voc.grids.iter().map(|g| g.0.as_str()).collect(); n.sort(); n };
+            if !in_set(&gj, &names)? {
+                return bad(&whr, format!("grid {} is not one of {}", gj.repr(), lst(&names)));
             }
             let Json::Str(grid) = &gj else { unreachable!() };
-            let extra: &[&str] = match grid.as_str() { "lanes" => &[], "keys" => &["keyed"], "chunks" => &["of", "status"], _ => &["of"] };
-            let mut surplus: Vec<String> = team.keys().into_iter().filter(|k| !["threads", "grid"].contains(k) && !extra.contains(k)).map(String::from).collect();
+            let extra: &[(String, String)] = &voc.grids.iter().find(|g| &g.0 == grid).unwrap().1;
+            let has_extra = |k: &str| extra.iter().any(|e| e.0 == k);
+            let mut surplus: Vec<String> = team.keys().into_iter().filter(|k| !["threads", "grid"].contains(k) && !has_extra(k)).map(String::from).collect();
             surplus.sort();
             if !surplus.is_empty() {
                 return bad(&whr, format!("has keys {} that grid {} does not carry", slst(&surplus), gj.repr()));
             }
-            let mut need: Vec<String> = extra.iter().filter(|k| !team.has(k)).map(|s| s.to_string()).collect();
+            let mut need: Vec<String> = extra.iter().filter(|e| !team.has(&e.0)).map(|e| e.0.clone()).collect();
             need.sort();
             if !need.is_empty() {
                 return bad(&whr, format!("grid {} needs {}", gj.repr(), slst(&need)));
             }
-            if grid == "keys" {
-                keyed_record(team.get("keyed").unwrap(), &format!("{whr}.keyed"), nm)?;
+            let mut records: Vec<&str> = extra.iter().filter(|e| e.1 == "record").map(|e| e.0.as_str()).collect();
+            records.sort();
+            for key in records {
+                keyed_record(team.get(key).unwrap(), &format!("{whr}.{key}"), nm)?;
             }
             // Python walks a set here: its order is hash-dependent. The port walks sorted order.
-            let mut names: Vec<&str> = extra.iter().copied().filter(|k| *k != "keyed").collect();
-            names.sort();
-            for key in names {
+            let mut planes: Vec<&str> = extra.iter().filter(|e| e.1 == "plane").map(|e| e.0.as_str()).collect();
+            planes.sort();
+            for key in planes {
                 let v = team.get(key).unwrap();
                 if !nonempty_str(v) {
                     return bad(&whr, format!("{key} must be a plane name; got {}", v.repr()));
@@ -346,8 +389,8 @@ pub fn check_team_fields(meta: &Json, nm: &str) -> R {
                 return bad(&whr, "must be an object with 'dtype', 'per_lane' and optionally 'keys', 'per_target', 'once', 'fill'".into());
             }
             let dt = spec.get("dtype").unwrap();
-            if !in_set(dt, &TEAM_DTYPES)? {
-                return bad(&whr, format!("dtype must be one of {}; got {}", lst(&TEAM_DTYPES), dt.repr()));
+            if !in_set(dt, &refs(&voc.dtypes))? {
+                return bad(&whr, format!("dtype must be one of {}; got {}", lst(&refs(&voc.dtypes)), dt.repr()));
             }
             let pl = spec.get("per_lane").unwrap();
             if !int_ge(pl, 1) {

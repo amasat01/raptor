@@ -33,9 +33,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -47,7 +47,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "name 0",
@@ -81,9 +81,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -129,9 +129,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -178,9 +178,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -227,9 +227,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -275,9 +275,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -324,9 +324,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -373,9 +373,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -422,9 +422,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -472,9 +472,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -487,7 +487,7 @@
 "refines": "node"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines='node', wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines='node', wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "operands 0",
@@ -518,9 +518,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -562,9 +562,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -576,7 +576,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(2, None, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(2, None, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "operands 3",
@@ -608,9 +608,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -622,7 +622,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 1, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 1, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "fields 0",
@@ -652,9 +652,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -696,9 +696,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -741,9 +741,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -786,9 +786,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -831,9 +831,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -875,9 +875,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -927,9 +927,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -941,7 +941,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('fixed', 'f64', [2]), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('fixed', 'f64', [2]), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "result 2",
@@ -975,9 +975,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -989,7 +989,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('carried',), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('carried',), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "result 3",
@@ -1023,9 +1023,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1072,9 +1072,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1119,9 +1119,9 @@
 0
 ],
 "identity": [],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1133,10 +1133,10 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=(), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=(), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
-"name": "traits 0",
+"name": "feathers 0",
 "data": {
 "name": "acme.thing",
 "ext": "acme",
@@ -1168,9 +1168,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"bad": true
-},
+"feathers": [
+"bad"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1182,7 +1182,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "RaptorError: kind 'acme.thing': unknown trait 'bad'"
+"want": "RaptorError: kind 'acme.thing': unknown feather 'bad'"
 },
 {
 "name": "spelling 0",
@@ -1217,9 +1217,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "n",
@@ -1265,9 +1265,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "n"
@@ -1275,7 +1275,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'n', ()), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), feathers=('fresh_read',), spelling=('d', 'n', ()), diff='none', no_writer=False)"
 },
 {
 "name": "no_writer 0",
@@ -1310,9 +1310,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1325,7 +1325,7 @@
 "no_writer": true
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=True)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='expr', refines=None, wire='acme.thing', operands=(1, 2, ('any', 'plane-leaf')), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('same_as', 0), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=True)"
 },
 {
 "name": "extra 0",
@@ -1360,9 +1360,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1405,9 +1405,9 @@
 "identity": [
 "k"
 ],
-"traits": {
-"fresh_read": true
-},
+"feathers": [
+"fresh_read"
+],
 "spelling": {
 "dialect": "d",
 "name": "thing",
@@ -1419,7 +1419,7 @@
 "diff": "none"
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='sink', refines=None, wire='acme.thing', operands=(0, 0, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('carried',), identity=('k',), traits=(('fresh_read', True),), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.thing', dialect='d', ext='acme', family='sink', refines=None, wire='acme.thing', operands=(0, 0, ()), fields=(('k', 'int', None, True), ('tag', 'str', 'x', False)), result=('carried',), identity=('k',), feathers=('fresh_read',), spelling=('d', 'thing', ('node', 'ref0')), diff='none', no_writer=False)"
 },
 {
 "name": "refine assign",
@@ -1436,7 +1436,7 @@
 ]
 },
 "fp": [],
-"want": "ok KindDecl(name='acme.r', dialect='', ext='acme', family='sink', refines='assign', wire='assign', operands=(0, 0, ()), fields=(('k', 'int', None, True),), result=('carried',), identity=None, traits=(), spelling=None, diff='none', no_writer=False)"
+"want": "ok KindDecl(name='acme.r', dialect='', ext='acme', family='sink', refines='assign', wire='assign', operands=(0, 0, ()), fields=(('k', 'int', None, True),), result=('carried',), identity=None, feathers=(), spelling=None, diff='none', no_writer=False)"
 },
 {
 "name": "refine assign wrong family",

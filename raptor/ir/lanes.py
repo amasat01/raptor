@@ -35,13 +35,12 @@ the data-free part (a gather into a row the lane chooses by its coordinates).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from fractions import Fraction
-from math import lcm
 from typing import Any
 
-from raptor.ir.nodes import Loop, LoopCarry, LoopCount, LoopIndex
-from raptor.ir.nodes import KEYED_AUTO, At, Const, Dispatch, Finish, Leaf, Node, Op, SampleIndex, Sink, peel_clamp
+from raptor.ir.nodes import Loop, LoopCarry, LoopIndex
+from raptor.ir.nodes import KEYED_AUTO, At, Const, Leaf, Node, Op, SampleIndex, Sink, peel_clamp
 
 INVARIANT, AFFINE, QUOTIENT = "invariant", "affine", "quotient"
 DATA_DEPENDENT, NON_AFFINE = "data_dependent", "non_affine"
@@ -109,40 +108,12 @@ class SinkFact:
     slot_extent: int | None = None
     #: per-axis forms of ``base`` whenever the key has the ``base + clamp`` shape.
     slot_base_forms: tuple = ()
-    #: the sum contract: the sink's own policy when it names one, else
+    #: the sum contract: the sink's own contract when it names one, else
     #: ``"compensated"`` when the sink carries a companion plane, else ``"auto"``.
-    policy: str = "auto"
+    contract: str = "auto"
 
     def invariant_axes(self, facts: "LaneFacts") -> tuple:
         return tuple(a.label for a, f in zip(facts.axes, self.forms) if f.cls == INVARIANT)
-
-
-@dataclass(frozen=True)
-class BoxCandidate:
-    """A non-fastest axis ``axis`` along which every site of each of ``planes``
-    is invariant: lanes that differ only in that axis read the same values, so
-    one staged copy serves ``reuse`` of them (``None`` = the runtime first
-    axis). ``fastest_extent`` is the static width the staged run spans."""
-
-    axis: str
-    planes: tuple
-    reuse: int | None
-    fastest_extent: int | None
-    static: bool
-    #: the axis's position in :attr:`LaneFacts.axes` (a label may be ``None``).
-    index: int = 0
-
-
-@dataclass(frozen=True)
-class GatherTile:
-    """A plane read as ``base + slot`` (a clamped data-dependent slot of static
-    bound ``slot_extent``) whose ``base`` does not move along the fastest axis:
-    every lane of a fastest-axis run reads the same row of ``row_words`` words
-    of ``plane``, so a block can stage that row once."""
-
-    plane: str
-    slot_extent: int
-    row_words: int
 
 
 @dataclass(frozen=True)
@@ -151,20 +122,8 @@ class LaneFacts:
     reads: tuple
     sinks: tuple
     notes: tuple = ()
-    #: thread/block box candidates, one per non-fastest axis with an invariant read.
-    box_candidates: tuple = ()
-    #: True only when the walk holds no per-lane loop exit, count, finish,
-    #: terminated read or lane-varying dispatch; unknown = False. It does NOT
-    #: see the launch's own tail guard or an external active set.
-    uniform_control: bool = False
     #: the kernel's declared group (a lane count, default 1).
     group: int = 1
-    #: the least lane count every proven key run and the declared ``group`` divide.
-    required_group: int = 1
-    #: planes a block could stage as a gather tile, one per plane.
-    gather_tiles: tuple = ()
-    #: the chosen lowering per pattern, recorded by the consumer that chooses it.
-    mapping: dict = field(default_factory=dict, compare=False)
 
     def axis_index(self, axis: Any) -> int:
         if isinstance(axis, int):
@@ -555,14 +514,11 @@ def _compensated_names(obj: Any) -> tuple:
     return True, getattr(sink, "compensation", None)
 
 
-def facts(obj: Any, labels: tuple | None = None, group: int = 1, *, run_width: Any = None) -> LaneFacts:
+def facts(obj: Any, labels: tuple | None = None, group: int = 1) -> LaneFacts:
     """The lane-space facts of a traced kernel (anything with ``sinks``), a
     :class:`~hawk.ir.walk.Walk`, or a sink tuple. ``labels`` are the declared
     axis labels in numpy order (``None`` entries stay unlabeled); ``group`` is
-    the kernel's declared group, a lane count. ``run_width(ev, axes, key)`` is
-    an optional consumer hook: the width of the aligned lane run it proves a
-    keyed sink's key equal over (an int >= 2), or ``None``; the widths and
-    ``group`` fix :attr:`LaneFacts.required_group`."""
+    the kernel's declared group, a lane count."""
     nodes = nodes_of(obj)
     axes, notes = axes_from(divisors(nodes))
     if labels is not None:
@@ -574,10 +530,10 @@ def facts(obj: Any, labels: tuple | None = None, group: int = 1, *, run_width: A
     ev = Eval(axes)
     n = len(axes)
     comp_on, companion = _compensated_names(obj)
-    reads, sinks, widths = [], [], [group]
+    reads, sinks = [], []
 
-    def policy(s: Any) -> str:
-        declared = getattr(s, "policy", "auto")
+    def contract(s: Any) -> str:
+        declared = getattr(s, "contract", "auto")
         if declared == KEYED_AUTO:
             return "compensated"
         if declared not in ("auto", "plain"):
@@ -590,14 +546,11 @@ def facts(obj: Any, labels: tuple | None = None, group: int = 1, *, run_width: A
         if s.index is None:
             sinks.append(SinkFact(s.name, s.kind, False,
                                   tuple(AxisForm(AFFINE, Fraction(a.stride)) for a in axes), False,
-                                  policy=policy(s)))
+                                  contract=contract(s)))
             return
         v = ev.value(s.index)
         sinks.append(SinkFact(s.name, s.kind, True, axis_forms(v, n), bool(v.dbad),
-                              *key_facts(ev, s.index, axes), policy=policy(s)))
-        width = None if run_width is None else run_width(ev, axes, s.index)
-        if width is not None:
-            widths.append(width)
+                              *key_facts(ev, s.index, axes), contract=contract(s)))
 
     for node in nodes:
         if isinstance(node, At):
@@ -617,10 +570,7 @@ def facts(obj: Any, labels: tuple | None = None, group: int = 1, *, run_width: A
                     add_sink(s)
     # deterministic order
     reads.sort(key=lambda r: (r.plane, repr(r.forms), repr(r.offset)))
-    out = LaneFacts(axes, tuple(reads), tuple(sinks), notes)
-    return LaneFacts(axes, out.reads, out.sinks, notes, _box_candidates(out),
-                     _uniform_control(nodes, ev), group, lcm(*widths),
-                     _gather_tiles(out.reads))
+    return LaneFacts(axes, tuple(reads), tuple(sinks), notes, group)
 
 
 def varies_along(obj: Any, axis: int):
@@ -629,40 +579,3 @@ def varies_along(obj: Any, axis: int):
     ``axis`` (by position). Unknown = it may."""
     ev = Eval(axes_from(divisors(nodes_of(obj)))[0])
     return lambda node: axis in ev.value(node).varies()
-
-
-def _box_candidates(f: LaneFacts) -> tuple:
-    last = f.axes[-1].extent
-    return tuple(BoxCandidate(a.label, planes, a.extent, last, a.extent is not None and last is not None, i)
-                 for i, a in enumerate(f.axes[:-1]) if (planes := f.invariant_reads(i)))
-
-
-def _gather_tiles(reads: tuple) -> tuple:
-    """One :class:`GatherTile` per plane with a slot read: its rows are the sites
-    sharing one ``row`` term, and a row's words span its lowest to its highest
-    offset (a slot adds its bound)."""
-    out = []
-    for plane in sorted({r.plane for r in reads if r.tile_site and r.tile_site[2] is not None}):
-        rows: dict = {}
-        for r in reads:
-            if r.plane == plane and r.tile_site:
-                row, off, slot = r.tile_site
-                lo, hi = rows.get(row, (off, off))
-                rows[row] = (min(lo, off), max(hi, off + (slot or 1) - 1))
-        slot = max(r.tile_site[2] for r in reads if r.plane == plane and r.tile_site
-                   and r.tile_site[2] is not None)
-        out.append(GatherTile(plane, slot, max(hi - lo + 1 for lo, hi in rows.values())))
-    return tuple(out)
-
-
-def _uniform_control(nodes: list, ev: "Eval") -> bool:
-    """No node a lane can leave, skip or finish on its own (conservative)."""
-    for n in nodes:
-        if isinstance(n, (LoopCount, Finish)) or (isinstance(n, Loop) and (n.exit_cond is not None
-                                                                           or n.count is not None)):
-            return False
-        if isinstance(n, Leaf) and n.role == "terminated":
-            return False
-        if isinstance(n, Dispatch) and n.policy != "predicated" and ev.value(n.operands[0]).varies():
-            return False
-    return True

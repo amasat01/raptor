@@ -108,7 +108,7 @@ pub fn kind_check<'py>(py: Python<'py>, cls: &B<'py>, ttype: &B<'py>, operands: 
     Ok((ttype, PyTuple::new(py, ops)?.into_any(), fields.clone()))
 }
 
-const KEYS: [&str; 14] = ["name", "dialect", "ext", "family", "refines", "wire", "operands", "fields", "result", "identity", "traits", "spelling", "diff", "no_writer"];
+const KEYS: [&str; 14] = ["name", "dialect", "ext", "family", "refines", "wire", "operands", "fields", "result", "identity", "spelling", "diff", "no_writer", "feathers"];
 const FIELD_TYPES: [&str; 6] = ["int", "float", "bool", "str", "none", "tuple"];
 fn tup<'py>(py: Python<'py>, v: Vec<B<'py>>) -> PyResult<B<'py>> { Ok(PyTuple::new(py, v)?.into_any()) }
 fn text<'py>(o: &B<'py>) -> Option<String> { if o.is_instance_of::<pyo3::types::PyString>() { o.extract().ok() } else { None } }
@@ -224,16 +224,16 @@ pub fn kind_declare<'py>(py: Python<'py>, kinds: &B<'py>, core: &B<'py>, data: &
             return Err(refuse(&name, format!("identity names unknown field(s) {}", sorted_repr(uniq.try_iter()?.collect::<PyResult<_>>()?)?)))
         }
     }
-    // traits
-    let traits = PyDict::new(py);
-    if !parent.is_none() { for t in parent.getattr("traits")?.try_iter()? { let t = t?; traits.set_item(t.get_item(0)?, t.get_item(1)?)? } }
-    let td = get(data, "traits")?;
-    if td.is_truthy()? {
-        for it in td.call_method0("items")?.try_iter()? {
-            let it = it?; let (t, v) = (it.get_item(0)?, it.get_item(1)?);
-            if !text(&t).is_some_and(|x| const_of("KIND_TRAITS").unwrap_or(&[]).contains(&x.as_str())) { return Err(refuse(&name, format!("unknown trait {}", rep(&t)))) }
-            traits.set_item(t, v.is_truthy()?)?;
+    // feathers: named properties raptor's table lists (KIND_FEATHERS, "name: meaning"); a row states its own, a refining kind inherits by class
+    let mut feathers: Vec<String> = vec![];
+    let fd = get(data, "feathers")?;
+    if fd.is_truthy()? {
+        for f in fd.try_iter()? {
+            let f = f?;
+            let known = text(&f).filter(|x| const_of("KIND_FEATHERS").unwrap_or(&[]).iter().any(|l| l.split(':').next() == Some(x.as_str())));
+            match known { Some(x) => if !feathers.contains(&x) { feathers.push(x) }, None => return Err(refuse(&name, format!("unknown feather {}", rep(&f)))) }
         }
+        feathers.sort();
     }
     // spelling
     let spell = get(data, "spelling")?;
@@ -259,9 +259,8 @@ pub fn kind_declare<'py>(py: Python<'py>, kinds: &B<'py>, core: &B<'py>, data: &
         let cw = if !refines.is_none() && core.contains(&refines)? { core.get_item(&refines)?.get_item(3)? } else { none.clone() };
         if cw.is_truthy()? { cw } else { s(py, &name)? }
     };
-    let tr = bi.getattr("tuple")?.call1((bi.getattr("sorted")?.call1((traits.call_method0("items")?,))?,))?;
     let flag = pyo3::types::PyBool::new(py, get(data, "no_writer")?.is_truthy()?).to_owned().into_any();
-    let all = vec![s(py, &name)?, data.call_method1("get", ("dialect", ""))?, s(py, &ext)?, s(py, &family)?, refines, wire, operands, tup(py, own)?, result, identity, tr, spelling,
+    let all = vec![s(py, &name)?, data.call_method1("get", ("dialect", ""))?, s(py, &ext)?, s(py, &family)?, refines, wire, operands, tup(py, own)?, result, identity, tup(py, feathers.iter().map(|f| s(py, f)).collect::<PyResult<Vec<_>>>()?)?, spelling,
         data.call_method1("get", ("diff", "none"))?, flag];
     let decl = decl_cls.call1(PyTuple::new(py, all)?)?;
     Ok((decl, root.to_string()))

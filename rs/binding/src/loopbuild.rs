@@ -27,8 +27,8 @@ fn depends(node: &B<'_>, own: &HashSet<usize>, memo: &mut HashMap<usize, bool>) 
     }
     Ok(memo[&id(node)])
 }
-/// A terminal whose kind declares the `static_index` trait: a position known at compile time.
-fn static_terminal(n: &B<'_>) -> bool { n.getattr("static_index").ok().and_then(|t| t.extract::<bool>().ok()).unwrap_or(false) }
+/// A terminal whose kind states the `static_index` feather: a position known at compile time.
+fn static_terminal(n: &B<'_>) -> bool { n.getattr("feathers").ok().and_then(|f| f.contains("static_index").ok()).unwrap_or(false) }
 /// An index built from constants and static-index terminals only (a compile-time read position).
 fn is_static(index: &B<'_>) -> PyResult<bool> {
     let mut stack = vec![index.clone()];
@@ -128,7 +128,8 @@ pub fn loop_gated_reads<'py>(py: Python<'py>, nexts: &B<'py>, own: &B<'py>) -> P
         }
         let orig = &cs[1..];
         if arms.iter().zip(orig).any(|(a, b)| !a.is(b)) {
-            let d = reg().by_name.get("Dispatch").unwrap().bind(py).call1((&sel, PyList::new(py, arms)?, node.getattr("policy")?, node.getattr("ttype")?))?;
+            let mut ops = vec![sel.clone()]; ops.extend(arms);
+            let d = node.call_method1("rebuilt", (PyTuple::new(py, ops)?,))?;       // the same kind over the gated arms
             swaps.set_item(id(&node), d)?;
         }
     }

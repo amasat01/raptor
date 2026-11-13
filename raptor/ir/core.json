@@ -53,18 +53,12 @@
    "eigh_factor",
    "qr_factor"
   ],
-  "DISPATCH_POLICIES": [
-   "predicated",
-   "switch",
-   "segmented",
-   "auto"
-  ],
-  "POLICIES": [
+  "CONTRACTS": [
    "auto",
    "compensated",
    "ordered"
   ],
-  "SCATTER_POLICIES": [
+  "SCATTER_CONTRACTS": [
    "auto",
    "compensated",
    "ordered",
@@ -80,11 +74,10 @@
   "PRIMITIVE_KIND": "primitive",
   "REDUCE_KIND": "reduce",
   "SAMPLE_INDEX_KIND": "sample_index",
-  "LANE_POSITION_KIND": "lane_position",
+  "SAMPLE_POSITION_KIND": "sample_position",
   "PLANE_EXTENT_KIND": "plane_extent",
   "DISPATCH_KIND": "dispatch",
   "NAMESPACE_SEP": "__",
-  "FUSED_STEPS_PLANE": "fused_steps",
   "PARAM_CELL": "param_cell",
   "ROLE_ORDER": [
    "mutable",
@@ -100,7 +93,6 @@
    "uniform",
    "nsamples"
   ],
-  "FINISHED_PLANE": "finished_count",
   "ELEMENTWISE_BINARY": [
    "add",
    "sub",
@@ -357,11 +349,16 @@
    "nsamples"
   ],
   "RAW_KIND": "raw_device",
-  "KIND_TRAITS": [
-   "elementwise_sink",
-   "reads_by_element",
-   "fresh_read",
-   "static_index"
+  "KIND_FEATHERS": [
+   "elementwise_sink: a sink that stores the value of one lane element per lane (the writer may push an elementwise read into its store loop)",
+   "reads_by_element: the node reads its operand element by element in its own loop, so the operand needs no value of its own",
+   "fresh_read: a read that renders as the name of a fresh local its stage fills, never copied",
+   "static_index: a terminal whose value is a position known at compile time (it may index a plane read statically)",
+   "commits_value: a sink whose first operand is the value it commits, so a promotion may rebuild it over another value",
+   "reduces_samples: the node reduces over the samples of a run (its value is one per run or per key, not per sample)",
+   "evaluates_all_branches: a dispatch that evaluates every branch and selects, with no branch skipped (the predicated strategy)",
+   "splits_by_branch: a dispatch whose branches run as units of their own, the samples grouped by branch (the segmented strategy)",
+   "counts_branch_mix: a dispatch that also counts the samples of each branch in a plane of its own (the auto strategy)"
   ],
   "schema.SCHEMA_VERSION": 1,
   "schema.MAX_SCHEMA_VERSION": 3,
@@ -397,16 +394,6 @@
    "graph_block",
    "pure",
    "vector"
-  ],
-  "schema.TEAM_GRIDS": [
-   "chunks",
-   "keys",
-   "lanes",
-   "targets"
-  ],
-  "schema.TEAM_PLANE_DTYPES": [
-   "int32",
-   "real"
   ],
   "schema.TOP_LEVEL_KEY_ORDER": [
    "schema_version",
@@ -504,14 +491,6 @@
    ]
   },
   {
-   "name": "LaneMeta",
-   "fields": [
-    "name",
-    "slots",
-    "digest"
-   ]
-  },
-  {
    "name": "Access",
    "home": "access",
    "kind": "namedtuple",
@@ -526,7 +505,7 @@
    "fields": [
     "name",
     "K",
-    "policy",
+    "strategy=''",
     "units=()",
     "selector_reads=()",
     "static_selector=False"
@@ -534,7 +513,7 @@
   },
   {
    "name": "PlaneDecl",
-   "home": "unit",
+   "home": "protocols.unit",
    "fields": [
     "name",
     "form",
@@ -549,7 +528,7 @@
   },
   {
    "name": "LoweredUnit",
-   "home": "unit",
+   "home": "protocols.unit",
    "eq": false,
    "fields": [
     "ir_version",
@@ -564,7 +543,7 @@
     "mode",
     "kind",
     "form",
-    "policy",
+    "settings",
     "cost",
     "_memo={}"
    ]
@@ -630,11 +609,6 @@
      "check",
      "bad is not None",
      "{name_of(cls)}: operand {bad!r} is not a Node"
-    ],
-    [
-     "check",
-     "cut_in_loop(operands)",
-     "a cut inside a `for` is not in this release (it would be one launch per iteration); hoist the cut out of the loop"
     ]
    ]
   },
@@ -684,6 +658,7 @@
    ]
   }
  },
+ "op_feathers": {},
  "kinds": [
   {
    "name": "node",
@@ -981,15 +956,15 @@
    ]
   },
   {
-   "name": "lane_position",
-   "class": "LanePosition",
+   "name": "sample_position",
+   "class": "SamplePosition",
    "family": "expr",
    "refines": "sample_index",
    "operands": {
     "min": 0,
     "max": 0
    },
-   "wire_attr": "lane_position"
+   "wire_attr": "sample_position"
   },
   {
    "name": "op",
@@ -1226,26 +1201,16 @@
     "same_as",
     1
    ],
-   "slots": [
-    "policy"
-   ],
+   "refinable": true,
    "wire_attr": "dispatch",
-   "params": "selector: Node, branches: Sequence[Node], policy: str, ttype: TensorType",
-   "assigns": [
-    "policy"
-   ],
+   "params": "selector: Node, branches: Sequence[Node], ttype: TensorType",
    "dedup": [
     "tup",
-    "k",
-    "f:policy"
-   ],
-   "state": [
-    "policy"
+    "k"
    ],
    "from": [
     "op:0",
     "ops:1:",
-    "@policy",
     "ttype"
    ],
    "watch": "all",
@@ -1263,13 +1228,8 @@
      ],
      [
       "check",
-      "policy not in DISPATCH_POLICIES",
-      "dispatch: unknown policy {policy!r}; declared are {DISPATCH_POLICIES}"
-     ],
-     [
-      "check",
       "selector.ttype.shape != () or selector.ttype.dtype != 'i32'",
-      "dispatch: kind must be a rank-0 i32 value, got {selector.ttype!r} — a compile-time constant is not a traced VALUE and a policy is an authoring decision, not something the node infers"
+      "dispatch: kind must be a rank-0 i32 value, got {selector.ttype!r} — a compile-time constant is not a traced VALUE and"
      ],
      [
       "let",
@@ -1293,9 +1253,7 @@
       "cat((selector,), br)"
      ]
     ],
-    "out": [
-     "policy"
-    ]
+    "out": []
    },
    "props": [
     [
@@ -1476,59 +1434,6 @@
    "wire": "wide_write"
   },
   {
-   "name": "block_sum_write",
-   "class": "BlockSumWrite",
-   "family": "sink",
-   "refines": "wide_write",
-   "operands": {
-    "min": 1,
-    "max": 1
-   },
-   "params": "name: str, block: Node",
-   "assigns": [
-    "kind",
-    "role",
-    "name"
-   ],
-   "from": [
-    "@name",
-    "op:0"
-   ],
-   "watch": "all",
-   "methods": [
-    [
-     "expanded",
-     "self.block.expanded(self.name)"
-    ]
-   ],
-   "ctor": {
-    "steps": [
-     [
-      "call",
-      "node_sink",
-      "'wide_write'",
-      "'wide_out'",
-      "name",
-      "block",
-      "None",
-      "tt(block.ttype.dtype)"
-     ]
-    ],
-    "out": [
-     "'wide_write'",
-     "'wide_out'",
-     "name"
-    ]
-   },
-   "props": [
-    [
-     "block",
-     "op",
-     "0"
-    ]
-   ]
-  },
-  {
    "name": "accum_write",
    "class": "AccumWrite",
    "family": "sink",
@@ -1538,26 +1443,26 @@
     "max": 2
    },
    "slots": [
-    "policy",
+    "contract",
     "reduced"
    ],
-   "params": "name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None, policy: str = \"auto\", reduced: Node | None = None",
+   "params": "name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None, contract: str = \"auto\", reduced: Node | None = None",
    "assigns": [
     "kind",
     "role",
     "name",
-    "policy",
+    "contract",
     "reduced"
    ],
    "dedup": [
     "tup",
     "f:role",
     "f:name",
-    "fx:policy:auto,plain"
+    "fx:contract:auto,plain"
    ],
    "state": [
     "+Sink",
-    "policy"
+    "contract"
    ],
    "edges": [
     "reduced?"
@@ -1567,7 +1472,7 @@
     "op:0",
     "opq:1",
     "ttype",
-    "@policy",
+    "@contract",
     "edge:reduced"
    ],
    "from_edges": true,
@@ -1586,91 +1491,18 @@
      ],
      [
       "check",
-      "not (policy in SCATTER_POLICIES or policy == 'keyed_auto')",
-      "accum_write {name!r}: policy {policy!r} is not one of {SCATTER_POLICIES}"
+      "not (contract in SCATTER_CONTRACTS or contract == 'keyed_auto')",
+      "accum_write {name!r}: contract {contract!r} is not one of {SCATTER_CONTRACTS}"
      ]
     ],
     "out": [
      "'accum_write'",
      "'accum_out'",
      "name",
-     "policy",
+     "contract",
      "reduced"
     ]
    }
-  },
-  {
-   "name": "ordered_accum_write",
-   "class": "OrderedAccumWrite",
-   "family": "sink",
-   "refines": "accum_write",
-   "operands": {
-    "min": 3,
-    "max": 3
-   },
-   "slots": [
-    "kept"
-   ],
-   "params": "name: str, value: Node, index: Node, key: Node, kept: tuple, ttype: TensorType | None = None",
-   "assigns": [
-    "kind",
-    "role",
-    "name",
-    "policy",
-    "reduced",
-    "kept"
-   ],
-   "dedup": [
-    "tup",
-    "f:role",
-    "f:name",
-    "fx:policy:auto,plain"
-   ],
-   "state": [
-    "+AccumWrite",
-    "kept:plain"
-   ],
-   "edges": [
-    "reduced?"
-   ],
-   "from": [
-    "@name",
-    "op:0",
-    "op:1",
-    "op:2",
-    "@kept:plain",
-    "ttype"
-   ],
-   "watch": "all",
-   "ctor": {
-    "steps": [
-     [
-      "let",
-      "tt",
-      "coalesce(ttype, value.ttype)"
-     ],
-     [
-      "node",
-      "tt",
-      "(value, index, key)"
-     ]
-    ],
-    "out": [
-     "'accum_write'",
-     "'accum_out'",
-     "name",
-     "'ordered'",
-     "None",
-     "tuple(kept)"
-    ]
-   },
-   "props": [
-    [
-     "key",
-     "op",
-     "2"
-    ]
-   ]
   },
   {
    "name": "reduce_samples",
@@ -1689,16 +1521,19 @@
     "op",
     "key",
     "count",
-    "policy",
+    "contract",
     "kept"
    ],
+   "feathers": [
+    "reduces_samples"
+   ],
    "wire_attr": "reduce",
-   "params": "op: str, value: Node, *, key: Node | None = None, count: Node | None = None, policy: str = \"auto\", kept: tuple = ()",
+   "params": "op: str, value: Node, *, key: Node | None = None, count: Node | None = None, contract: str = \"auto\", kept: tuple = ()",
    "assigns": [
     "op",
     "key",
     "count",
-    "policy",
+    "contract",
     "kept"
    ],
    "dedup": [
@@ -1707,7 +1542,7 @@
    ],
    "state": [
     "op",
-    "policy",
+    "contract",
     "kept:plain"
    ],
    "edges": [
@@ -1719,7 +1554,7 @@
     "op:0",
     "key=edge:key",
     "count=edge:count",
-    "policy=@policy",
+    "contract=@contract",
     "kept=@kept:plain"
    ],
    "from_edges": true,
@@ -1742,8 +1577,8 @@
      ],
      [
       "check",
-      "policy not in POLICIES",
-      "reduce over samples: policy {policy!r} is not one of {POLICIES}"
+      "contract not in CONTRACTS",
+      "reduce over samples: contract {contract!r} is not one of {CONTRACTS}"
      ],
      [
       "node",
@@ -1755,112 +1590,10 @@
      "op",
      "key",
      "count",
-     "policy",
+     "contract",
      "kept"
     ]
    }
-  },
-  {
-   "name": "block_sum",
-   "class": "BlockSum",
-   "family": "expr",
-   "refines": "reduce_samples",
-   "operands": {
-    "min": 1,
-    "max": 1
-   },
-   "result": [
-    "same_as",
-    0
-   ],
-   "slots": [],
-   "params": "op: str, value: Node, *, key: Node | None = None, count: Node | None = None, policy: str = \"auto\", kept: tuple = ()",
-   "assigns": [
-    "op",
-    "key",
-    "count",
-    "policy",
-    "kept"
-   ],
-   "dedup": [
-    "one",
-    "f:op"
-   ],
-   "state": [
-    "op",
-    "policy",
-    "kept:plain"
-   ],
-   "edges": [
-    "key?",
-    "count?"
-   ],
-   "from": [
-    "@op",
-    "op:0",
-    "key=edge:key",
-    "count=edge:count",
-    "policy=@policy",
-    "kept=@kept:plain"
-   ],
-   "from_edges": true,
-   "ctor": {
-    "steps": [
-     [
-      "check",
-      "op not in CELL_OPS",
-      "reduce over samples: op {op!r} is not one of {CELL_OPS}"
-     ],
-     [
-      "check",
-      "value.ttype.dtype not in ('f64', 'f32') or len(value.ttype.shape) > 2",
-      "reduce over samples: an f64/f32 scalar, vector or matrix is reduced, got {value.ttype!r}"
-     ],
-     [
-      "check",
-      "key is not None and op != 'sum'",
-      "reduce over some lane axes: op {op!r} is not built, only sum"
-     ],
-     [
-      "check",
-      "policy not in POLICIES",
-      "reduce over samples: policy {policy!r} is not one of {POLICIES}"
-     ],
-     [
-      "node",
-      "value.ttype",
-      "(value,)"
-     ]
-    ],
-    "out": [
-     "op",
-     "key",
-     "count",
-     "policy",
-     "kept"
-    ]
-   },
-   "methods": [
-    [
-     "stored(name, ttype=None)",
-     "(BlockSumWrite(name, self),)"
-    ],
-    [
-     "expanded(name)",
-     "ReduceSamples.stored(self, name)"
-    ],
-    [
-     "plain()",
-     "ReduceSamples(\"sum\", self.operands[0], policy=self.policy) if not self.kept else ReduceSamples(\"sum\", self.operands[0], key=self.key, count=self.count, policy=self.policy, kept=self.kept)"
-    ]
-   ],
-   "props": [
-    [
-     "factors",
-     "core",
-     "block_factors_of"
-    ]
-   ]
   },
   {
    "name": "sample_sum",
@@ -2051,30 +1784,23 @@
     "bool",
     []
    ],
-   "slots": [
-    "steps"
-   ],
-   "params": "name: str, value: Node, steps: int = 1",
+   "params": "name: str, value: Node",
    "assigns": [
     "kind",
     "role",
-    "name",
-    "steps"
+    "name"
    ],
    "dedup": [
     "tup",
     "f:role",
-    "f:name",
-    "f:steps"
+    "f:name"
    ],
    "state": [
-    "name",
-    "steps"
+    "name"
    ],
    "from": [
     "@name",
-    "op:0",
-    "@steps"
+    "op:0"
    ],
    "ctor": {
     "steps": [
@@ -2092,8 +1818,7 @@
     "out": [
      "'finish'",
      "'terminated'",
-     "name",
-     "auto_or_int(steps)"
+     "name"
     ]
    }
   },

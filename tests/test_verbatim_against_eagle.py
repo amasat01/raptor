@@ -28,11 +28,6 @@ def test_recognized_patterns_verbatim():
     assert manifest.BASE_PATTERNS | {blocks.GRAPH_BLOCK_PATTERN} == roles.RECOGNIZED_PATTERNS
 
 
-def test_manifest_formats_verbatim():
-    roles = import_eagle_module("roles")
-    assert manifest.MANIFEST_FORMATS == roles.MANIFEST_FORMATS
-
-
 def test_scalar_types_verbatim():
     eagle_dtypes = import_eagle_module("dtypes")
     assert dtypes.SCALAR_TYPES == eagle_dtypes.SCALAR_TYPES

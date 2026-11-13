@@ -50,7 +50,7 @@ def check_table(text: str) -> list:
     for n in rust:
         if n not in by: bad.append(f"{n}: in the core, not in the table")
     for name, fields, kind, _eq, home in t["record"]:
-        cls = getattr(__import__("importlib").import_module("raptor.ir." + (home or "types")), name, None)
+        cls = getattr(__import__("importlib").import_module("raptor." + home if home and "." in home else "raptor.ir." + (home or "types")), name, None)
         have = list(cls._fields) if kind == "namedtuple" and cls is not None else list(getattr(cls, "__dataclass_fields__", ()))
         if cls is None or [f.split("=")[0] for f in fields] != have: bad.append(f"record {name}: differs from {cls}")
     return bad

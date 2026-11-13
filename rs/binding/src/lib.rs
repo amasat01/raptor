@@ -50,7 +50,7 @@ enum Step { Let(usize, E), Check(E, Vec<Piece>), Node(E, E), Call(usize, Vec<E>)
 struct Prog { params: usize, nvars: usize, steps: Vec<Step>, out: Vec<E>, slots: Vec<String>, slot_objs: OnceLock<Vec<Py<PyAny>>> }
 struct Man { progs: Vec<Prog>, by_class: HashMap<String, usize>, named: Vec<Prog>, named_idx: HashMap<String, usize>, node_base: usize, const_names: Vec<String>, key_types: Vec<String> }
 static CONST_OBJS: OnceLock<Vec<Py<PyAny>>> = OnceLock::new();
-const BUILTINS: &[&str] = &["len", "isinstance", "tt", "width_of", "rem", "int", "tuple", "cat", "opt", "head", "first_ne_ttype", "first_not_node", "cut_in_loop", "coalesce", "orelse", "auto_or_int", "name_of", "bool", "trip", "first_mismatch", "first_not_instance", "carry_fault", "ttype_fault", "literal_fault"];
+const BUILTINS: &[&str] = &["len", "isinstance", "tt", "width_of", "rem", "int", "tuple", "cat", "opt", "head", "first_ne_ttype", "first_not_node", "coalesce", "orelse", "name_of", "bool", "trip", "first_mismatch", "first_not_instance", "carry_fault", "ttype_fault", "literal_fault"];
 const RESERVED: &[&str] = &["_cls", "_t", "_o"];
 const V_CLS: usize = 0; const V_T: usize = 1; const V_O: usize = 2;   // offsets after the parameters
 
@@ -286,8 +286,8 @@ fn cmp<'py>(py: Python<'py>, a: &E, op: Cmp, b: &E, env: &Env<'py>) -> PyResult<
 fn call<'py>(py: Python<'py>, n: usize, a: &[E], env: &Env<'py>) -> PyResult<Bound<'py, PyAny>> {
     use pyo3::types::PyBool;
     match n {
-        13 => { let x = eval(py, &a[0], env)?; return if x.is_none() { eval(py, &a[1], env) } else { Ok(x) } }   // coalesce (lazy)
-        14 => { let x = eval(py, &a[0], env)?; return if truthy(&x)? { Ok(x) } else { eval(py, &a[1], env) } } // orelse (lazy)
+        12 => { let x = eval(py, &a[0], env)?; return if x.is_none() { eval(py, &a[1], env) } else { Ok(x) } }   // coalesce (lazy)
+        13 => { let x = eval(py, &a[0], env)?; return if truthy(&x)? { Ok(x) } else { eval(py, &a[1], env) } } // orelse (lazy)
         _ => {}
     }
     let v = a.iter().map(|x| eval(py, x, env)).collect::<PyResult<Vec<_>>>()?;
@@ -306,22 +306,16 @@ fn call<'py>(py: Python<'py>, n: usize, a: &[E], env: &Env<'py>) -> PyResult<Bou
         9 => { let t: String = v[0].extract()?; s(py, t.split('_').next().unwrap_or(""))? }
         10 => { let first = v[0].get_item(0)?.getattr("ttype")?; for b in v[0].try_iter()?.skip(1) { let b = b?; if b.getattr("ttype")?.ne(&first)? { return Ok(b) } } py.None().into_bound(py) }
         11 => { let node = reg().node.bind(py); for o in v[0].try_iter()? { let o = o?; if !o.is_instance(node)? { return Ok(o) } } py.None().into_bound(py) }
-        12 => { let mut cut = false;
-            for o in v[0].try_iter()? { if o?.getattr(intern!(py, "kind"))?.eq(intern!(py, "reduce")).unwrap_or(false) { cut = true; break } }
-            let mut hit = false;
-            if cut { for c in v[0].try_iter()? { let k = c?.getattr(intern!(py, "kind")); if k.ok().and_then(|k| k.extract::<String>().ok().map(|k| k.starts_with("loop"))).unwrap_or(false) { hit = true } } }
-            boolv(hit) }
-        15 => if v[0].eq("auto")? { v[0].clone() } else { py.get_type::<pyo3::types::PyInt>().call1((&v[0],))? },
-        16 => v[0].getattr("__name__")?,
-        17 => boolv(v[0].is_truthy()?),
-        18 => { let (a, b, c): (i64, i64, i64) = (v[0].extract()?, v[1].extract()?, v[2].extract()?);
+        14 => v[0].getattr("__name__")?,
+        15 => boolv(v[0].is_truthy()?),
+        16 => { let (a, b, c): (i64, i64, i64) = (v[0].extract()?, v[1].extract()?, v[2].extract()?);
             let n = if c > 0 { if b > a { (b - a + c - 1) / c } else { 0 } } else if c < 0 { if a > b { (a - b - c - 1) / (-c) } else { 0 } } else { 0 };
             n.into_pyobject(py)?.into_any() }
-        19 => loops::first_mismatch(&v[0], &v[1])?.into_pyobject(py)?.into_any(),
-        20 => { let mut at: i64 = -1; for (j, x) in v[0].try_iter()?.enumerate() { if !x?.is_instance(&v[1])? { at = j as i64; break } } at.into_pyobject(py)?.into_any() }
-        21 => loops::carry_fault(py, &v[0], &v[1], &v[2])?,
-        22 => match ttype_fault(py, &v[0])? { Some(m) => s(py, &m)?, None => py.None().into_bound(py) },
-        23 => match literal_fault(&v[0]) { Some(m) => s(py, &m)?, None => py.None().into_bound(py) },
+        17 => loops::first_mismatch(&v[0], &v[1])?.into_pyobject(py)?.into_any(),
+        18 => { let mut at: i64 = -1; for (j, x) in v[0].try_iter()?.enumerate() { if !x?.is_instance(&v[1])? { at = j as i64; break } } at.into_pyobject(py)?.into_any() }
+        19 => loops::carry_fault(py, &v[0], &v[1], &v[2])?,
+        20 => match ttype_fault(py, &v[0])? { Some(m) => s(py, &m)?, None => py.None().into_bound(py) },
+        21 => match literal_fault(&v[0]) { Some(m) => s(py, &m)?, None => py.None().into_bound(py) },
         _ => return Err(he("manifest: unknown function".into())),
     })
 }
@@ -485,19 +479,20 @@ fn refuse(m: String) -> PyErr {
 /// `which` names one validator of raptor.schema.manifest (or "document" for raptor.schema.validate_manifest); raises ValueError / TypeError
 /// with the text the Python validators gave. Returns the schema version for "schema_version", else None.
 #[pyfunction]
-#[pyo3(signature = (which, meta, name="<document>", version=1, legacy=false))]
-fn schema_check(which: &str, meta: &Bound<'_, PyAny>, name: &str, version: i64, legacy: bool) -> PyResult<Option<i64>> {
+#[pyo3(signature = (which, meta, name="<document>", version=1, legacy=false, vocab=None))]
+fn schema_check(which: &str, meta: &Bound<'_, PyAny>, name: &str, version: i64, legacy: bool, vocab: Option<&Bound<'_, PyAny>>) -> PyResult<Option<i64>> {
     use rcore::manifest as m;
     let j = to_json(meta)?;
     let nm = rcore::keytext::py_str(name);
+    let voc = match vocab { Some(v) if !v.is_none() => m::Vocab::from_json(&to_json(v)?).map_err(refuse)?, _ => m::Vocab::default() };
     let r = match which {
-        "document" => m::validate(&j),
+        "document" => m::validate(&j, &voc),
         "block_descriptor" => m::validate_block_descriptor(&j, name),
         "schema_version" => return m::check_schema_version(&j, &nm, legacy).map(Some).map_err(refuse),
         "execution_axis" => m::check_execution_axis(&j, version, &nm),
         "lane_space" => m::check_lane_space(&j, &nm),
-        "launch_fields" => m::check_launch_fields(&j, &nm),
-        "team_fields" => m::check_team_fields(&j, &nm),
+        "launch_fields" => m::check_launch_fields(&j, &nm, &voc),
+        "team_fields" => m::check_team_fields(&j, &nm, &voc),
         "index_planes" => m::check_index_planes(&j, &nm),
         _ => return Err(he(format!("schema_check: no validator {which}"))),
     };
@@ -698,7 +693,7 @@ fn digest(pre: &str, tail: &[u8]) -> String { rcore::digest(pre, tail) }
 #[pymodule(gil_used = false)]
 fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     macro_rules! f { ($($n:path),*) => { $( m.add_function(wrap_pyfunction!($n, m)?)?; )* } }
-    f!(canon::canonical, canon::body_nodes, canon::quantity_expand, canon::quantity_check, canon::companion, typing::result_type, typing::make, typing::promote_dtype, kindcheck::kind_check, kindcheck::kind_declare, primitive::rule_substitute, primitive::rule_prepare, rules::rule_modes, rules::block_shaped, rules::ordered_case, rules::expand_stores, rules::rule_reduce, rules::rule_factor, rules::rule_kinds, rules::rule_run, loopbuild::loop_boundary, loopbuild::loop_gated_reads, loopbuild::loop_check_placeholders, loopbuild::loop_classify, loopbuild::loop_addends, loopbuild::loop_refuse_nesting, index::index_form, rules::block_factors, rules::block_factors_of, rules::entrywise_op, loops::body_roots, loops::exit_form, loops::body_key_widths, canon::set_loop_carry, canon::merge_bindings, canon::infer_access, canon::dispatch_nodes, canon::dispatch_listing, canon::written, canon::digest_of, keytext, schema_check, load, construct, ctor_index, run_check, check_manifest, dedup_extra, setup, set_loop, manifest, facts, spec_dump, walk, digest);
+    f!(canon::canonical, canon::body_nodes, canon::quantity_expand, canon::quantity_check, typing::result_type, typing::make, typing::promote_dtype, kindcheck::kind_check, kindcheck::kind_declare, primitive::rule_substitute, primitive::rule_prepare, rules::rule_modes, rules::rule_reduce, rules::rule_factor, rules::rule_kinds, rules::rule_run, loopbuild::loop_boundary, loopbuild::loop_gated_reads, loopbuild::loop_check_placeholders, loopbuild::loop_classify, loopbuild::loop_addends, loopbuild::loop_refuse_nesting, index::index_form, rules::entrywise_op, loops::body_roots, loops::exit_form, loops::body_key_widths, canon::set_loop_carry, canon::merge_bindings, canon::infer_access, canon::dispatch_nodes, canon::dispatch_listing, canon::written, canon::digest_of, keytext, schema_check, load, construct, ctor_index, run_check, check_manifest, dedup_extra, setup, set_loop, manifest, facts, spec_dump, walk, digest);
     Ok(())
 }
 

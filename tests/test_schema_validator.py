@@ -8,12 +8,17 @@ from raptor.schema import validate_manifest, manifest
 CASES = [json.loads(l) for l in (Path(__file__).parent / "data" / "schema_validator_cases.jsonl").read_text().splitlines()]
 
 
+#: The vocabulary the recorded cases were taken under: what a caller states for the launch and team fields.
+VOCAB = {"team_grids": {"lanes": {}, "keys": {"keyed": "record"}, "chunks": {"of": "plane", "status": "plane"}, "targets": {"of": "plane"}},
+         "default_grid": "lanes", "team_dtypes": ["int32", "real"], "local_sources": ["ptxas", "ptx"]}
+
+
 def test_recorded_cases():
     assert len(CASES) > 100
     bad = []
     for c in CASES:
         try:
-            validate_manifest(json.loads(c["json"])); err = None
+            validate_manifest(json.loads(c["json"]), VOCAB); err = None
         except Exception as e:
             err = f"{type(e).__name__}: {e}"
         if err != c["err"]:

@@ -5,7 +5,7 @@
 
 Everything here is a function over a :class:`Registry` that the caller holds and passes in (no module-level table of kinds). A
 declaration is plain data (JSON-shaped); :func:`declare` validates it and has the registry build ONE class for the kind, the
-Python presentation of the declaration (a node holds its declaration; a pass asks :func:`is_a` and :func:`trait`)."""
+Python presentation of the declaration (a node holds its declaration; a pass asks :func:`is_a` and :func:`has_feather`)."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from types import MappingProxyType
 from typing import Any
 
 from raptor import _core
-from .nodes import KIND_TRAITS, Assign, At, Node, Sink, WideWrite, plain_in, plain_out
+from .nodes import Assign, At, Node, Sink, WideWrite, plain_in, plain_out
 from ..errors import RaptorError
 
 #: The core kinds a declared kind may refine: name -> (family, class, role of a sink, wire kind).
@@ -27,7 +27,6 @@ def _core_kinds() -> MappingProxyType:
 
 
 CORE = _core_kinds()
-TRAITS = KIND_TRAITS
 
 
 class Registry:
@@ -54,7 +53,7 @@ class KindDecl:
     fields: tuple            # ((name, type, default, required), ...)
     result: tuple
     identity: tuple | None
-    traits: tuple            # ((name, bool), ...)
+    feathers: tuple          # the feathers the row states itself, sorted (a refining kind inherits the rest by class)
     spelling: tuple | None   # (dialect, name, args)
     diff: str
     no_writer: bool = False
@@ -98,7 +97,7 @@ def _build_class(reg: Registry, decl: KindDecl, root: str):
     own = tuple(f[0] for f in decl.fields)
     ns: dict = {"__slots__": own, "decl": decl, "decl_root": root, "__module__": __name__,
                 "decl_chain": (decl.name, *getattr(base, "decl_chain", ())),
-                **{t: v for t, v in decl.traits}}
+                "feathers": frozenset(base.feathers) | frozenset(decl.feathers)}
     if root == "node":
         ns["kind"] = decl.wire
     if decl.identity is not None:
@@ -130,6 +129,8 @@ def _make(cls, ttype, operands, **fields):
     obj = object.__new__(cls)
     if cls.decl_root == "sink":
         Sink.__init__(obj, d.wire, fields.get("role", core_role), fields["name"], operands[0], operands[1] if len(operands) > 1 else None, ttype)
+        if len(operands) > 2:        # a declared sink may state operands beyond the value and the index (the key of an ordered accumulate)
+            object.__setattr__(obj, "operands", tuple(operands))     # still inside the builder: the node is not yet visible
     elif cls.decl_root == "at":
         At.__init__(obj, operands[0], operands[1], ttype)
         object.__setattr__(obj, "kind", d.wire)   # still inside the builder: the declared wire replaces At's, before the node escapes
@@ -169,7 +170,4 @@ def is_a(node: Any, name: str) -> bool:
     return name in CORE and isinstance(node, CORE[name][1])
 
 
-def trait(node: Any, name: str) -> bool:
-    if name not in TRAITS:
-        raise RaptorError(f"unknown trait {name!r}")
-    return bool(getattr(node, name, False))
+from .nodes import has_feather as has_feather  # noqa: E402,F401  (the one question a reader asks raptor)

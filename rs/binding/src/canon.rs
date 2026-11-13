@@ -59,14 +59,14 @@ fn with_loop_bodies<'py>(order: &[Bound<'py, PyAny>], out: &mut Vec<Bound<'py, P
     }
     Ok(())
 }
-fn step_word<'py>(count: &Bound<'py, PyAny>) -> PyResult<Option<usize>> {
+fn step_word<'py>(count: &Bound<'py, PyAny>, exempt: &[String]) -> PyResult<Option<usize>> {
     if count.is_none() { return Ok(None) }
     let (mut stack, mut seen) = (vec![count.clone()], HashSet::new());
     while let Some(n) = stack.pop() {
         if !seen.insert(n.as_ptr() as usize) { continue }
         if is_a(&n, "At")? {
             let plane = n.getattr("plane")?;
-            if st(&plane, "role")? == "lookup" && st(&plane, "name")? == str_const("FUSED_STEPS_PLANE")
+            if st(&plane, "role")? == "lookup" && exempt.contains(&st(&plane, "name")?)
                 && is_a(&n.getattr("index")?, "Const")? { return Ok(Some(n.as_ptr() as usize)) }
         }
         for c in n.getattr("operands")?.try_iter()? { stack.push(c?) }
@@ -83,11 +83,11 @@ fn rank(s: &str) -> usize { RANK.iter().position(|x| *x == s).unwrap_or(0) }
 
 /// The access class of a canonical node order, loop bodies descended into (see raptor/ir/access.py: the same rules).
 #[pyfunction]
-pub fn infer_access(order: Vec<Bound<'_, PyAny>>) -> PyResult<&'static str> {
+pub fn infer_access(order: Vec<Bound<'_, PyAny>>, exempt: Vec<String>) -> PyResult<&'static str> {
     let mut all = vec![];
     with_loop_bodies(&order, &mut all)?;
     let mut seam = HashSet::new();
-    for n in &all { if is_loop(n)? { if let Some(w) = step_word(&n.getattr("count")?)? { seam.insert(w); } } }
+    for n in &all { if is_loop(n)? { if let Some(w) = step_word(&n.getattr("count")?, &exempt)? { seam.insert(w); } } }
     let mut cls = 0usize;
     for n in &all {
         if seam.contains(&(n.as_ptr() as usize)) || param_cell(n)? { continue }
@@ -193,12 +193,6 @@ pub fn quantity_expand<'py>(q: &Bound<'py, PyAny>, slot_c: &Bound<'py, PyAny>, t
     }
     Ok(out)
 }
-/// The compensation plane's slot of a sum: the sink's role and type under `<name><suffix>`.
-#[pyfunction]
-pub fn companion<'py>(sink: &Bound<'py, PyAny>, slot_c: &Bound<'py, PyAny>, suffix: &str) -> PyResult<Bound<'py, PyAny>> {
-    slot_c.call1((sink.getattr("role")?, format!("{}{suffix}", st(sink, "name")?), sink.getattr("ttype")?))
-}
-
 /// The Dispatch nodes of a canonical order: the top-level ones, then those inside lowered loop bodies (first-in first-out).
 #[pyfunction]
 pub fn dispatch_nodes<'py>(order: Vec<Bound<'py, PyAny>>) -> PyResult<Vec<Bound<'py, PyAny>>> {
@@ -213,15 +207,15 @@ pub fn dispatch_nodes<'py>(order: Vec<Bound<'py, PyAny>>) -> PyResult<Vec<Bound<
     }
     Ok(top)
 }
-/// Per Dispatch node (in `dispatch_nodes` order): (name, K, policy, selector reads, static selector).
+/// Per Dispatch node (in `dispatch_nodes` order): (name, K, selector reads, static selector).
 #[pyfunction]
-pub fn dispatch_listing(order: Vec<Bound<'_, PyAny>>) -> PyResult<Vec<(String, i64, String, Vec<(String, String)>, bool)>> {
+pub fn dispatch_listing(order: Vec<Bound<'_, PyAny>>) -> PyResult<Vec<(String, i64, Vec<(String, String)>, bool)>> {
     let written = written_names(&order)?;
     let mut out = vec![];
     for (i, n) in dispatch_nodes(order)?.iter().enumerate() {
         let reads = selector_reads(n)?;
         let stat = !reads.iter().any(|(_, nm)| written.contains(nm));
-        out.push((format!("dispatch{i}"), n.getattr("K")?.extract()?, st(n, "policy")?, reads, stat));
+        out.push((format!("dispatch{i}"), n.getattr("K")?.extract()?, reads, stat));
     }
     Ok(out)
 }
@@ -265,13 +259,13 @@ fn cls<'py>(name: &str, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
 
 /// The ONE traversal and everything derived from it (raptor/ir/walk.py's `canonical`, whole): the sink-set check, the finish statement, the total
 /// merge of the bindings, declared slots, compensation planes, the positional dispatch names, the role order with the quantity expansion, the
-/// spans, the access class (floored by `force`), the digest. `env` = (Slot, QuantitySpan, TensorType, FINISHED_TTYPE, NAMESPACE_SEP, SAMPLE_SUM_COMP). Returns the fields of a Walk.
+/// spans, the access class (floored by `force`), the digest. `env` = (Slot, QuantitySpan, TensorType, NAMESPACE_SEP). Returns the fields of a Walk.
 #[pyfunction]
-#[pyo3(signature = (sinks, declared, force, env))]
-pub fn canonical<'py>(py: Python<'py>, sinks: Vec<Bound<'py, PyAny>>, declared: Vec<Bound<'py, PyAny>>, force: Option<String>, env: Bound<'py, PyTuple>)
+#[pyo3(signature = (sinks, declared, force, env, exempt))]
+pub fn canonical<'py>(py: Python<'py>, sinks: Vec<Bound<'py, PyAny>>, declared: Vec<Bound<'py, PyAny>>, force: Option<String>, env: Bound<'py, PyTuple>, exempt: Vec<String>)
     -> PyResult<Bound<'py, PyTuple>> {
-    let (slot_c, span_c, ttype_c, fin_tt) = (env.get_item(0)?, env.get_item(1)?, env.get_item(2)?, env.get_item(3)?);
-    let (sep, comp_suffix): (String, String) = (env.get_item(4)?.extract()?, env.get_item(5)?.extract()?);
+    let (slot_c, span_c, ttype_c) = (env.get_item(0)?, env.get_item(1)?, env.get_item(2)?);
+    let sep: String = env.get_item(3)?.extract()?;
     if sinks.is_empty() { return Err(he("canonical(): the sink set is empty — the sinks are the walk's root set".into())) }
     for s in &sinks {
         if is_loop(s)? {
@@ -289,19 +283,21 @@ pub fn canonical<'py>(py: Python<'py>, sinks: Vec<Bound<'py, PyAny>>, declared: 
         let names: Vec<String> = finishes.iter().map(|f| f.getattr("name").map(|n| rep(&n)).unwrap_or_default()).collect();
         return Err(he(format!("canonical(): {} finish statements ([{}]); a kernel finishes its sample through ONE mask", finishes.len(), names.join(", "))))
     }
-    let finish: Bound<'py, PyAny> = match finishes.first() { Some(f) => tup(py, vec![f.getattr("name")?, f.getattr("steps")?])?.into_any(), None => py.None().into_bound(py) };
+    let finish: Bound<'py, PyAny> = match finishes.first() { Some(f) => f.getattr("name")?, None => py.None().into_bound(py) };
     let mut declared = declared;
-    if !finishes.is_empty() { declared.push(slot_c.call1(("lookup", str_const("FINISHED_PLANE"), &fin_tt))?) }
 
     let (order, position, merges, pre, watched, leaf_nodes) = walk(py, sinks.clone())?;
     let _ = position;
     let merges: Vec<(Bound<'py, PyAny>, Bound<'py, PyAny>)> = merges.iter().map(|m| m.extract()).collect::<PyResult<_>>()?;
     let bindings = merge_bindings(py, merges)?;
     let leaf_cls = cls("Leaf", py)?;
+    let sink_roles = const_of("SINK_ROLES").expect("SINK_ROLES in the manifest");
+    let mut declared_sinks: Vec<((String, String), Bound<'py, PyAny>)> = vec![];
     for slot in &declared {
         let (role, name) = (st(slot, "role")?, st(slot, "name")?);
         let key = (role.clone(), name.clone());
         match bindings.get_item(&key)? {
+            None if sink_roles.contains(&role.as_str()) => declared_sinks.push((key, slot.clone())),
             None => { let kind = if role == "terminated" { "terminated" } else { "vocab_read" };
                       bindings.set_item(&key, leaf_cls.call1((kind, &role, &name, slot.getattr("ttype")?))?)? }
             Some(held) => if held.getattr("ttype")?.ne(slot.getattr("ttype")?)? {
@@ -311,30 +307,8 @@ pub fn canonical<'py>(py: Python<'py>, sinks: Vec<Bound<'py, PyAny>>, declared: 
             }
         }
     }
-    for sink in &sinks {
-        if is_a(sink, "SampleSum")? && st(sink, "op")? == "sum" {
-            let comp = companion(sink, &slot_c, &comp_suffix)?;
-            let key = (st(&comp, "role")?, st(&comp, "name")?);
-            if bindings.contains(&key)? {
-                return Err(he(format!("sample_sum {}: its compensation plane {} collides with a plane of the same name",
-                    rep(&sink.getattr("name")?), rep(&comp.getattr("name")?))))
-            }
-            let kw = PyDict::new(py); kw.set_item("ttype", comp.getattr("ttype")?)?;
-            let node = cls("Sink", py)?.call((sink.getattr("kind")?, &key.0, &key.1, sink.getattr("value")?), Some(&kw))?;
-            bindings.set_item(&key, node)?;
-        }
-    }
     let watched_v: Vec<Bound<'py, PyAny>> = watched.iter().collect();
     let listing = dispatch_listing(watched_v.clone())?;
-    for (dname, _, policy, _, _) in &listing {
-        if policy == "auto" {
-            let name = format!("{dname}_mix");
-            let key = ("lookup".to_string(), name.clone());
-            if !bindings.contains(&key)? {
-                bindings.set_item(&key, leaf_cls.call1(("vocab_read", "lookup", &name, ttype_c.call1((PyTuple::empty(py), "uint32"))?))?)?;
-            }
-        }
-    }
 
     // the role order, with the all-or-nothing quantity expansion
     let mut reached: Vec<(String, Bound<'py, PyAny>)> = vec![];
@@ -363,6 +337,7 @@ pub fn canonical<'py>(py: Python<'py>, sinks: Vec<Bound<'py, PyAny>>, declared: 
             match at.get(&key) { Some(&p) => slots[p].1 = s, None => { at.insert(key.clone(), slots.len()); slots.push((key, s)) } }
         }
     }
+    for (key, slot) in declared_sinks { if !at.contains_key(&key) { at.insert(key.clone(), slots.len()); slots.push((key, slot)) } }
     for (k, node) in bindings.iter() {
         let key: (String, String) = k.extract()?;
         if !at.contains_key(&key) { at.insert(key.clone(), slots.len()); slots.push((key, node.getattr("binding")?)) }
@@ -413,11 +388,11 @@ pub fn canonical<'py>(py: Python<'py>, sinks: Vec<Bound<'py, PyAny>>, declared: 
         let names = tup(py, expanded.iter().map(|s| s.getattr("name")).collect::<PyResult<Vec<_>>>()?)?;
         quantities.set_item(prefix, span_c.call1((prefix, names, PyTuple::new(py, idx)?))?)?;
     }
-    let mut acc = infer_access(watched_v.clone())?;
+    let mut acc = infer_access(watched_v.clone(), exempt)?;
     if let Some(f) = &force { if rank(f) > rank(acc) { acc = RANK[rank(f)] } }
     let digest = digest_of(&pre, ordered.clone(), acc, None, &quantities)?;
     let prior: Vec<String> = { let mut v = vec![]; for n in leaf_nodes.iter() { if is_a(&n, "Leaf")? && st(&n, "kind")? == "prior_read" { v.push(st(&n, "name")?) } } v };
-    let listing_py: Vec<Bound<'py, PyAny>> = listing.into_iter().map(|(a, b, c, d, e)| Ok((a, b, c, d, e).into_pyobject(py)?.into_any())).collect::<PyResult<_>>()?;
+    let listing_py: Vec<Bound<'py, PyAny>> = listing.into_iter().map(|(a, b, c, d)| Ok((a, b, c, d).into_pyobject(py)?.into_any())).collect::<PyResult<_>>()?;
     Ok(PyTuple::new(py, [order.into_any(), tup(py, ordered)?.into_any(), arg_spec.to_tuple().into_any(), slot_of.into_any(), slot_types.into_any(),
         acc.into_pyobject(py)?.into_any(), quantities.into_any(), digest.into_pyobject(py)?.into_any(), tup(py, listing_py)?.into_any(),
         PyList::new(py, prior)?.into_any(), finish])?)

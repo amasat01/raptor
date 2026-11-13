@@ -1,4 +1,4 @@
-"""The kinds builder (declare, make), the rule registry (register, instantiate, refusals) and the block predicates, in the Rust core, against
+"""The kinds builder (declare, make), the rule registry (register, instantiate, refusals) in the Rust core, against
 recorded verdicts and refusal texts: one case per distinct (kind of case, outcome). The recorded outcomes were compared equal to the Python
 they replaced, over a larger grid, when the port landed."""
 import json
@@ -14,7 +14,7 @@ def _load(name):
     return json.loads((DATA / f"{name}_cases.json").read_text())
 
 
-KINDS, PRIM, BLOCK = _load("kinds"), _load("primitive"), _load("block")
+KINDS, PRIM = _load("kinds"), _load("primitive")
 
 
 def test_declare_cases():
@@ -35,12 +35,6 @@ def test_rule_registry_cases():
     assert not bad, bad[:3]
 
 
-def test_block_predicates():
-    assert len(BLOCK) >= 2
-    bad = [(c["payload"], got, c["want"]) for c in BLOCK if (got := C.run_block(c["payload"], c["policy"])) != c["want"]]
-    assert not bad, bad[:3]
-
-
 def test_reduce_rule_refuses_all_but_sum():
     from raptor.ir.nodes import Leaf, ReduceSamples
     from raptor.ir.types import TensorType
@@ -53,10 +47,9 @@ def test_reduce_rule_refuses_all_but_sum():
         rule.vjp(ReduceSamples("max", x), x)
 
 
-def test_expand_stores_and_modes():
+def test_rule_modes():
     from raptor import _core
     from raptor.rules.core import RULES
-    assert _core.expand_stores(iter(())) == ()
     modes = dict(_core.rule_modes())
     assert modes["at"] == modes["dispatch"] == "walker" and modes["lt"] == "zero"
     assert RULES[("at", None)].mode == "walker" and RULES[("floor", None)].mode == "zero"

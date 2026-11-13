@@ -4,7 +4,7 @@
 """The dependency-free type tier.
 
 Small, frozen dataclasses describing HAWK's tensor-typed vocabulary —
-the records a policy core (a downstream routing/dispatch layer) needs
+the records a routing core (a downstream routing/dispatch layer) needs
 to describe its own kernel shapes without paying for HAWK's
 kernel-authoring machinery. This module is importable at near-zero
 cost: importing ``hawk.types`` pulls in no other ``hawk`` module, so a
@@ -14,8 +14,6 @@ downstream consumer avoids paying for
 Nothing here performs validation, tracing or codegen — types only.
 ``TensorType``/``Wire`` are the static slice of the vocabulary read off
 a traced/emitted IR; ``Slot`` is one entry of ``Walk.leaves``.
-:class:`LaneMeta` lives here rather than in the emitter so a policy core
-composing lanes pays the cheap import, never the codegen one.
 """
 
 from __future__ import annotations
@@ -42,7 +40,7 @@ PER_SAMPLE_ROLES = ("per_sample", "vec_in", "mat_in", "terminated", "mutable", "
 from .. import _core
 from . import _gen
 
-# TensorType, Wire, Slot, LaneMeta: frozen dataclasses generated from the one declaration table.
+# TensorType, Wire, Slot: frozen dataclasses generated from the one declaration table.
 globals().update(_gen.records(_gen.parse(_core.manifest()), __name__))
 
 _INDEX = TensorType((), "i32")

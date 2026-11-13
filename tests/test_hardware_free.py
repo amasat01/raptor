@@ -24,8 +24,9 @@ _MANIFEST = _PKG / "raptor" / "ir" / "core.json"
 
 #: Hardware as a word of a name, a comment or a string: a vendor, an ISA family, a device class, a cache level or size word.
 _NAMES = re.compile(
-    r"(?<![A-Za-z0-9])(?:cuda|nvidia|nvrtc|warps?|smem|avx[0-9]*|neon|sse[0-9]*|simd|xeon|gpus?|p2000|l1d|l[123][ _-]cache|cachelines?|"
-    r"sm_[0-9]+|shared[ _-]memory|cache[ _-](?:line|size|bytes))(?![A-Za-z0-9])", re.IGNORECASE)
+    r"(?<![A-Za-z0-9])(?:cuda|nvidia|nvrtc|ptx|cubin|fatbin|warps?|smem|avx[0-9]*|neon|sse[0-9]*|simd|xeon|gpus?|p2000|l1d|l[123][ _-]cache|cachelines?|"
+    r"sm_[0-9]+|shared[ _-]memory|cache[ _-](?:line|size|bytes)|"
+    r"lanes?|threads?|teams?|launch(?:es)?|atomics?|tiles?)(?![A-Za-z0-9])", re.IGNORECASE)
 #: Words that make an UPPER_CASE integer constant a machine fact.
 _MACHINE = {"warp", "bank", "banks", "lane", "lanes", "l1", "l2", "l3", "tile", "tiles", "width", "chunk", "chunks", "cache",
             "smem", "avx", "simd", "sse", "neon"}

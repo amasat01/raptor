@@ -2,8 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """The kernel IR: what a unit IS and how to read it. L0 math core (typed expressions, loops, selects, op kinds with
-typing), L1 kernel model (sample space, planes, sinks, cross-sample reads and reductions, the block-shaped keyed
-sum), the node schema, the generic rebuild and THE canonical walk. Nothing here rewrites a unit, names a dialect or a
+typing), L1 kernel model (sample space, planes, sinks, cross-sample reads and reductions), the node schema, the generic rebuild and THE canonical walk. Nothing here rewrites a unit, names a dialect or a
 backend, or imports anything but the standard library and this package; form dialects live in their own packages and
 plug in through their host's registry.
 
@@ -18,9 +17,6 @@ from .types import TensorType as TensorType
 from .types import Wire as Wire
 from .access import Access as Access
 from .._core import keytext as key_text  # the key-text rule (docs/MANIFEST.md section 10), for a class that states its own text
-from .block import BlockSum as BlockSum
-from .block import BlockSumWrite as BlockSumWrite
-from .block import factors as factors
 from .access import infer
 from .compound import Quantity as Quantity
 from .compound import QuantitySpan as QuantitySpan
@@ -36,11 +32,10 @@ from .loops import LoopClass as LoopClass
 from .loops import build_loop as build_loop
 from .loops import classify_loop as classify_loop
 from .nodes import DISPATCH_KIND as DISPATCH_KIND
-from .nodes import DISPATCH_POLICIES as DISPATCH_POLICIES
 from .nodes import AccumWrite, Assign, At, Const, Op
 from .nodes import Dispatch as Dispatch
 from ..errors import RaptorError as RaptorError
-from .nodes import LanePosition as LanePosition
+from .nodes import SamplePosition as SamplePosition
 from .nodes import PlaneExtent as PlaneExtent
 from .nodes import Leaf as Leaf
 from .nodes import Node as Node
@@ -55,12 +50,9 @@ from .nodes import WideWrite as WideWrite
 from .ops import OP_KINDS as OP_KINDS
 from .ops import make
 from .ops import result_type as result_type
-from .segment import OFFSETS_DTYPE as OFFSETS_DTYPE
-from .segment import OFFSETS_ROLE as OFFSETS_ROLE
 from .segment import SegmentInfo as SegmentInfo
 from .segment import ClassifyUnit as ClassifyUnit
 from .segment import SegmentUnit as SegmentUnit
-from .segment import classify_name as classify_name
 from .walk import DispatchInfo as DispatchInfo
 from .walk import Walk as Walk
 from .walk import canonical

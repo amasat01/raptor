@@ -101,11 +101,3 @@ def test_blocks_module_resolves_and_entry_point_runs_numpy_eagle_cupy_blocked():
         f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
 
-
-def test_old_pattern_name_is_refused_by_name():
-    import pytest
-
-    from raptor.schema import validate_manifest
-
-    with pytest.raises(ValueError, match="'neural_block' was renamed to 'graph_block' in 0.7.3"):
-        validate_manifest({"schema_version": 1, "pattern": "neural_block"})

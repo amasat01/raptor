@@ -72,7 +72,7 @@ pub fn body_digest(lp: &Bound<'_, PyAny>) -> PyResult<String> {
         roots.push(match key_of.get(&(r.as_ptr() as usize)) { Some(h) => V::Str(h.clone()),
             None => if is_a(&r, "LoopIndex")? || is_a(&r, "LoopCarry")? { V::Str(key_of_child(&r, &mut key_of)?) } else { V::None } });
     }
-    let mut data = b"raptor.ir.loop/2\n".to_vec();
+    let mut data = b"raptor.ir.loop/3\n".to_vec();
     for n in &body { data.extend_from_slice(key_of[&(n.as_ptr() as usize)].as_bytes()); data.push(b'\n') }
     data.extend_from_slice(format!("roots|{}\n", keytext::text(&V::List(roots))).as_bytes());
     Ok(rcore::sha256::hex(&data)[..32].to_string())

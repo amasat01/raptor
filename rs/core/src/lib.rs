@@ -140,7 +140,7 @@ pub fn walk_full(recs: &[Rec], roots: &[u32]) -> Result<WalkOut, String> {
 
 pub fn digest(pre: &str, tail: &[u8]) -> String {
     let mut b = Vec::with_capacity(pre.len() + tail.len() + 16);
-    b.extend_from_slice(b"raptor.ir.walk/1\n");
+    b.extend_from_slice(b"raptor.ir.walk/2\n");
     b.extend_from_slice(pre.as_bytes());
     b.extend_from_slice(tail);
     sha256::hex(&b)

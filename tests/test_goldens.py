@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _eagle_helpers import eagle_root  # noqa: E402
 
 from raptor.schema import validate_manifest  # noqa: E402
+from test_schema_validator import VOCAB  # noqa: E402  (the vocabulary the goldens were written under: a caller states it)
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 GOLDENS = REPO_ROOT / "goldens"
@@ -56,7 +57,7 @@ def test_golden_passes_validate_manifest(path):
         "fail loud here, never silently skip"
     )
     doc = json.loads(path.read_text())
-    validate_manifest(doc)  # must not raise
+    validate_manifest(doc, VOCAB)  # must not raise
 
 
 def _md5(path: Path) -> str:

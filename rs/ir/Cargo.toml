@@ -1,0 +1,11 @@
+[package]
+name = "raptor_ir"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
+rcore = { path = "../core" }

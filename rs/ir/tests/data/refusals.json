@@ -1,0 +1,1326 @@
+{
+ "pool": [
+  {
+   "class": "Leaf",
+   "dtype": "f64",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))",
+   "name": "x"
+  },
+  {
+   "class": "Leaf",
+   "dtype": "f64",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('kind', 'vocab_read'), ('role', 'mutable'), ('name', 'm'), ('quantity', None), ('wire_index', 0), ('sorted', False))",
+   "name": "m"
+  },
+  {
+   "class": "Const",
+   "dtype": "f64",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('literal', 1.0),)",
+   "name": "c1"
+  },
+  {
+   "class": "Const",
+   "dtype": "i32",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('literal', 0),)",
+   "name": "ci"
+  },
+  {
+   "class": "Const",
+   "dtype": "bool",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('literal', True),)",
+   "name": "cb"
+  },
+  {
+   "class": "Const",
+   "dtype": "f64",
+   "shape": [
+    3
+   ],
+   "tag": null,
+   "ops": [],
+   "fields": "(('literal', 0.0),)",
+   "name": "v3"
+  },
+  {
+   "class": "Const",
+   "dtype": "f64",
+   "shape": [
+    1,
+    1,
+    1
+   ],
+   "tag": null,
+   "ops": [],
+   "fields": "(('literal', 0.0),)",
+   "name": "m3"
+  },
+  {
+   "class": "LoopIndex",
+   "dtype": "i32",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('depth', 0), ('name', 'i'), ('bounds', None))",
+   "name": "idx"
+  },
+  {
+   "class": "LoopCarry",
+   "dtype": "f64",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('depth', 0), ('slot', 0), ('name', 'c'))",
+   "name": "car"
+  },
+  {
+   "class": "LoopCarry",
+   "dtype": "f64",
+   "shape": [],
+   "tag": null,
+   "ops": [],
+   "fields": "(('depth', 0), ('slot', 1), ('name', 'c2'))",
+   "name": "car2"
+  },
+  {
+   "class": "LoopCarry",
+   "dtype": "f64",
+   "shape": [
+    1,
+    1,
+    1
+   ],
+   "tag": null,
+   "ops": [],
+   "fields": "(('depth', 0), ('slot', 0), ('name', 'c3'))",
+   "name": "car3"
+  },
+  {
+   "class": "Loop",
+   "dtype": "f64",
+   "shape": [],
+   "tag": null,
+   "ops": [
+    "c1"
+   ],
+   "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))",
+   "name": "L0"
+  }
+ ],
+ "cases": [
+  {
+   "group": "check",
+   "id": 1,
+   "kind": "check:node_base",
+   "check": "not isinstance(ttype, TensorType)",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: ttype must be a TensorType, got 1"
+   },
+   "raw": "Node: ttype must be a TensorType, got 1",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "status": "RX_BADARG",
+    "msg": "dtype is NULL",
+    "door": {
+     "class": "Node",
+     "dtype": null,
+     "shape": [],
+     "tag": null,
+     "ops": [],
+     "fields": "()"
+    }
+   }
+  },
+  {
+   "group": "check",
+   "id": 2,
+   "kind": "check:node_base",
+   "check": "ttype_fault(ttype) is not None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: TensorType.dtype 'f77' is not one of ('f64', 'f32', 'i32', 'i64', 'bool', 'int32', 'uint32')"
+   },
+   "raw": "Node: TensorType.dtype 'f77' is not one of ('f64', 'f32', 'i32', 'i64', 'bool', 'int32', 'uint32')",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "status": "RX_BADARG",
+    "msg": "unknown dtype",
+    "door": {
+     "class": "Node",
+     "dtype": "f77",
+     "shape": [],
+     "tag": null,
+     "ops": [],
+     "fields": "()"
+    }
+   }
+  },
+  {
+   "group": "check",
+   "id": 3,
+   "kind": "check:node_base",
+   "check": "bad is not None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: operand 1 is not a Node"
+   },
+   "raw": "Node: operand 1 is not a Node",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "status": "RX_REFUSED",
+    "msg": "operand handle 99 is not in this context",
+    "door": {
+     "class": "Node",
+     "dtype": "f64",
+     "shape": [],
+     "tag": null,
+     "ops": [
+      99
+     ],
+     "fields": "(('fields', '()'),)"
+    }
+   }
+  },
+  {
+   "group": "check",
+   "id": 4,
+   "kind": "check:refuse_factor_arms",
+   "check": "ttype.tag in FACTOR_TAGS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "select: the arms are lu factorisations, which are read through lu_solve/cho_solve and the field reads, never selected between; select between the results (the solves, the determinant, the eigenvalues) instead"
+   },
+   "raw": "select: the arms are lu factorisations, which are read through lu_solve/cho_solve and the field reads, never selected between; select between the results (the solves, the determinant, the eigenvalues) instead",
+   "expect": "a",
+   "bad": {
+    "class": "Select",
+    "dtype": "f64",
+    "shape": [],
+    "tag": "lu_factor",
+    "ops": [
+     "cb",
+     "x",
+     "x"
+    ],
+    "fields": "()"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 5,
+   "kind": "check:node_sink",
+   "check": "role not in SINK_ROLES",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'wide_out', 'accum_out')"
+   },
+   "raw": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'wide_out', 'accum_out')",
+   "expect": "a",
+   "bad": {
+    "class": "Sink",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'assign'), ('role', 'bogus'), ('name', 'y'))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 6,
+   "kind": "Leaf",
+   "check": "kind not in LEAF_KINDS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "leaf 'l': unknown leaf kind 'bogus', expected one of ('vocab_read', 'uniform', 'table_read', 'terminated', 'nsamples', 'prior_read')"
+   },
+   "raw": "leaf 'l': unknown leaf kind 'bogus', expected one of ('vocab_read', 'uniform', 'table_read', 'terminated', 'nsamples', 'prior_read')",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'bogus'), ('role', 'vec_in'), ('name', 'l'), ('quantity', None), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 7,
+   "kind": "Leaf",
+   "check": "role not in LEAF_ROLES",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "leaf 'l': unknown leaf role 'bogus', expected one of ('vec_in', 'mat_in', 'wide_in', 'per_sample', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')"
+   },
+   "raw": "leaf 'l': unknown leaf role 'bogus', expected one of ('vec_in', 'mat_in', 'wide_in', 'per_sample', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'bogus'), ('name', 'l'), ('quantity', None), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 8,
+   "kind": "Const",
+   "check": "literal_fault(literal) is not None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Const.literal: a list is not a literal (it can change after the node is built); use a tuple"
+   },
+   "raw": "Const.literal: a list is not a literal (it can change after the node is built); use a tuple",
+   "expect": "a",
+   "bad": {
+    "class": "Const",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('literal', [1]),)"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 9,
+   "kind": "Op",
+   "check": "literal_fault(literal) is not None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Op.literal: a list is not a literal (it can change after the node is built); use a tuple"
+   },
+   "raw": "Op.literal: a list is not a literal (it can change after the node is built); use a tuple",
+   "expect": "a",
+   "bad": {
+    "class": "Op",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x",
+     "x"
+    ],
+    "fields": "(('kind', 'add'), ('literal', [1]))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 10,
+   "kind": "Op",
+   "check": "kind in QUAT_OPS and _t.shape == (4,) and _t.tag != 'quaternion'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "op 'quat_mul' returns a 4-wide value typed TensorType(shape=(4,), dtype='f64', tag=None): a quaternion-producing op must carry tag='quaternion', because the tag participates in type identity and therefore in the walk's merge check"
+   },
+   "raw": "op 'quat_mul' returns a 4-wide value typed TensorType(shape=(4,), dtype='f64', tag=None): a quaternion-producing op must carry tag='quaternion', because the tag participates in type identity and therefore in the walk's merge check",
+   "expect": "a",
+   "bad": {
+    "class": "Op",
+    "dtype": "f64",
+    "shape": [
+     4
+    ],
+    "tag": null,
+    "ops": [
+     "x",
+     "x"
+    ],
+    "fields": "(('kind', 'quat_mul'), ('literal', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 11,
+   "kind": "At",
+   "check": "not (isinstance(plane, Leaf) and plane.role in AT_ROLES)",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'per_sample', 'vec_in', 'mat_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>"
+   },
+   "raw": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'per_sample', 'vec_in', 'mat_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>",
+   "expect": "b",
+   "bad": {
+    "class": "At",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "m",
+     "ci"
+    ],
+    "fields": "(('kind', 'at'), ('literal', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 12,
+   "kind": "Dispatch",
+   "check": "len(br) < 2",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "dispatch: at least 2 branches are required, got 1"
+   },
+   "raw": "dispatch: at least 2 branches are required, got 1",
+   "expect": "a",
+   "bad": {
+    "class": "Dispatch",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "ci",
+     "x"
+    ],
+    "fields": "()"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 13,
+   "kind": "Dispatch",
+   "check": "selector.ttype.shape != () or selector.ttype.dtype != 'i32'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "dispatch: kind must be a rank-0 i32 value, got TensorType(shape=(), dtype='f64', tag=None) \u2014 a compile-time constant is not a traced VALUE and"
+   },
+   "raw": "dispatch: kind must be a rank-0 i32 value, got TensorType(shape=(), dtype='f64', tag=None) \u2014 a compile-time constant is not a traced VALUE and",
+   "expect": "a",
+   "bad": {
+    "class": "Dispatch",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x",
+     "x",
+     "x"
+    ],
+    "fields": "()"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 14,
+   "kind": "Dispatch",
+   "check": "bad is not None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "dispatch: the branches disagree \u2014 TensorType(shape=(), dtype='f64', tag=None) vs TensorType(shape=(), dtype='i32', tag=None) (every branch shares ONE TensorType)"
+   },
+   "raw": "dispatch: the branches disagree \u2014 TensorType(shape=(), dtype='f64', tag=None) vs TensorType(shape=(), dtype='i32', tag=None) (every branch shares ONE TensorType)",
+   "expect": "a",
+   "bad": {
+    "class": "Dispatch",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "ci",
+     "x",
+     "ci"
+    ],
+    "fields": "()"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 15,
+   "kind": "AccumWrite",
+   "check": "not (contract in SCATTER_CONTRACTS or contract == 'keyed_auto')",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "accum_write 'o': contract 'bogus' is not one of ('auto', 'compensated', 'ordered', 'plain', 'or')"
+   },
+   "raw": "accum_write 'o': contract 'bogus' is not one of ('auto', 'compensated', 'ordered', 'plain', 'or')",
+   "expect": "a",
+   "bad": {
+    "class": "AccumWrite",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'accum_write'), ('role', 'accum_out'), ('name', 'o'), ('contract', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 16,
+   "kind": "ReduceSamples",
+   "check": "op not in CELL_OPS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "reduce over samples: op 'bogus' is not one of ('sum', 'max', 'min')"
+   },
+   "raw": "reduce over samples: op 'bogus' is not one of ('sum', 'max', 'min')",
+   "expect": "a",
+   "bad": {
+    "class": "ReduceSamples",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('op', 'bogus'), ('key', None), ('count', None), ('contract', 'auto'), ('kept', ()))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 17,
+   "kind": "ReduceSamples",
+   "check": "value.ttype.dtype not in ('f64', 'f32') or len(value.ttype.shape) > 2",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "reduce over samples: an f64/f32 scalar, vector or matrix is reduced, got TensorType(shape=(), dtype='i32', tag=None)"
+   },
+   "raw": "reduce over samples: an f64/f32 scalar, vector or matrix is reduced, got TensorType(shape=(), dtype='i32', tag=None)",
+   "expect": "a",
+   "bad": {
+    "class": "ReduceSamples",
+    "dtype": "i32",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "ci"
+    ],
+    "fields": "(('op', 'sum'), ('key', None), ('count', None), ('contract', 'auto'), ('kept', ()))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 18,
+   "kind": "ReduceSamples",
+   "check": "key is not None and op != 'sum'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "reduce over some lane axes: op 'max' is not built, only sum"
+   },
+   "raw": "reduce over some lane axes: op 'max' is not built, only sum",
+   "expect": "a",
+   "bad": {
+    "class": "ReduceSamples",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('op', 'max'), ('key', #ci), ('count', None), ('contract', 'auto'), ('kept', ()))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 19,
+   "kind": "ReduceSamples",
+   "check": "contract not in CONTRACTS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "reduce over samples: contract 'bogus' is not one of ('auto', 'compensated', 'ordered')"
+   },
+   "raw": "reduce over samples: contract 'bogus' is not one of ('auto', 'compensated', 'ordered')",
+   "expect": "a",
+   "bad": {
+    "class": "ReduceSamples",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('op', 'sum'), ('key', None), ('count', None), ('contract', 'bogus'), ('kept', ()))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 20,
+   "kind": "SampleSum",
+   "check": "op not in CELL_OPS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "sample_sum 's': op 'bogus' is not one of ('sum', 'max', 'min')"
+   },
+   "raw": "sample_sum 's': op 'bogus' is not one of ('sum', 'max', 'min')",
+   "expect": "a",
+   "bad": {
+    "class": "SampleSum",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'sample_sum'), ('role', 'accum_out'), ('name', 's'), ('cell', 's'), ('columns', 1), ('op', 'bogus'))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 21,
+   "kind": "SampleSum",
+   "check": "_t.shape or _t.dtype not in ('f64', 'f32')",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "sample_sum 's': sums a rank-0 f64/f32 value, got TensorType(shape=(3,), dtype='f64', tag=None)"
+   },
+   "raw": "sample_sum 's': sums a rank-0 f64/f32 value, got TensorType(shape=(3,), dtype='f64', tag=None)",
+   "expect": "a",
+   "bad": {
+    "class": "SampleSum",
+    "dtype": "f64",
+    "shape": [
+     3
+    ],
+    "tag": null,
+    "ops": [
+     "v3"
+    ],
+    "fields": "(('kind', 'sample_sum'), ('role', 'accum_out'), ('name', 's'), ('cell', 's'), ('columns', 1), ('op', 'sum'))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 22,
+   "kind": "TapeWrite",
+   "check": "len(_t.shape) != 1 or not vs or rem(_t.shape[0], w) != 0 or row.ttype != tt('i32')",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "tape_write 't': a TensorType(shape=(), dtype='f64', tag=None) plane takes whole rows of the 1 stored components at an i32 row"
+   },
+   "raw": "tape_write 't': a TensorType(shape=(), dtype='f64', tag=None) plane takes whole rows of the 1 stored components at an i32 row",
+   "expect": "a",
+   "bad": {
+    "class": "TapeWrite",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "ci",
+     "cb",
+     "x"
+    ],
+    "fields": "(('kind', 'tape_write'), ('role', 'out'), ('name', 't'), ('width', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 23,
+   "kind": "Finish",
+   "check": "value.ttype != _t",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "finish 'f': the condition is typed TensorType(shape=(), dtype='f64', tag=None); a sample finishes on a traced rank-0 bool"
+   },
+   "raw": "finish 'f': the condition is typed TensorType(shape=(), dtype='f64', tag=None); a sample finishes on a traced rank-0 bool",
+   "expect": "a",
+   "bad": {
+    "class": "Finish",
+    "dtype": "bool",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'finish'), ('role', 'terminated'), ('name', 'f'))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 24,
+   "kind": "Loop",
+   "check": "exit_cond is None and len(exit_values) > 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: exit values without an exit condition"
+   },
+   "raw": "Loop: exit values without an exit condition",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', (#c1,)), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 25,
+   "kind": "Loop",
+   "check": "exit_cond is not None and (exit_cond.ttype.shape != () or exit_cond.ttype.dtype != 'bool')",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: a `break` condition must be a rank-0 bool, got TensorType(shape=(), dtype='f64', tag=None)"
+   },
+   "raw": "Loop: a `break` condition must be a rank-0 bool, got TensorType(shape=(), dtype='f64', tag=None)",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', #x), ('exit_values', (#c1,)), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 26,
+   "kind": "Loop",
+   "check": "exit_cond is not None and len(exit_values) != len(carries)",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: 1 carried slot(s) but 0 value(s) at the `break`"
+   },
+   "raw": "Loop: 1 carried slot(s) but 0 value(s) at the `break`",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', #cb), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 27,
+   "kind": "Loop",
+   "check": "exit_cond is not None and not xj < 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: carried slot 0 ('c') is typed TensorType(shape=(), dtype='f64', tag=None) but its value at the `break` is typed TensorType(shape=(), dtype='i32', tag=None)"
+   },
+   "raw": "Loop: carried slot 0 ('c') is typed TensorType(shape=(), dtype='f64', tag=None) but its value at the `break` is typed TensorType(shape=(), dtype='i32', tag=None)",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', #cb), ('exit_values', (#ci,)), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 28,
+   "kind": "Loop",
+   "check": "dynamic is not None and dynamic != 'max' and dynamic != 'open'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: dynamic is None, 'max' or 'open', got 'bogus'"
+   },
+   "raw": "Loop: dynamic is None, 'max' or 'open', got 'bogus'",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1",
+     "ci"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', #ci), ('count_tail', False), ('dynamic', 'bogus'), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 29,
+   "kind": "Loop",
+   "check": "dynamic is not None and count is None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: a run-time trip count is carried as `count`"
+   },
+   "raw": "Loop: a run-time trip count is carried as `count`",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', 'max'), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 30,
+   "kind": "Loop",
+   "check": "count is not None and (count.ttype.shape != () or count.ttype.dtype != 'i32')",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: a runtime iteration count is a rank-0 i32, got TensorType(shape=(), dtype='f64', tag=None)"
+   },
+   "raw": "Loop: a runtime iteration count is a rank-0 i32, got TensorType(shape=(), dtype='f64', tag=None)",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1",
+     "x"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', #x), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 31,
+   "kind": "Loop",
+   "check": "not sj < 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)> is not a sink"
+   },
+   "raw": "Loop: <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)> is not a sink",
+   "expect": "b",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', (#x,)), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 32,
+   "kind": "Loop",
+   "check": "len(carries) == 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: a lowered `for` must carry at least one value \u2014 a body that assigns nothing the loop's consumers read computes nothing, and an empty loop is not a loop form"
+   },
+   "raw": "Loop: a lowered `for` must carry at least one value \u2014 a body that assigns nothing the loop's consumers read computes nothing, and an empty loop is not a loop form",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('index', #idx), ('carries', ()), ('nexts', ()), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 0), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 0))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 33,
+   "kind": "Loop",
+   "check": "len(carries) != len(inits) or len(inits) != len(nexts)",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: 2 carried slot(s) but 1 initial value(s) and 2 body result(s) \u2014 the three are one tuple read three ways"
+   },
+   "raw": "Loop: 2 carried slot(s) but 1 initial value(s) and 2 body result(s) \u2014 the three are one tuple read three ways",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car, #car2)), ('nexts', (#x, #x)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 2), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 34,
+   "kind": "Loop",
+   "check": "int(step) == 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: a `for` step of zero never terminates"
+   },
+   "raw": "Loop: a `for` step of zero never terminates",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 0), ('trip', 0), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 35,
+   "kind": "Loop",
+   "check": "fault is not None and fault[1] == 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: carried slot 0 ('c') is typed TensorType(shape=(), dtype='f64', tag=None) but its initial value is typed TensorType(shape=(), dtype='i32', tag=None). A carried value has ONE type for the whole loop \u2014 it is a single C++ local the body reassigns, so a type that changed between iterations could not be declared at all"
+   },
+   "raw": "Loop: carried slot 0 ('c') is typed TensorType(shape=(), dtype='f64', tag=None) but its initial value is typed TensorType(shape=(), dtype='i32', tag=None). A carried value has ONE type for the whole loop \u2014 it is a single C++ local the body reassigns, so a type that changed between iterations could not be declared at all",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "ci"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#x,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 36,
+   "kind": "Loop",
+   "check": "fault is not None and fault[1] == 1",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: carried slot 0 ('c') is typed TensorType(shape=(), dtype='f64', tag=None) but its body result is typed TensorType(shape=(), dtype='i32', tag=None). A carried value has ONE type for the whole loop \u2014 it is a single C++ local the body reassigns, so a type that changed between iterations could not be declared at all"
+   },
+   "raw": "Loop: carried slot 0 ('c') is typed TensorType(shape=(), dtype='f64', tag=None) but its body result is typed TensorType(shape=(), dtype='i32', tag=None). A carried value has ONE type for the whole loop \u2014 it is a single C++ local the body reassigns, so a type that changed between iterations could not be declared at all",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "c1"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car,)), ('nexts', (#ci,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 37,
+   "kind": "Loop",
+   "check": "fault is not None and fault[1] == 2",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Loop: carried slot 0 ('c3') is typed TensorType(shape=(1, 1, 1), dtype='f64', tag=None); a carried slot is one language value with static extents and the language declares none above rank 2"
+   },
+   "raw": "Loop: carried slot 0 ('c3') is typed TensorType(shape=(1, 1, 1), dtype='f64', tag=None); a carried slot is one language value with static extents and the language declares none above rank 2",
+   "expect": "a",
+   "bad": {
+    "class": "Loop",
+    "dtype": "f64",
+    "shape": [
+     1,
+     1,
+     1
+    ],
+    "tag": null,
+    "ops": [
+     "m3"
+    ],
+    "fields": "(('index', #idx), ('carries', (#car3,)), ('nexts', (#m3,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 38,
+   "kind": "LoopValue",
+   "check": "not isinstance(loop, Loop)",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "LoopValue: <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)> is not a Loop"
+   },
+   "raw": "LoopValue: <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)> is not a Loop",
+   "expect": "b",
+   "bad": {
+    "class": "LoopValue",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'loop_value'), ('literal', 0))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 39,
+   "kind": "LoopValue",
+   "check": "slot < 0 or not slot < loop.carry_count",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "LoopValue: slot 5 is outside the loop's 1 carried slot(s)"
+   },
+   "raw": "LoopValue: slot 5 is outside the loop's 1 carried slot(s)",
+   "expect": "a",
+   "bad": {
+    "class": "LoopValue",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "L0"
+    ],
+    "fields": "(('kind', 'loop_value'), ('literal', 5))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 40,
+   "kind": "LoopCount",
+   "check": "not isinstance(loop, Loop) or loop.exit_cond is None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "LoopCount: <Loop loop TensorType(shape=(), dtype='f64', tag=None)> is not a loop with a `break`"
+   },
+   "raw": "LoopCount: <Loop loop TensorType(shape=(), dtype='f64', tag=None)> is not a loop with a `break`",
+   "expect": "b",
+   "bad": {
+    "class": "LoopCount",
+    "dtype": "i32",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "L0"
+    ],
+    "fields": "(('kind', 'loop_count'), ('literal', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 41,
+   "kind": "TapeRead",
+   "check": "not isinstance(loop, Loop)",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "TapeRead: <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)> is not a Loop"
+   },
+   "raw": "TapeRead: <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)> is not a Loop",
+   "expect": "b",
+   "bad": {
+    "class": "TapeRead",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x",
+     "ci"
+    ],
+    "fields": "(('kind', 'tape_read'), ('literal', 0), ('slot', 0))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 42,
+   "kind": "TapeRead",
+   "check": "slot < 0 or not slot < loop.carry_count",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "TapeRead: slot 5 is outside the loop's 1 carried slot(s)"
+   },
+   "raw": "TapeRead: slot 5 is outside the loop's 1 carried slot(s)",
+   "expect": "a",
+   "bad": {
+    "class": "TapeRead",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "L0",
+     "ci"
+    ],
+    "fields": "(('kind', 'tape_read'), ('literal', 5), ('slot', 5))"
+   },
+   "standing": null
+  },
+  {
+   "group": "quantity",
+   "id": 1,
+   "kind": "pack",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Quantity 'q': pack 'bogus' is not one of ('auto', 'tuple')"
+   },
+   "raw": "Quantity 'q': pack 'bogus' is not one of ('auto', 'tuple')",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None),), pack='bogus')), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "quantity",
+   "id": 2,
+   "kind": "slug",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Quantity: slug is required \u2014 it is the namespace's first segment"
+   },
+   "raw": "Quantity: slug is required \u2014 it is the namespace's first segment",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None),), pack='auto')), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "quantity",
+   "id": 3,
+   "kind": "no wires",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Quantity 'q': declares no wires"
+   },
+   "raw": "Quantity 'q': declares no wires",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(), pack='auto')), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "quantity",
+   "id": 4,
+   "kind": "not a wire",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Quantity 'q': 1 is not a Wire"
+   },
+   "raw": "Quantity 'q': 1 is not a Wire",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(1,), pack='auto')), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "quantity",
+   "id": 5,
+   "kind": "role",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Quantity 'q': wire 'a' has role 'bogus', which no leaf kind mints; declared read roles are ['lookup', 'mat_in', 'nsamples', 'per_sample', 'terminated', 'uniform', 'vec_in', 'wide_in']"
+   },
+   "raw": "Quantity 'q': wire 'a' has role 'bogus', which no leaf kind mints; declared read roles are ['lookup', 'mat_in', 'nsamples', 'per_sample', 'terminated', 'uniform', 'vec_in', 'wide_in']",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='bogus', shape=(), dtype='f64', tag=None),), pack='auto')), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "quantity",
+   "id": 6,
+   "kind": "duplicate",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Quantity 'q': duplicate wire name 'a'"
+   },
+   "raw": "Quantity 'q': duplicate wire name 'a'",
+   "expect": "a",
+   "bad": {
+    "class": "Leaf",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [],
+    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None), Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None)), pack='auto')), ('wire_index', 0), ('sorted', False))"
+   },
+   "standing": null
+  },
+  {
+   "group": "ttype",
+   "id": 1,
+   "kind": "dtype",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: TensorType.dtype 'f77' is not one of ('f64', 'f32', 'i32', 'i64', 'bool', 'int32', 'uint32')"
+   },
+   "raw": "Node: TensorType.dtype 'f77' is not one of ('f64', 'f32', 'i32', 'i64', 'bool', 'int32', 'uint32')",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "status": "RX_BADARG",
+    "msg": "unknown dtype",
+    "door": {
+     "class": "Node",
+     "dtype": "f77",
+     "shape": [],
+     "tag": null,
+     "ops": [],
+     "fields": "(('fields', '()'),)"
+    }
+   }
+  },
+  {
+   "group": "ttype",
+   "id": 2,
+   "kind": "negative extent",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: TensorType.shape (-1,) has a negative extent"
+   },
+   "raw": "Node: TensorType.shape (-1,) has a negative extent",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "status": "RX_BADARG",
+    "msg": "negative extent",
+    "door": {
+     "class": "Node",
+     "dtype": "f64",
+     "shape": [
+      -1
+     ],
+     "tag": null,
+     "ops": [],
+     "fields": "(('fields', '()'),)"
+    }
+   }
+  },
+  {
+   "group": "ttype",
+   "id": 3,
+   "kind": "shape not a tuple",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: TensorType.shape 5 is not a tuple"
+   },
+   "raw": "Node: TensorType.shape 5 is not a tuple",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "none": "the shape is an int64 array at the door"
+   }
+  },
+  {
+   "group": "ttype",
+   "id": 4,
+   "kind": "shape holds a non-int",
+   "check": "",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "Node: TensorType.shape ('a',) holds 'a', which is not an int"
+   },
+   "raw": "Node: TensorType.shape ('a',) holds 'a', which is not an int",
+   "expect": "c",
+   "bad": null,
+   "standing": {
+    "none": "the shape is an int64 array at the door"
+   }
+  }
+ ]
+}

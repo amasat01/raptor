@@ -89,3 +89,146 @@ pub fn text(v: &V) -> String { let mut o = String::new(); write(v, &mut o); o }
 
 /// Python `repr` of a str (the same rule as `str_repr`).
 pub fn py_str(s: &str) -> String { let mut o = String::new(); str_repr(s, &mut o); o }
+
+/// A value of the key text in full: the kinds of `V` plus a node reference `#h` and a record `Name(f=v, ...)`. It is the value of a
+/// node's field; `write_val` writes it and `parse` reads it back, byte for byte.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Val { None, Bool(bool), Int(i128), Float(f64), Str(String), Tuple(Vec<Val>), List(Vec<Val>), Node(u32), Rec(String, Vec<(String, Val)>) }
+
+fn seq_val(v: &[Val], open: char, close: char, one_comma: bool, out: &mut String) {
+    out.push(open);
+    for (i, x) in v.iter().enumerate() { if i > 0 { out.push_str(", ") } write_val(x, out) }
+    if one_comma && v.len() == 1 { out.push(',') }
+    out.push(close);
+}
+
+pub fn write_val(v: &Val, out: &mut String) {
+    match v {
+        Val::None => out.push_str("None"),
+        Val::Bool(b) => out.push_str(if *b { "True" } else { "False" }),
+        Val::Int(i) => out.push_str(&i.to_string()),
+        Val::Float(f) => out.push_str(&float_repr(*f)),
+        Val::Str(s) => str_repr(s, out),
+        Val::Tuple(t) => seq_val(t, '(', ')', true, out),
+        Val::List(l) => seq_val(l, '[', ']', false, out),
+        Val::Node(h) => { out.push('#'); out.push_str(&h.to_string()) }
+        Val::Rec(n, fs) => {
+            out.push_str(n); out.push('(');
+            for (i, (k, x)) in fs.iter().enumerate() { if i > 0 { out.push_str(", ") } out.push_str(k); out.push('='); write_val(x, out) }
+            out.push(')');
+        }
+    }
+}
+
+pub fn text_val(v: &Val) -> String { let mut o = String::new(); write_val(v, &mut o); o }
+
+const MAX_DEPTH: usize = 200;
+
+struct Rd<'a> { s: &'a str, i: usize }
+
+impl<'a> Rd<'a> {
+    fn ws(&mut self) { while self.s[self.i..].starts_with(|c: char| c.is_ascii_whitespace()) { self.i += 1 } }
+    fn peek(&self) -> Option<char> { self.s[self.i..].chars().next() }
+    fn eat(&mut self, c: char) -> bool { if self.peek() == Some(c) { self.i += 1; true } else { false } }
+    fn err<T>(&self, what: &str) -> Result<T, String> { Err(format!("value text: {what} at {}", self.i)) }
+    fn run(&mut self, ok: impl Fn(char) -> bool) -> &'a str {
+        let st = self.i;
+        while self.s[self.i..].starts_with(&ok) { self.i += 1 }
+        &self.s[st..self.i]
+    }
+    fn items(&mut self, close: char, d: usize) -> Result<(Vec<Val>, bool), String> {
+        let mut v = vec![]; let mut comma = false;
+        loop {
+            self.ws();
+            if self.eat(close) { return Ok((v, comma)) }
+            v.push(self.val(d + 1)?);
+            self.ws();
+            comma = self.eat(',');
+            if !comma { self.ws(); if self.eat(close) { return Ok((v, false)) } return self.err("expected ',' or the closing bracket") }
+        }
+    }
+    fn val(&mut self, d: usize) -> Result<Val, String> {
+        if d > MAX_DEPTH { return self.err("nesting too deep") }
+        self.ws();
+        let Some(c) = self.peek() else { return self.err("unexpected end") };
+        match c {
+            '\'' | '"' => self.string(c).map(Val::Str),
+            '(' => {
+                self.i += 1;
+                let (v, comma) = self.items(')', d)?;
+                if v.len() == 1 && !comma { return self.err("a 1-tuple is written (x,)") }
+                Ok(Val::Tuple(v))
+            }
+            '[' => { self.i += 1; Ok(Val::List(self.items(']', d)?.0)) }
+            '#' => {
+                self.i += 1;
+                let t = self.run(|c| c.is_ascii_digit());
+                t.parse::<u32>().map(Val::Node).or_else(|_| self.err("a node reference is #<int>"))
+            }
+            '-' | '0'..='9' => {
+                let t = self.run(|c| c.is_ascii_alphanumeric() || c == '.' || c == '+' || c == '-');
+                if t == "-inf" { return Ok(Val::Float(f64::NEG_INFINITY)) }
+                if t.contains(['.', 'e', 'E']) {
+                    if !t.chars().all(|c| c.is_ascii_digit() || ".eE+-".contains(c)) { return self.err("bad float") }
+                    t.parse::<f64>().map(Val::Float).or_else(|_| self.err("bad float"))
+                } else { t.parse::<i128>().map(Val::Int).or_else(|_| self.err("bad integer (up to 128 bits)")) }
+            }
+            c if c.is_ascii_alphabetic() || c == '_' => {
+                let id = self.run(|c| c.is_ascii_alphanumeric() || c == '_');
+                if self.eat('(') { return self.record(id, d) }
+                match id {
+                    "None" => Ok(Val::None), "True" => Ok(Val::Bool(true)), "False" => Ok(Val::Bool(false)),
+                    "inf" => Ok(Val::Float(f64::INFINITY)), "nan" => Ok(Val::Float(f64::NAN)),
+                    _ => self.err(&format!("unknown token {id}")),
+                }
+            }
+            _ => self.err("unexpected character"),
+        }
+    }
+    fn record(&mut self, name: &str, d: usize) -> Result<Val, String> {
+        let mut fs = vec![];
+        self.ws();
+        if self.eat(')') { return Ok(Val::Rec(name.into(), fs)) }
+        loop {
+            self.ws();
+            let k = self.run(|c| c.is_ascii_alphanumeric() || c == '_');
+            if k.is_empty() { return self.err("a field name") }
+            self.ws();
+            if !self.eat('=') { return self.err("expected '='") }
+            fs.push((k.to_string(), self.val(d + 1)?));
+            self.ws();
+            if self.eat(')') { return Ok(Val::Rec(name.into(), fs)) }
+            if !self.eat(',') { return self.err("expected ',' or ')'") }
+        }
+    }
+    fn string(&mut self, q: char) -> Result<String, String> {
+        self.i += 1;
+        let mut o = String::new();
+        loop {
+            let Some(c) = self.peek() else { return self.err("unterminated string") };
+            self.i += c.len_utf8();
+            if c == q { return Ok(o) }
+            if c != '\\' { o.push(c); continue }
+            let Some(e) = self.peek() else { return self.err("unterminated string") };
+            self.i += e.len_utf8();
+            let n = match e { 'x' => 2, 'u' => 4, 'U' => 8, _ => 0 };
+            if n == 0 {
+                o.push(match e { '\\' => '\\', '\'' => '\'', '"' => '"', 'n' => '\n', 'r' => '\r', 't' => '\t', _ => return self.err("unknown escape") });
+                continue;
+            }
+            let h = self.s.get(self.i..self.i + n).filter(|h| h.bytes().all(|b| b.is_ascii_hexdigit()));
+            let Some(h) = h else { return self.err("bad hex escape") };
+            self.i += n;
+            match char::from_u32(u32::from_str_radix(h, 16).unwrap()) { Some(c) => o.push(c), None => return self.err("escape is not a code point") }
+        }
+    }
+}
+
+/// Reads one value of the key text (the grammar of `write_val`); text after the value is refused.
+pub fn parse(s: &str) -> Result<Val, String> {
+    let mut r = Rd { s, i: 0 };
+    let v = r.val(0)?;
+    r.ws();
+    if r.i != s.len() { return r.err("trailing text") }
+    Ok(v)
+}

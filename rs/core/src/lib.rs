@@ -163,15 +163,18 @@ pub fn verify(recs: &[Rec]) -> Result<(), String> {
 
 /// The operand count, the plane-leaf families and the result-type rule of one record (the declared rule of its kind).
 fn check_rule(i: usize, r: &Rec, u: &Rule, recs: &[Rec]) -> Result<(), String> {
+    match rule_fault(r, u, recs) { Some(m) => Err(format!("node {i} ({}): {m}", r.kind)), None => Ok(()) }
+}
+
+/// What a record breaks of its kind's rule, as text without the position prefix; `recs` holds its operands (`r.ops` index into it).
+pub fn rule_fault(r: &Rec, u: &Rule, recs: &[Rec]) -> Option<String> {
     let n = r.ops.len();
     if (n as u32) < u.min || (u.max >= 0 && n as i32 > u.max) {
         let hi = if u.max < 0 { "many".to_string() } else { u.max.to_string() };
-        return Err(format!("node {i} ({}): takes {}..{hi} operand(s), got {n}", r.kind, u.min));
+        return Some(format!("takes {}..{hi} operand(s), got {n}", u.min));
     }
     for (j, &c) in r.ops.iter().enumerate() {
-        if j < 32 && u.plane >> j & 1 == 1 && !recs[c as usize].leaf {
-            return Err(format!("node {i} ({}): operand {j} must be a plane leaf", r.kind));
-        }
+        if j < 32 && u.plane >> j & 1 == 1 && !recs[c as usize].leaf { return Some(format!("operand {j} must be a plane leaf")) }
     }
     let same = |o: &Rec| o.dtype == r.dtype && o.shape == r.shape && o.tag == r.tag;
     let ok = match u.res {
@@ -180,13 +183,11 @@ fn check_rule(i: usize, r: &Rec, u: &Rule, recs: &[Rec]) -> Result<(), String> {
         3 => r.dtype == u.dtype && r.shape == u.shape,
         _ => true,
     };
-    if !ok {
-        let want = match u.res {
-            1 => format!("the type of operand {}", u.idx),
-            2 => format!("a scalar of operand {}'s dtype", u.idx),
-            _ => format!("{} {:?}", u.dtype, u.shape),
-        };
-        return Err(format!("node {i} ({}): type {} {:?} is not what its result rule derives, {want}", r.kind, r.dtype, r.shape));
-    }
-    Ok(())
+    if ok { return None }
+    let want = match u.res {
+        1 => format!("the type of operand {}", u.idx),
+        2 => format!("a scalar of operand {}'s dtype", u.idx),
+        _ => format!("{} {:?}", u.dtype, u.shape),
+    };
+    Some(format!("type {} {:?} is not what its result rule derives, {want}", r.dtype, r.shape))
 }

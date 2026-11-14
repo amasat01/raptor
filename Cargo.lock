@@ -111,6 +111,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "raptor_ir"
+version = "0.0.1"
+dependencies = [
+ "rcore",
+]
+
+[[package]]
 name = "rcore"
 version = "0.0.1"
 

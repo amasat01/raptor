@@ -37,24 +37,9 @@ PREDICATE = _N.PREDICATE
 COMPARE = _N.COMPARE
 #: Boolean connectives (``lnot`` is unary): bool-typed, zero derivative.
 LOGICAL = _N.LOGICAL
-#: Rank-changing vector algebra. ``component`` carries a literal index,
-#: ``splat`` a literal shape; ``component_at`` is ``component``'s
-#: RUNTIME-index twin (a loop's symbolic ``k``), a separate KIND since its
-#: arity, type rule and emission differ. ``set_component_at`` is its WRITE
-#: twin: a VALUE, not a statement, so ``v[k] = e`` rebinds the name to it.
-VECTOR_OPS = _N.VECTOR_OPS
-#: Matrix algebra: matrix-vector, matrix-matrix, transpose, outer product.
-MATRIX_OPS = _N.MATRIX_OPS
-#: Per-lane linear algebra (:mod:`hawk.ir.linalg`): a factorisation node, the
-#: solves against it and the reads of its fields.
-LINALG_OPS = linalg.LINALG_OPS
-#: The least-squares kinds (:data:`raptor.ir.linalg.LSTSQ_OPS`): math in the shared IR, lowered by each backend.
-LSTSQ_OPS = linalg.LSTSQ_OPS
 #: Ops that exist only in a minted form: a derivative rule, a lowering or a read mints them, and no authoring name spells them.
 #: A declared fact about the op, read by the authoring-surface check; an op that has an authoring spelling is not in it.
 MINTED_OPS = _N.MINTED_OPS
-#: Ray intersection (:mod:`hawk.ir.rays`): one node per primitive, a ``(4,)`` result.
-RAY_OPS = rays.RAY_OPS
 #: The language's stateless, counter-based draws: arity 2, ``(seed, counter)``,
 #: both rank-0 integer-typed, lowered to its uniform and normal generators
 #: with the kernel's
@@ -74,15 +59,11 @@ INT_UNARY = _N.INT_UNARY
 #: integer truncates toward zero, saturates at the type's range and maps NaN
 #: to 0; integer -> integer wraps modulo 2^32 (numpy's ``astype``).
 CAST = ("cast",)
-#: What an integer plane value supports beside the explicit cast.
-#: The dtypes a ``cast`` reaches: a 32-bit integer plane, an index
-#: integer, or the kernel's ``Real`` (``f64``; the scalar mode narrows it).
-CAST_TARGETS = INT_PLANE_DTYPES + ("i32", "f64")
 
 #: Every op kind a traced body can mint (``at``/``select`` mint their own
 #: node subclasses but are KINDS here, since the rule table keys on kind).
-OP_KINDS = (ELEMENTWISE_BINARY + UNARY_MATH + COMPARE + LOGICAL + VECTOR_OPS
-            + MATRIX_OPS + LINALG_OPS + LSTSQ_OPS + RAY_OPS + QUAT_OPS + RANDOM_OPS + ("select", "dispatch", "at")
+OP_KINDS = (ELEMENTWISE_BINARY + UNARY_MATH + COMPARE + LOGICAL + _N.VECTOR_OPS
+            + _N.MATRIX_OPS + linalg.LINALG_OPS + linalg.LSTSQ_OPS + rays.RAY_OPS + QUAT_OPS + RANDOM_OPS + ("select", "dispatch", "at")
             + ELEMENTWISE_TERNARY + PREDICATE + INT_BINARY + INT_UNARY + CAST)
 
 #: Kinds under which a semantic tag survives (a quaternion sum is a quaternion).

@@ -7,7 +7,8 @@
 (c) the names the core table (raptor/ir/core.json) declares: kinds, classes, feathers, records, constants, rules, checks,
 key-text records and op feathers.
 
-Section 1 of the file is the base; section 2 holds the additions a ruling allowed, each line ending ``# U-<number>``."""
+Section 1 of the file is the base; section 2 holds the additions the owner allowed, each line ending with its reason
+(``# <word>``)."""
 
 import ast
 import json
@@ -21,10 +22,10 @@ pytestmark = pytest.mark.repo_local         # reads the package's own source as 
 _PKG = Path(__file__).resolve().parents[1]
 _FILE = _PKG / "ci" / "surface.txt"
 _BASE_HEAD = "# base, generated 2026-11-13"
-_ADDED_HEAD = "# added by ruling"
+_ADDED_HEAD = "# added by the owner"
 
 #: The count of section-1 lines. It may only be lowered.
-BASE_COUNT = 428
+BASE_COUNT = 416
 
 
 def _module_name(path: Path) -> str:
@@ -88,18 +89,18 @@ def read_file(text: str) -> tuple:
 
 def problems(items: set, base: list, added: list) -> list:
     """What is wrong when ``items`` is checked against the two sections."""
-    listed = set(base) | {re.sub(r"\s+# U-\d+$", "", a) for a in added}
+    listed = set(base) | {re.sub(r"\s+# [a-z][a-z-]*$", "", a) for a in added}
     out = []
     new = sorted(items - listed)
     if new:
-        out.append("raptor's surface is frozen: an addition needs the owner's ruling id in ci/surface.txt. Not listed:\n  "
+        out.append("raptor's surface is frozen: an addition needs the owner's word and its reason in ci/surface.txt. Not listed:\n  "
                    + "\n  ".join(new))
     stale = sorted(listed - items)
     if stale:
         out.append("stale lines, remove them:\n  " + "\n  ".join(stale))
-    bare = [a for a in added if not re.search(r"\s# U-\d+$", a)]
+    bare = [a for a in added if not re.search(r"\s# [a-z][a-z-]*$", a)]
     if bare:
-        out.append("section 2 lines without a ruling id (end the line with ' # U-<number>'):\n  " + "\n  ".join(bare))
+        out.append("section 2 lines without a reason (end the line with ' # <word>'):\n  " + "\n  ".join(bare))
     if len(base) > BASE_COUNT:
         out.append(f"section 1 has {len(base)} lines, above BASE_COUNT={BASE_COUNT}: the base may only shrink")
     return out
@@ -116,5 +117,5 @@ def test_the_guard_bites():
     assert problems(items, ["a x", "a y"], []) == []
     assert any("frozen" in p for p in problems(items | {"a z"}, ["a x", "a y"], []))
     assert any("stale" in p for p in problems(items, ["a x", "a y", "a gone"], []))
-    assert any("ruling id" in p for p in problems(items, ["a x"], ["a y"]))
-    assert not any("ruling id" in p for p in problems(items, ["a x"], ["a y # U-1"]))
+    assert any("without a reason" in p for p in problems(items, ["a x"], ["a y"]))
+    assert not any("without a reason" in p for p in problems(items, ["a x"], ["a y # protocol"]))

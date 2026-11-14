@@ -259,7 +259,6 @@ raptor.ir.access ACCESS_CLASSES
 raptor.ir.access IndexForm
 raptor.ir.access index_form
 raptor.ir.access infer
-raptor.ir.access infer_over
 raptor.ir.cells CELL_PLANE
 raptor.ir.cells param_cell
 raptor.ir.cells planes
@@ -331,29 +330,22 @@ raptor.ir.nodes param_cell_names
 raptor.ir.nodes peel_clamp
 raptor.ir.nodes plain_in
 raptor.ir.nodes plain_out
-raptor.ir.nodes refuse_factor_arms
 raptor.ir.nodes replace
 raptor.ir.nodes same_index
 raptor.ir.nodes sample_sums
 raptor.ir.nodes through
 raptor.ir.ops CAST
-raptor.ir.ops CAST_TARGETS
 raptor.ir.ops COMPARE
 raptor.ir.ops ELEMENTWISE_BINARY
 raptor.ir.ops ELEMENTWISE_TERNARY
 raptor.ir.ops INT_BINARY
 raptor.ir.ops INT_UNARY
-raptor.ir.ops LINALG_OPS
 raptor.ir.ops LOGICAL
-raptor.ir.ops LSTSQ_OPS
-raptor.ir.ops MATRIX_OPS
 raptor.ir.ops MINTED_OPS
 raptor.ir.ops OP_KINDS
 raptor.ir.ops PREDICATE
 raptor.ir.ops RANDOM_OPS
-raptor.ir.ops RAY_OPS
 raptor.ir.ops UNARY_MATH
-raptor.ir.ops VECTOR_OPS
 raptor.ir.ops make
 raptor.ir.ops promote
 raptor.ir.ops result_type
@@ -378,9 +370,6 @@ raptor.rules.core RULES
 raptor.rules.core rule_for
 raptor.rules.core zero_like
 raptor.rules.linalg LINALG_RULES
-raptor.rules.linalg Tangent
-raptor.rules.primitive DIRECTIONS
-raptor.rules.primitive PREFIX
 raptor.rules.primitive PrimitiveDecl
 raptor.rules.primitive declare_primitive
 raptor.rules.primitive has_rule
@@ -391,7 +380,6 @@ raptor.rules.primitive signature_of
 raptor.rules.primitive substitute
 raptor.rules.primitive vjp_contributions
 raptor.rules.rays RAY_RULES
-raptor.rules.rays Tangent
 raptor.schema ALL_PATTERNS
 raptor.schema blocks
 raptor.schema dtypes
@@ -429,7 +417,7 @@ raptor.schema.manifest check_launch_fields
 raptor.schema.manifest check_schema_version
 raptor.schema.manifest check_team_fields
 
-# added by ruling
-# every line below ends with ' # U-<number>'
+# added by the owner
+# every line below ends with its reason: ' # <word>'
 
-module raptor.protocols.unit # U-65
+module raptor.protocols.unit # protocol

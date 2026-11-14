@@ -32,9 +32,6 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from raptor import _core
-from raptor.ir import Node
-
-Tangent = Callable[[Node], "Node | None"]
 
 
 def _rule(kind: str) -> tuple[Callable, Callable]:

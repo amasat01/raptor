@@ -177,3 +177,16 @@ def test_roadmap_framework_raises_when_framework_is_present():
     the present-but-roadmap direction REDs without touching the env."""
     with pytest.raises(AssertionError):
         roadmap_framework("pytest")
+
+
+def test_an_absent_certified_framework_is_a_failure_text_and_a_present_one_is_none(monkeypatch):
+    import importlib.util
+
+    import raptor.conformance as door
+    from raptor.conformance import interop
+
+    assert door.certified_framework_problem is interop.certified_framework_problem
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: None)
+    assert interop.certified_framework_problem("numpy") == "certified framework absent from the gate environment"
+    monkeypatch.setattr(importlib.util, "find_spec", lambda name: object())
+    assert interop.certified_framework_problem("numpy") is None

@@ -16,8 +16,7 @@ from ..errors import RaptorError
 from ..ir.types import TensorType
 from .core import zero_like
 
-PREFIX = "$"                 # the name of a placeholder leaf starts with it; no plane or uniform may
-DIRECTIONS = ("vjp", "jvp")
+_PREFIX = "$"                 # the name of a placeholder leaf starts with it; no plane or uniform may
 _WORDS = {"vjp": "reverse (vjp)", "jvp": "forward (jvp)"}
 
 
@@ -32,7 +31,7 @@ class PrimitiveDecl:
 
 def placeholder(tag: str, ttype: TensorType) -> Leaf:
     """The free leaf a template reads: ``in<i>``, ``out``, ``cot`` (the incoming adjoint), ``dot<i>`` (an input's tangent)."""
-    return Leaf("uniform", "uniform", PREFIX + tag, ttype)
+    return Leaf("uniform", "uniform", _PREFIX + tag, ttype)
 
 
 def signature_of(node: Primitive) -> tuple:
@@ -65,7 +64,7 @@ def register_rule(reg: Registry, name: str, signature: tuple, direction: str, te
     held = reg.primitives.get(name)
     if held is None:
         raise RaptorError(f"primitive {name!r} is not registered")
-    templates, key = _core.rule_prepare(name, signature, direction, templates, PREFIX)
+    templates, key = _core.rule_prepare(name, signature, direction, templates, _PREFIX)
     instance = held[1].setdefault(signature, {})
     old = instance.get(direction)
     if old is not None and old[0] != key:
@@ -101,15 +100,15 @@ def _supplied(reg: Registry, node: Primitive, direction: str):
 def vjp_contributions(reg: Registry, node: Primitive, g: Node) -> tuple:
     """``((input, adjoint), ...)`` for one boundary node, from the registered rule instance."""
     templates = _supplied(reg, node, "vjp")
-    m = {PREFIX + f"in{i}": x for i, x in enumerate(node.inputs)}
-    m[PREFIX + "cot"], m[PREFIX + "out"] = g, node
+    m = {_PREFIX + f"in{i}": x for i, x in enumerate(node.inputs)}
+    m[_PREFIX + "cot"], m[_PREFIX + "out"] = g, node
     return tuple((child, substitute(t, m)) for child, t in zip(node.inputs, templates))
 
 
 def jvp_tangent(reg: Registry, node: Primitive, supplied) -> Node:
     """The output's tangent for one boundary node; an input with no incoming tangent is a structural zero."""
     (template,) = _supplied(reg, node, "jvp")
-    m = {PREFIX + f"in{i}": x for i, x in enumerate(node.inputs)}
-    m.update({PREFIX + f"dot{i}": (t if t is not None else zero_like(x.ttype)) for i, (t, x) in enumerate(zip(supplied, node.inputs))})
-    m[PREFIX + "out"] = node
+    m = {_PREFIX + f"in{i}": x for i, x in enumerate(node.inputs)}
+    m.update({_PREFIX + f"dot{i}": (t if t is not None else zero_like(x.ttype)) for i, (t, x) in enumerate(zip(supplied, node.inputs))})
+    m[_PREFIX + "out"] = node
     return substitute(template, m)

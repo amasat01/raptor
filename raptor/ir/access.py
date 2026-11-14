@@ -62,7 +62,7 @@ from .. import _core
 globals().update(_gen.records(_gen.parse(_core.manifest()), __name__, 'access'))
 
 
-def infer_over(order: Iterable[Node], exempt_planes: Iterable[str] = ()) -> Access:
+def _infer_over(order: Iterable[Node], exempt_planes: Iterable[str] = ()) -> Access:
     """The classifier proper, over a canonical node ORDER.
 
     A :class:`~hawk.ir.nodes.Loop`'s body is NOT in that order (it's a
@@ -81,7 +81,7 @@ def infer_over(order: Iterable[Node], exempt_planes: Iterable[str] = ()) -> Acce
 
 def infer(walk: Walk) -> Access:
     """The entry point: the access class + op a manifest declares."""
-    return infer_over(walk.order)
+    return _infer_over(walk.order)
 
 
 class IndexForm(NamedTuple):

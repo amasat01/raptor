@@ -34,11 +34,6 @@ globals().update(_TABLE["const"])
 globals().update(_TABLE["str"])
 
 
-def refuse_factor_arms(what: str, ttype: TensorType) -> None:
-    """Refuse a ``select`` or ``dispatch`` whose arms are factorisations (the check lives in the core)."""
-    _core.run_check("refuse_factor_arms", what, ttype)
-
-
 def plain_out(x: Any) -> Any:
     """A literal as JSON-safe data: scalars as they are, tuples tagged; anything else refused."""
     if x is None or type(x) in (int, float, str, bool):

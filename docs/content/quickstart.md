@@ -41,27 +41,7 @@ validate_manifest(bad)
 # supports v2; upgrade eagle to load it
 ```
 
-## 2. Check an implementation against a protocol
-
-`raptor.protocols` names the shapes a class needs to plug into the family —
-one method here, `build(directory)`, is all `ManifestProvider` asks for.
-Python checks that shape with `isinstance`, structurally — no inheritance
-needed:
-
-```python
-from raptor.protocols import ManifestProvider
-
-class Bundle:
-    def build(self, directory):
-        return str(directory) + "/manifest.json"
-
-isinstance(Bundle(), ManifestProvider)  # True — duck-typed, no inheritance needed
-```
-
-Any object with a matching `build(directory)` method satisfies
-`ManifestProvider`, whether or not it ever imports raptor.
-
-## 3. Read the conformance declaration
+## 2. Read the conformance declaration
 
 `raptor.conformance.interop` says which array libraries raptor works with
 today:
@@ -98,8 +78,8 @@ certification matrix defines each one.
 
 ## Next
 
-- [Tutorials](/content/tutorials) walk through the manifest schema, the
-  protocol contracts and the certification matrix in depth.
+- [Tutorials](/content/tutorials) walk through the manifest schema and the
+  certification matrix in depth.
 - The runnable examples live with the packages they show: [hawk](https://amasat01.github.io/hawk/content/examples.html)
   (a hybrid orbit, autodiff against torch) and [eagle](https://amasat01.github.io/eagle/content/userguide/howto.html)
   (early termination, zero-copy interop).

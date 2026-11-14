@@ -89,9 +89,7 @@ DEFAULT_MARKER_EXPR = "not cross_repo and not repo_local and not ft"
 # test_conformance_interop (the four JAX FFI rows' declaration, the legs vocabulary, the leg check in register_row).
 # 2026-10-16: 71 passed. +1 test_inject_rows_declared_exactly (the ten inject rows' declaration).
 # 2026-10-22: 72 passed. +1 test_gradient_and_handover_rows_declared_exactly (the gradient and NumPy/CuPy rows' declaration).
-# 2026-10-25: 77 passed. +5 test_flow (raptor.flow's source lifts, run in subprocesses).
 # 2026-10-30: 81 passed. +4 test_public_names (the family's public-name check).
-# 2026-11-02: 82 passed. +1 test_old_pattern_name_is_refused_by_name (the renamed graph_block pattern).
 DEFAULT_EXPECTED_PASS_COUNT = 82
 # Pinned by commissioning measurement, collecting `-m repo_local` against the
 # live tree (10 node IDs: the 9 tests that used to fail in the venv leg --

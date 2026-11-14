@@ -16,10 +16,8 @@ the ones the checked-out code actually exports.
        ``blocks`` (the ``graph_block`` extension), ``dtypes`` (the scalar-type
        vocabulary), and :func:`raptor.schema.validate_manifest`.
    * - :doc:`raptor.protocols <protocols>`
-     - The family's ``typing.Protocol`` contracts: ``Backend`` /
-       ``Executable`` (program-level execution), ``KernelLauncher`` /
-       ``Marshal`` (kernel-level launch and argument marshalling),
-       ``ManifestProvider`` (the kernel-provider protocol).
+     - The lowered-unit record (``unit``): the plain data a lowering hands to a
+       backend.
    * - :doc:`raptor.conformance <conformance>`
      - The interop certification declaration (``UNIVERSE`` / ``CERTIFIED`` /
        ``ROADMAP`` / ``ROWS``) and the reusable matrix-hygiene scanners every

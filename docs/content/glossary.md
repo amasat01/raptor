@@ -61,7 +61,7 @@ capability
   A feature a consumer may or may not support, named in the schema so a missing one is a clear refusal, never a silent fallback.
 
 backend
-  An eagle execution backend: a device kind behind `eagle-backend/1`. raptor's `Backend` and `Executable` protocols describe whole-program execution, which is a different thing.
+  An eagle execution backend: a device kind behind `eagle-backend/1`.
 
 language
   hawk's IR: the target-free form a kernel is built in.
@@ -85,7 +85,7 @@ entry kind
   `device` or `host`: how eagle enters a built kernel.
 
 format
-  The artifact container: `ptx`, `cubin`, `fatbin` or `host`. raptor holds the list as `raptor.schema.manifest.MANIFEST_FORMATS`.
+  The artifact container: `ptx`, `cubin`, `fatbin` or `host`.
 
 numerics contract
   aether's rules for how results are computed, shared by every target.
@@ -102,14 +102,8 @@ fastest axis
 group
   A lane count, the unit in which finished lanes are compacted away (default 1). It is the sidecar's `launch.lane_space.group`.
 
-launcher
-  Something that launches one kernel and marshals its arguments, described by raptor's `KernelLauncher` and `Marshal` protocols.
-
 marshal
   To convert an array into exactly the layout a compiled call expects.
-
-provider
-  Something that supplies kernels, described by raptor's `ManifestProvider` protocol: a compiled kernel with a schema-versioned manifest.
 
 protocol
   A `typing.Protocol`: an implementation satisfies it by shape, without inheriting from anything in raptor.

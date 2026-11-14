@@ -1,6 +1,6 @@
 # Tutorials
 
-Four short, sequential notebooks in two topics. Each builds on the last; none needs a GPU,
+Three short, sequential notebooks in two topics. Each builds on the last; none needs a GPU,
 hawk or eagle — they only exercise raptor itself.
 
 1. [What the contracts buy you](/content/tutorials/01_what_the_contracts_buy_you) —
@@ -9,24 +9,20 @@ hawk or eagle — they only exercise raptor itself.
 2. [Write a manifest](/content/tutorials/02_write_a_manifest) — build a v1
    and a v2 manifest by hand, validate both, and see exactly how
    `validate_manifest` rejects a malformed one.
-3. [Implement a protocol](/content/tutorials/03_implement_a_protocol) —
-   implement a minimal `Backend`, `ManifestProvider` and `Marshal` from
-   nothing but their protocol shape, and check them with `isinstance`.
-4. [Read the interop matrix](/content/tutorials/04_plug_into_the_interop_matrix) —
+3. [Read the interop matrix](/content/tutorials/04_plug_into_the_interop_matrix) —
    read `raptor.conformance.interop`'s declaration and check which array
    libraries this environment actually has installed. Contributing a
    certification row of your own is covered separately, in the devguide.
 
 ## Contracts and manifests
 
-What the contracts buy you, how to write a manifest, and how to implement a protocol.
+What the contracts buy you and how to write a manifest.
 
 ```{toctree}
 :maxdepth: 1
 
 tutorials/01_what_the_contracts_buy_you
 tutorials/02_write_a_manifest
-tutorials/03_implement_a_protocol
 ```
 
 ## Interoperability

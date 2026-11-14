@@ -44,7 +44,7 @@ python -m raptor_docs.fresh --check --site ../site   # generated numbers and the
 ## Where things live
 
 - `raptor/schema/`: the manifest contract (`manifest.py`, `blocks.py`, `dtypes.py`); `validate_manifest` is the entry point.
-- `raptor/protocols/`: `Backend`, `KernelLauncher`, `ManifestProvider` as structural protocols.
+- `raptor/protocols/unit.py`: the lowered-unit record.
 - `raptor/conformance/`: the row declaration (`interop.py`) and the pytest plugin that records which rows ran.
 - `tests/`: the suite; `goldens/`: manifests every golden test validates. `docs/content/`: the pages.
 - A new interop row: [Contributing a certification row](https://amasat01.github.io/raptor/content/devguide/contributing_a_certification_row.html).

@@ -117,15 +117,15 @@
     "sorted_inputs": { "$ref": "#/$defs/names" },
     "dispatch": {
       "type": "array",
-      "description": "Per-kernel dispatch groups: name, K, policy, static_selector and the selector's read slots.",
+      "description": "Per-kernel dispatch groups: name, K, strategy, static_selector and the selector's read slots.",
       "items": {
         "type": "object",
-        "required": ["name", "K", "policy"],
+        "required": ["name", "K", "strategy"],
         "additionalProperties": true,
         "properties": {
           "name": { "type": "string" },
           "K": { "type": "integer" },
-          "policy": { "type": "string" },
+          "strategy": { "type": "string" },
           "static_selector": { "type": "boolean" },
           "selector_reads": { "type": "array" },
           "units": { "$ref": "#/$defs/names" }

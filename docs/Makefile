@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Minimal makefile for the raptor Sphinx (MyST/Markdown) documentation.
-# raptor is pure Python — there is no Doxygen/breathe step.
+# raptor documents Python only (the Rust core is behind the binding) — there is no Doxygen/breathe step.
 
 SPHINXOPTS    ?=
 SPHINXBUILD   ?= python -m sphinx

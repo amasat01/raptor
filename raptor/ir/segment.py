@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 """The records of the ``segmented`` dispatch strategy: its unit records. The plane names and the split itself live in the
-lowering wing and its passes."""
+base wing and its passes."""
 
 from __future__ import annotations
 

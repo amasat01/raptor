@@ -18,7 +18,7 @@ tagged ``chol`` node is used as a matrix it becomes its ``chol_factor``
 projection (lower triangular, zero when the factorisation failed). An LU or
 eigh factor used as a matrix is refused by name.
 
-Sizes are static, ``n >= 1``: up to the variant's ``linalg.max_dim`` a lane holds the matrix
+Sizes are static, ``n >= 1``: up to the facts' ``linalg.max_dim`` a lane holds the matrix
 (one thread per matrix), above it a team of threads works on it in scratch the runtime
 owns (:mod:`hawk.passes.team`). The cost formulas are
 ``aether::linalg``'s (``aether/linalg/``): operations in fused multiply-adds,
@@ -42,7 +42,7 @@ FACTOR_TAG = dict(zip(FACTOR_TAG_PAIRS[::2], FACTOR_TAG_PAIRS[1::2]))
 #: solves ``(J^T J) X = B`` as ``R^-1 R^-T B`` by two triangular solves on its ``R`` (the
 #: derivative's solve: ``J^T J`` is never formed, so the conditioning stays ``cond(J)``).
 #: The least-squares kinds of the SHARED IR (``lstsq``, ``lstsq_gram_solve``, ``lstsq_info``) name the MATH; how a backend
-#: solves it (normal equations by Cholesky, or QR) is its own lowering and reads its own variant's ``linalg.max_dim``.
+#: solves it (normal equations by Cholesky, or QR) is its own lowering and reads its own facts' ``linalg.max_dim``.
 #: The factorisations (one node each), the solves against a factor (``lu_solve_t`` solves with ``A^T``; ``tri_lower``
 #: and ``tri_upper_t`` with the Cholesky factor's ``L`` and ``L^T`` alone) and the free reads of one field of a factor
 #: are the manifest's ``LINALG_*`` consts, as are ``QR_OPS`` and ``LSTSQ_OPS``.

@@ -626,7 +626,7 @@ pub struct KeyRun {
 }
 
 /// Every node reachable from the sinks, loop bodies included.
-fn reachable(c: &Ctx, sinks: &[u32]) -> R<Vec<u32>> {
+pub(crate) fn reachable(c: &Ctx, sinks: &[u32]) -> R<Vec<u32>> {
     let (mut seen, mut stack, mut found) = (
         std::collections::HashSet::new(),
         sinks.iter().rev().copied().collect::<Vec<_>>(),
@@ -721,6 +721,52 @@ pub(crate) fn axes_of(c: &Ctx, sinks: &[u32]) -> R<Vec<Axis>> {
         .collect())
 }
 
+/// A lane axis along which some plane is read at the same place by lanes that differ only in that axis, so one thread can serve
+/// several of them from one read.
+pub(crate) struct BoxCandidate {
+    /// The axis's position among the lane axes.
+    pub(crate) axis: usize,
+    /// How many steps the axis has; none for the run-time first axis.
+    pub(crate) extent: Option<i128>,
+    /// The flat-lane distance of one step.
+    pub(crate) stride: i128,
+}
+
+/// The first axis, other than the fastest, along which every read of some plane is invariant; none when there is no such axis.
+pub(crate) fn box_candidate(c: &Ctx, sinks: &[u32]) -> R<Option<BoxCandidate>> {
+    let axes = axes_of(c, sinks)?;
+    let n = axes.len();
+    let mut ev = Eval {
+        c,
+        axes,
+        memo: HashMap::new(),
+        all: (1u64 << n) - 1,
+    };
+    // for each plane read, the axes along which every read site so far is invariant
+    let mut planes: Vec<(String, Vec<bool>)> = vec![];
+    for node in reachable(c, sinks)? {
+        if !c.table.is_a(c.nodes[node as usize].class, "At") {
+            continue;
+        }
+        let forms = axis_forms(&ev.value(ev.raw_index(node))?, n);
+        let plane = ev.ops(node)[0];
+        let name = c
+            .str_field(plane, "name")
+            .unwrap_or_else(|_| format!("#{plane}"));
+        let held: Vec<bool> = forms.iter().map(|f| f.0 == INVARIANT).collect();
+        match planes.iter_mut().find(|p| p.0 == name) {
+            Some(known) => known.1.iter_mut().zip(held).for_each(|(a, b)| *a &= b),
+            None => planes.push((name, held)),
+        }
+    }
+    let found = (0..n - 1).find(|&i| planes.iter().any(|p| p.1[i]));
+    Ok(found.map(|axis| BoxCandidate {
+        axis,
+        extent: ev.axes[axis].extent,
+        stride: ev.axes[axis].stride,
+    }))
+}
+
 /// The key run of one keyed sink of the kernel whose sinks are `sinks`; None for an own-column sink or a key with no run.
 pub fn key_run(
     c: &Ctx,
@@ -785,4 +831,5 @@ pub fn key_run(
     })
 }
 
+pub mod slice;
 pub mod warp;

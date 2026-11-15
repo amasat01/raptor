@@ -2141,6 +2141,23 @@ fn key_run_text(
     })
 }
 
+/// True for a recorded call this tool answers.
+fn is_mine(call: &J) -> bool {
+    let f = call.get("fn").and_then(J::str);
+    MINE.iter().any(|m| Some(m.0) == f)
+}
+
+/// True for the recorded calls of the warp-uniform check: the closure's own calls and the outer calls that carry its arguments.
+fn warp_uniform_call(call: &J) -> bool {
+    let key = MINE
+        .iter()
+        .find(|m| m.1 == "rw_lanes_warp_uniform")
+        .unwrap()
+        .0;
+    let f = call.get("fn").and_then(J::str);
+    f == Some(key) || f.is_some_and(|f| f.ends_with("lanes:warp_uniform"))
+}
+
 /// Reads the arguments, answers every recorded call of every unit and prints the counts per family.
 fn main() {
     let a: Vec<String> = std::env::args().collect();
@@ -2175,7 +2192,9 @@ fn main() {
             continue;
         };
         lines += 1;
-        let Ok(rec) = json::parse(&String::from_utf8_lossy(&raw)) else {
+        let text = String::from_utf8_lossy(&raw);
+        // the recorded calls are read again, one at a time, where they are answered; only the closure calls the warp check needs stay
+        let Ok(rec) = json::parse_keeping(&text, "analyses", &warp_uniform_call) else {
             bad += 1;
             continue;
         };
@@ -2193,16 +2212,14 @@ fn main() {
         if only.as_deref().is_some_and(|o| !unit.contains(o)) {
             continue;
         }
-        let calls: Vec<&J> = rec
-            .get("analyses")
-            .map_or(&[][..], |x| x.arr())
-            .iter()
-            .filter(|c| {
-                MINE.iter()
-                    .any(|m| Some(m.0) == c.get("fn").and_then(J::str))
-            })
-            .collect();
-        if calls.is_empty() && rec.get("placement").is_none() {
+        let mut any_call = rec.get("placement").is_some();
+        if !any_call {
+            let _ = json::each_in(&text, "analyses", &mut |c| {
+                any_call = is_mine(&c);
+                !any_call
+            });
+        }
+        if !any_call {
             continue;
         }
         if units >= limit {
@@ -2232,18 +2249,21 @@ fn main() {
             Ok(h) => h,
             Err(e) => {
                 build_fail += 1;
-                for call in &calls {
-                    let f = call.get("fn").and_then(J::str).unwrap_or("");
-                    *skips
-                        .entry((
-                            f.into(),
-                            format!(
-                                "unit nodes not rebuilt: {}",
-                                e.chars().take(70).collect::<String>()
-                            ),
-                        ))
-                        .or_default() += call.get("n").map_or(1, |n| n.int() as usize)
-                }
+                let _ = json::each_in(&text, "analyses", &mut |call| {
+                    if is_mine(&call) {
+                        let f = call.get("fn").and_then(J::str).unwrap_or("");
+                        *skips
+                            .entry((
+                                f.into(),
+                                format!(
+                                    "unit nodes not rebuilt: {}",
+                                    e.chars().take(70).collect::<String>()
+                                ),
+                            ))
+                            .or_default() += call.get("n").map_or(1, |n| n.int() as usize)
+                    }
+                    true
+                });
                 rx_ctx_free(c);
                 continue;
             }
@@ -2253,7 +2273,11 @@ fn main() {
             rec.get("target").and_then(J::str).unwrap_or("").to_string(),
         );
         let mut cache = HashMap::new();
-        for call in calls {
+        let _ = json::each_in(&text, "analyses", &mut |call| {
+            if !is_mine(&call) {
+                return true;
+            }
+            let call = &call;
             let f = MINE
                 .iter()
                 .find(|m| Some(m.0) == call.get("fn").and_then(J::str))
@@ -2289,7 +2313,9 @@ fn main() {
                 }
                 Err(Out::Equal) => false,
             };
-        }
+
+            true
+        });
         check_walk_props(c, &rec, &cache, &mut stats, &mut skips, units);
         check_lowered(c, &rec, &h, &mut stats, &mut skips, units, &unit);
         check_placed(c, &rec, &h, &mut stats, &mut skips, units, &unit);

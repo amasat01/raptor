@@ -3,9 +3,9 @@
 //! move along the box axis is copied for lane `k` (the lane `i + k * stride`) and every other
 //! node is lane 0's, shared by all. The copies are made in the caller's context.
 use crate::construct::refs;
-use crate::lanes::varying_nodes;
+use crate::lanes::{box_candidate, reachable, varying_nodes};
 use crate::planes::{type_parts, NodeType};
-use crate::{is_a, list_out, op_kind, raw_index};
+use crate::{in_kinds, is_a, konst, kstr, list_out, op_kind, raw_index};
 use raptor_ir::build::LoopParts;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
@@ -353,6 +353,108 @@ fn boxed_sinks(ctx: &mut Ctx, sinks: &[u32], boxed: BoxSpec) -> Outcome<Vec<u32>
         }
     }
     Ok(stores)
+}
+
+/// The box a kernel's plain entry is written with.
+pub struct ChosenBox {
+    /// The lane axis the box runs along.
+    pub axis: usize,
+    /// How many lanes the box holds.
+    pub lanes: i64,
+    /// How many flat lanes apart two neighbouring box lanes are.
+    pub stride: i64,
+}
+
+/// Whether the kernel can be written boxed: every commit is a scalar write of the lane's own column, and every node is local to
+/// its lane (no read of a per-lane input but a scalar one, no loop that exits, counts, commits or nests, no carried value but a
+/// scalar real, no dispatch, random draw or raw block).
+fn boxable(ctx: &Ctx, sinks: &[u32]) -> Outcome<bool> {
+    for &sink in sinks {
+        let commit = is_a(ctx, sink, "Assign") || is_a(ctx, sink, "WideWrite");
+        if !commit
+            || ctx.field(sink, "index")? != Val::None
+            || !ctx.nodes[sink as usize].shape.is_empty()
+        {
+            return Ok(false);
+        }
+    }
+    for node in reachable(ctx, sinks)? {
+        if ["Dispatch", "TapeRead", "LoopCount"]
+            .iter()
+            .any(|class| is_a(ctx, node, class))
+            || in_kinds(ctx, node, |kind| {
+                konst("RANDOM_OPS").contains(&kind) || kind == kstr("RAW_KIND")
+            })?
+            || (is_a(ctx, node, "Leaf") && !lane_local_leaf(ctx, node)?)
+            || (is_a(ctx, node, "Loop") && !lane_local_loop(ctx, node)?)
+        {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// Whether a leaf is one a box can share: not a per-lane input, a mutable or a terminated flag.
+fn lane_local_leaf(ctx: &Ctx, leaf: u32) -> Outcome<bool> {
+    let role = ctx.str_field(leaf, "role")?;
+    let per_lane_input = matches!(
+        role.as_str(),
+        "vec_in" | "mat_in" | "mutable" | "terminated"
+    );
+    let wide_per_sample = role == "per_sample" && !ctx.nodes[leaf as usize].shape.is_empty();
+    Ok(!(per_lane_input || wide_per_sample))
+}
+
+/// Whether a loop is one a box can fuse: it runs a fixed count, commits nothing, holds no loop inside and carries scalar reals.
+fn lane_local_loop(ctx: &Ctx, lp: u32) -> Outcome<bool> {
+    if ctx.field(lp, "exit_cond")? != Val::None
+        || ctx.field(lp, "count")? != Val::None
+        || !refs(ctx, lp, "body_sinks")?.is_empty()
+    {
+        return Ok(false);
+    }
+    for inner in ctx.body_nodes(lp)? {
+        if is_a(ctx, inner, "Loop") {
+            return Ok(false);
+        }
+    }
+    for carry in refs(ctx, lp, "carries")? {
+        let node = &ctx.nodes[carry as usize];
+        if !node.shape.is_empty() || !matches!(node.dtype.as_str(), "f64" | "f32") {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// The box for a kernel whose sinks are `sinks`, or none. `card_lanes` is the host's lanes per thread for the scalar type and
+/// `group` the lanes the launch compacts by. A box needs an axis other than the fastest along which a plane is read invariantly,
+/// room for at least two lanes that divide the axis, and a group the box does not straddle.
+pub fn choose_box(
+    ctx: &Ctx,
+    sinks: &[u32],
+    group: i64,
+    card_lanes: i64,
+) -> Outcome<Option<ChosenBox>> {
+    if !boxable(ctx, sinks)? {
+        return Ok(None);
+    }
+    let Some(found) = box_candidate(ctx, sinks)? else {
+        return Ok(None);
+    };
+    let lanes = found
+        .extent
+        .map_or(card_lanes, |e| card_lanes.min(e as i64));
+    let stride = found.stride as i64;
+    let divides_axis = found.extent.is_none_or(|e| e % i128::from(lanes) == 0);
+    if lanes < 2 || !divides_axis || (group > 1 && group % (lanes * stride) != 0) {
+        return Ok(None);
+    }
+    Ok(Some(ChosenBox {
+        axis: found.axis,
+        lanes,
+        stride,
+    }))
 }
 
 /// The sinks of a boxed unit, in the caller's context; see `raptor_wings.h`.

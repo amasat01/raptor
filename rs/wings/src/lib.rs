@@ -2,7 +2,11 @@
 //! context's nodes and the walk; vocabularies come from the core manifest's constants.
 #![warn(missing_docs)]
 #![warn(clippy::missing_docs_in_private_items)]
+pub mod blocks;
+pub mod blockteam;
 pub mod boxing;
+pub mod cells;
+pub mod chain;
 pub mod construct;
 pub mod declare;
 pub mod lanes;
@@ -12,8 +16,13 @@ pub mod place;
 pub mod plan;
 pub mod planes;
 pub mod rewrite;
+pub mod scatter;
+pub mod segment;
 pub mod slots;
+pub mod slotwise;
 pub mod split;
+pub mod stages;
+pub mod team;
 pub mod wide;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
@@ -464,7 +473,7 @@ pub unsafe extern "C" fn rw_wide_is_tiled(ctx: *mut Ctx, node: u32, out: *mut c_
 }
 
 /// The placements of the nodes and the bodies of their loops, one row per plane.
-fn wide_record(c: &Ctx, order: &[u32]) -> R<Vec<PlaneRow>> {
+pub fn wide_record(c: &Ctx, order: &[u32]) -> R<Vec<PlaneRow>> {
     let mut out: std::collections::BTreeMap<String, PlaneRow> = Default::default();
     let mut nodes: Vec<u32> = order.to_vec();
     while let Some(n) = nodes.pop() {

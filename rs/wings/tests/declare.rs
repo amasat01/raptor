@@ -4,7 +4,7 @@ use raptor_ir::record::Ctx;
 use raptor_support::safe::{
     rx_ctx_free, rx_ctx_new, rx_dump, rx_last_error, rx_load, rx_make, rx_make_op,
 };
-use raptor_wings::boxing::rw_box_boxed_sinks;
+use raptor_wings::boxing::{choose_box, rw_box_boxed_sinks};
 use raptor_wings::declare::{rw_declare_kinds, MANIFESTS};
 use raptor_wings::lstsq::rw_lstsq_lowered;
 use raptor_wings::place::rw_wide_place;
@@ -131,6 +131,17 @@ fn boxed_sinks_in_a_context_with_only_the_wings_kinds() {
 }
 
 #[test]
+fn no_box_is_chosen_for_a_kernel_with_one_axis_or_a_per_lane_input() {
+    let c = fresh();
+    let context = unsafe { &*c };
+    let plain = assign(c, "o", leaf(c, "per_sample", "x", &[]), &[]);
+    assert!(choose_box(context, &[plain], 1, 16).unwrap().is_none());
+    let per_lane = assign(c, "p", leaf(c, "mutable", "m", &[]), &[]);
+    assert!(choose_box(context, &[per_lane], 1, 16).unwrap().is_none());
+    rx_ctx_free(c);
+}
+
+#[test]
 fn lowered_sinks_in_a_context_with_only_the_wings_kinds() {
     let c = fresh();
     let (a, b) = (
@@ -238,4 +249,25 @@ fn embedded_manifests_equal_their_source() {
             "the copy of the {wing} manifest differs from its source"
         );
     }
+}
+
+#[test]
+fn a_panic_inside_an_analysis_is_the_panic_status_with_its_message() {
+    let c = fresh();
+    let (sink, mut made, mut count, mut changed) = (99u32, [0u32; 1], 0usize, 0);
+    let status = unsafe {
+        rw_lstsq_lowered(
+            c,
+            &sink,
+            1,
+            std::ptr::null(),
+            made.as_mut_ptr(),
+            1,
+            &mut count,
+            &mut changed,
+        )
+    };
+    assert_eq!(status, 4, "a sink that is no node of the context");
+    assert!(message(c).starts_with("panic: "), "{}", message(c));
+    rx_ctx_free(c);
 }

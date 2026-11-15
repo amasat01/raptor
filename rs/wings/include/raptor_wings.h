@@ -96,6 +96,15 @@ int rw_wide_place(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, int thread_f
 int rw_lanes_warp_uniform(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, const int64_t* warp, const rx_node* nodes, size_t nnodes,
                           int* flags);
 
+/* The sinks of a kernel in the warp form (one warp serves a sample; every wide value is held sliced across the warp's lanes: element j of
+   lane l is element j * warp + l), made in ctx, whose dialect must declare warp_lane and warp_store. A value is sliced when it is a vector
+   of a whole number of warps and at least slice_min long. *found is 0 when a node has no rule in the form, or the automatic choice (explicit
+   0) declines the kernel (only run-time indexed writes, or nothing sliced wider than team_min); then nothing is returned. A commit becomes a warp
+   store, a sum, dot or norm of sliced values a sum over the lanes of each lane's partial sum. buf must hold nsinks nodes (else RX_TRUNC,
+   nothing made). The caller takes the walk again over the result. */
+int rw_lanes_slice_sinks(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, int64_t warp, int64_t slice_min, int64_t team_min, int explicit,
+                         rx_node* buf, size_t cap, size_t* count, int* found);
+
 /* Declares in ctx every kind the wings declare (the base and simt manifests, embedded in this library), which the rewrites of this
    library make nodes of (a box store, for one). Call it once on a context before the first rewrite; it may be called again, and after
    a unit has declared the same kinds, with no effect. */

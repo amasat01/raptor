@@ -5,7 +5,7 @@
 # the exit status is non-zero when any leg is red. Needs cargo, clang and nm on PATH; no network.
 cd "$(dirname "$0")/.." || exit 2
 JOBS=${JOBS:-2}
-HDRS="rs/ir/include/raptor_ir.h rs/ir/include/raptor_ir_query.h rs/wings/include/raptor_wings.h"
+HDRS="rs/ir/include/raptor_ir.h rs/ir/include/raptor_ir_front.h rs/ir/include/raptor_ir_query.h rs/wings/include/raptor_wings.h rs/wings/include/raptor_wings_front.h"
 SRC_DIRS="rs/core rs/ir rs/wings"
 out=$(mktemp "${TMPDIR:-/tmp}/gate_rs.XXXXXX")
 trap 'rm -f "$out" "$out".*' EXIT
@@ -117,5 +117,5 @@ for l in $legs; do
   echo "== $l"
   if "leg_$l"; then green="$green $l"; else red="$red $l"; fi
 done
-echo "GREEN:$green"; echo "RED:$red"
+echo "GREEN:$green"; [ -z "$red" ] || echo "RED:$red"
 [ -z "$red" ]

@@ -2,6 +2,7 @@
 use raptor_ir::record::Ctx;
 use raptor_support::safe::{rx_canonical, rx_ctx_free, rx_ctx_new, rx_last_error, rx_make};
 use raptor_wings::place::rw_wide_place;
+use raptor_wings::slotwise::{rw_slotwise_chain, rw_slotwise_is_structural_zero};
 use raptor_wings::*;
 use std::ffi::{CStr, CString};
 
@@ -228,5 +229,145 @@ fn warp_uniform_answers_per_node() {
         unsafe { CStr::from_ptr(rx_last_error(c)) }.to_string_lossy()
     );
     assert_eq!(flags, [0, 1, 1, 0]);
+    rx_ctx_free(c);
+}
+
+/// A scalar constant of the literal text.
+fn constant(c: *mut Ctx, literal: &str) -> u32 {
+    make(
+        c,
+        "Const",
+        "f64",
+        &[],
+        &[],
+        &format!("((\"literal\", {literal}),)"),
+    )
+}
+
+/// An op of the kind over the operands with the given result shape.
+fn op(c: *mut Ctx, kind: &str, shape: &[i64], ops: &[u32]) -> u32 {
+    let fields = format!("((\"kind\", \"{kind}\"), (\"literal\", None))");
+    make(c, "Op", "f64", shape, ops, &fields)
+}
+
+#[test]
+fn slotwise_chain_lists_its_links_in_order() {
+    let c = rx_ctx_new();
+    let base = make(c, "Leaf", "f64", &[2], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"vec_in\"), (\"name\", \"v\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
+    let (i0, v0, i1, v1) = (
+        constant(c, "0"),
+        constant(c, "1.5"),
+        constant(c, "1"),
+        constant(c, "2.5"),
+    );
+    let first = op(c, "add_at", &[2], &[base, i0, v0]);
+    let second = op(c, "add_at", &[2], &[first, i1, v1]);
+    let (mut found, mut buf, mut n) = (u32::MAX, [0u32; 8], 0usize);
+    let st = unsafe { rw_slotwise_chain(c, second, &mut found, buf.as_mut_ptr(), 8, &mut n) };
+    assert_eq!((st, found, n), (0, base, 4));
+    assert_eq!(&buf[..n], &[i0, v0, i1, v1]);
+    // a node that is no add_at is its own base with no links
+    let st = unsafe { rw_slotwise_chain(c, base, &mut found, buf.as_mut_ptr(), 8, &mut n) };
+    assert_eq!((st, found, n), (0, base, 0));
+    // a buffer that is too small is reported with the size needed
+    let st = unsafe { rw_slotwise_chain(c, second, &mut found, buf.as_mut_ptr(), 2, &mut n) };
+    assert_eq!((st, n), (3, 4));
+    rx_ctx_free(c);
+}
+
+#[test]
+fn slotwise_zero_is_a_vec_or_splat_of_zero_literals() {
+    let c = rx_ctx_new();
+    let (zero, one) = (constant(c, "0.0"), constant(c, "1.0"));
+    let zero_int = constant(c, "0");
+    let ask = |node: u32| {
+        let mut out = -1;
+        assert_eq!(
+            unsafe { rw_slotwise_is_structural_zero(c, node, &mut out) },
+            0
+        );
+        out
+    };
+    assert_eq!(ask(op(c, "vec", &[2], &[zero, zero_int])), 1);
+    assert_eq!(ask(op(c, "splat", &[2], &[zero])), 1);
+    assert_eq!(ask(op(c, "vec", &[2], &[])), 1);
+    assert_eq!(ask(op(c, "vec", &[2], &[zero, one])), 0);
+    assert_eq!(ask(op(c, "splat", &[2], &[one])), 0);
+    assert_eq!(ask(op(c, "add", &[2], &[zero, zero])), 0);
+    assert_eq!(ask(zero), 0);
+    let mut out = 0;
+    assert_eq!(
+        unsafe { rw_slotwise_is_structural_zero(c, 999, &mut out) },
+        1
+    );
+    rx_ctx_free(c);
+}
+
+/// The class name of a node.
+fn class_of(c: *mut Ctx, node: u32) -> String {
+    let ctx = unsafe { &*c };
+    ctx.table.classes[ctx.nodes[node as usize].class]
+        .name
+        .clone()
+}
+
+/// A wide input held sliced: its product with itself is a vector of the slice's width stored by a warp store, and a sum of it is a
+/// sum over the lanes of the warp.
+#[test]
+fn slice_sinks_holds_a_wide_value_across_the_warp() {
+    let c = rx_ctx_new();
+    assert_eq!(unsafe { raptor_wings::declare::rw_declare_kinds(c) }, 0);
+    let x = make(c, "Leaf", "f64", &[128], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"vec_in\"), (\"name\", \"x\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
+    let op = |kind: &str, shape: &[i64], ops: &[u32]| {
+        make(
+            c,
+            "Op",
+            "f64",
+            shape,
+            ops,
+            &format!("((\"kind\", {kind:?}), (\"literal\", None))"),
+        )
+    };
+    let (square, total) = (op("mul", &[128], &[x, x]), op("sum", &[], &[x]));
+    let store = |name: &str, shape: &[i64], value: u32| {
+        make(
+            c,
+            "Assign",
+            "f64",
+            shape,
+            &[value],
+            &format!("((\"kind\", \"assign\"), (\"name\", {name:?}), (\"role\", \"mutable\"))"),
+        )
+    };
+    let sinks = [store("y", &[128], square), store("t", &[], total)];
+    let (mut out, mut count, mut found) = ([0u32; 2], 0usize, 0);
+    let ask = |explicit: i32, out: &mut [u32; 2], count: &mut usize, found: &mut i32| unsafe {
+        raptor_wings::lanes::slice::rw_lanes_slice_sinks(
+            c,
+            sinks.as_ptr(),
+            2,
+            32,
+            128,
+            128,
+            explicit,
+            out.as_mut_ptr(),
+            2,
+            count,
+            found,
+        )
+    };
+    assert_eq!(ask(1, &mut out, &mut count, &mut found), 0);
+    assert_eq!((found, count), (1, 2));
+    assert_eq!(class_of(c, out[0]), "WarpStore");
+    let node = |h: u32| unsafe { &(&*c).nodes[h as usize] };
+    assert_eq!(node(node(out[0]).ops[0]).shape, [4]);
+    let fold = node(node(out[1]).ops[0]);
+    assert_eq!(
+        fold.fields[0],
+        raptor_ir::value::Val::Str("warp_sum".into())
+    );
+    // a plain kernel under the automatic choice is kept when its widest sliced value reaches the team minimum
+    assert_eq!(ask(0, &mut out, &mut count, &mut found), 0);
+    assert_eq!(found, 1);
     rx_ctx_free(c);
 }

@@ -103,16 +103,24 @@ fn reduces(ctx: &Ctx, node: u32) -> bool {
 fn depths(ctx: &Ctx, order: &[u32], members: &HashSet<u32>) -> R<HashMap<u32, usize>> {
     let mut depth = HashMap::new();
     for &node in order {
-        let below = ctx.nodes[node as usize]
-            .ops
-            .iter()
-            .map(|c| depth[c])
-            .max()
-            .unwrap_or(0);
+        let mut below = 0;
+        for c in &ctx.nodes[node as usize].ops {
+            below = below.max(operand_depth(ctx, &depth, *c)?);
+        }
         let own = reduces(ctx, node) || members.contains(&node);
         depth.insert(node, below + usize::from(own));
     }
     Ok(depth)
+}
+
+/// The depth of one operand. A loop's placeholders (its index and its carried values) stand inside the loop body and are not in
+/// the order, so they are at depth 0; any other operand without a depth is refused by name.
+fn operand_depth(ctx: &Ctx, depth: &HashMap<u32, usize>, c: u32) -> R<usize> {
+    match depth.get(&c) {
+        Some(d) => Ok(*d),
+        None if is_a(ctx, c, "LoopIndex") || is_a(ctx, c, "LoopCarry") => Ok(0),
+        None => refuse(format!("node {c} is read before its depth is known")),
+    }
 }
 
 /// A plane name for a cell that no node of the kernel uses.

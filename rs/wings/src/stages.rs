@@ -92,6 +92,8 @@ pub enum Stages {
     Cut(Cut),
     /// The body folds an ordered log, whose team stage is not planned.
     Team,
+    /// A sum over the lanes of a key has a payload whose block stages are not planned.
+    Unwritten,
 }
 
 /// Whether the node reduces over samples: a reduction or a block sum.
@@ -305,7 +307,10 @@ fn order_under(ctx: &Ctx, roots: &[u32], stop: &HashMap<u32, u32>) -> Vec<u32> {
 /// The cut of a kernel's sinks into stages (including the team stages of linear algebra, block sums and ordered scatters), the
 /// whole kernel when it reads no reduction over samples and needs no team, or a note that it folds an ordered log.
 pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
-    let (sinks, scattered) = scatter::logged(ctx, sinks, facts.routed)?;
+    let limits = (facts.routed, facts.team.team_max_dim);
+    let Some((sinks, scattered)) = scatter::logged(ctx, sinks, limits)? else {
+        return Ok(Stages::Unwritten);
+    };
     let sinks = &sinks[..];
     let order = Graph::build(ctx, sinks)?.order;
     let mut cuts = vec![];

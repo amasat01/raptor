@@ -3,6 +3,7 @@
 //! target: one block per cell zeroes the cell's partial sums, one per chunk of consecutive lanes adds its lanes' slots in order into
 //! its own partial sum of each key, and one block per cell adds the cell's partial sums in chunk order. No atomics and no sort: the
 //! same bits on every launch.
+use crate::blocks::{block_shaped, ordered_case};
 use crate::cells::build;
 use crate::stages::is_ordered_sink;
 use crate::team::{sample_index, Grid, Plane, Step, TeamSpec, Unit, PLANE_PREFIX};
@@ -44,10 +45,69 @@ fn log_store(ctx: &mut Ctx, (plane, target): (&str, &str), (value, at): (u32, u3
     build(ctx, "ScatterLog", given)
 }
 
+/// What a routed keyed accumulate becomes.
+enum Routed {
+    /// It stays as it is (it is no sum over the lanes of a key, or its payload is too large for a team).
+    Keep,
+    /// The write of the block sum of its payload.
+    Block(u32),
+    /// Its payload has a shape whose block stages are not planned.
+    Unwritten,
+}
+
+/// What the keyed accumulate `sink` becomes when the build routes accumulates to the ordered stages: a sum over the lanes of a key
+/// is then one block sum of its payload, which the team stages of a block add in lane order.
+fn route(ctx: &mut Ctx, sink: u32, max_dim: i64) -> R<Routed> {
+    if !is_a(ctx, sink, "AccumWrite") || ctx.nodes[sink as usize].ops.len() < 2 {
+        return Ok(Routed::Keep);
+    }
+    let Val::Node(reduced) = ctx.field(sink, "reduced")? else {
+        return Ok(Routed::Keep);
+    };
+    let plain = matches!(
+        ctx.str_field(sink, "contract")?.as_str(),
+        "auto" | "compensated" | "keyed_auto"
+    );
+    if !plain || ctx.str_field(reduced, "op")? != "sum" {
+        return Ok(Routed::Keep);
+    }
+    let payload = ctx.nodes[reduced as usize].ops[0];
+    if !ordered_case(ctx, payload, "ordered", Some(max_dim)) {
+        let shaped = block_shaped(ctx, payload, "ordered", Some(max_dim));
+        return Ok(if shaped {
+            Routed::Unwritten
+        } else {
+            Routed::Keep
+        });
+    }
+    let (key, count) = (ctx.field(reduced, "key")?, ctx.field(reduced, "count")?);
+    let (Val::Node(key), Val::Node(count)) = (key, count) else {
+        return Ok(Routed::Keep);
+    };
+    let operands = Val::Tuple([payload, key, count].map(Val::Node).to_vec());
+    let kept = ctx.field(reduced, "kept")?;
+    let given = vec![
+        ("operands", operands),
+        ("contract", Val::Str("ordered".into())),
+        ("kept", kept),
+    ];
+    let block = build(ctx, "BlockSum", given)?;
+    let given = vec![
+        ("name", Val::Str(ctx.str_field(sink, "name")?)),
+        ("operands", Val::Tuple(vec![Val::Node(block)])),
+    ];
+    build(ctx, "BlockSumWrite", given).map(Routed::Block)
+}
+
 /// The sinks with each ordered accumulate replaced by the stores of its key and value into its log slots, and the slots each target
-/// holds per lane, in the order the targets are first added to. When the build routes accumulates to the ordered stages the
-/// accumulator carries its own compensation, so no residual plane is kept.
-pub fn logged(ctx: &mut Ctx, sinks: &[u32], routed: bool) -> R<(Vec<u32>, Slots)> {
+/// holds per lane, in the order the targets are first added to, or none when a payload's block stages are not planned. When the
+/// build routes accumulates to the ordered stages the accumulator carries its own compensation, so no residual plane is kept, and
+/// a sum over the lanes of a key is a block sum.
+pub fn logged(
+    ctx: &mut Ctx,
+    sinks: &[u32],
+    (routed, max_dim): (bool, i64),
+) -> R<Option<(Vec<u32>, Slots)>> {
     let mut kept = vec![];
     let mut residual = vec![];
     for &sink in sinks {
@@ -64,8 +124,18 @@ pub fn logged(ctx: &mut Ctx, sinks: &[u32], routed: bool) -> R<(Vec<u32>, Slots)
         let dropped = routed
             && is_a(ctx, sink, "AccumWrite")
             && residual.contains(&ctx.str_field(sink, "name")?);
-        if !dropped {
-            kept.push(sink);
+        if dropped {
+            continue;
+        }
+        let routed_to = if routed {
+            route(ctx, sink, max_dim)?
+        } else {
+            Routed::Keep
+        };
+        match routed_to {
+            Routed::Keep => kept.push(sink),
+            Routed::Block(write) => kept.push(write),
+            Routed::Unwritten => return Ok(None),
         }
     }
     let mut width: Vec<(String, i64)> = vec![];
@@ -79,7 +149,7 @@ pub fn logged(ctx: &mut Ctx, sinks: &[u32], routed: bool) -> R<(Vec<u32>, Slots)
         }
     }
     if width.is_empty() {
-        return Ok((kept, width));
+        return Ok(Some((kept, width)));
     }
     let mut used: Vec<(String, i64)> = vec![];
     let mut out = vec![];
@@ -114,7 +184,7 @@ pub fn logged(ctx: &mut Ctx, sinks: &[u32], routed: bool) -> R<(Vec<u32>, Slots)
         out.push(log_store(ctx, (&keys, &target), (key, at))?);
         out.push(log_store(ctx, (&values, &target), (value, at))?);
     }
-    Ok((out, width))
+    Ok(Some((out, width)))
 }
 
 /// The three team stages that add the logs of the scatter into `target`, a lane holding `width` log slots.

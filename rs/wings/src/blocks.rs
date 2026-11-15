@@ -90,7 +90,7 @@ fn has_factors(ctx: &Ctx, payload: u32) -> bool {
 }
 
 /// Whether the ordered contract keeps the payload (a floating scalar or vector of at most `max_dim` elements) as one block.
-fn ordered_case(ctx: &Ctx, payload: u32, contract: &str, max_dim: Option<i64>) -> bool {
+pub(crate) fn ordered_case(ctx: &Ctx, payload: u32, contract: &str, max_dim: Option<i64>) -> bool {
     contract == "ordered"
         && is_float(ctx, payload)
         && rank(ctx, payload) <= 1
@@ -101,7 +101,7 @@ fn ordered_case(ctx: &Ctx, payload: u32, contract: &str, max_dim: Option<i64>) -
 }
 
 /// Whether the keyed sum of the payload can be one block by its structure alone.
-fn block_shaped(ctx: &Ctx, payload: u32, contract: &str, max_dim: Option<i64>) -> bool {
+pub(crate) fn block_shaped(ctx: &Ctx, payload: u32, contract: &str, max_dim: Option<i64>) -> bool {
     if ordered_case(ctx, payload, contract, max_dim) {
         return true;
     }

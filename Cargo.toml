@@ -1,5 +1,5 @@
 [workspace]
-members = ["rs/core", "rs/ir", "rs/binding"]
+members = ["rs/core", "rs/ir", "rs/support", "rs/binding", "rs/wings"]
 resolver = "2"
 
 [profile.release]

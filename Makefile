@@ -37,8 +37,8 @@ gate_venv = $(GATE_DIR)/venv
 gate_py   = $(CURDIR)/$(gate_venv)/bin/python
 gate_env  = export PATH="$(CURDIR)/$(gate_venv)/bin:$$PATH"
 
-.PHONY: build test guards cargo-test bench gate gate-gpu gate-all gate-venv gate-lint gate-names gate-test gate-fresh gate-docs
-gate: gate-lint gate-names gate-test cargo-test gate-docs
+.PHONY: build test guards cargo-test bench gate gate-gpu gate-all gate-venv gate-lint gate-names gate-test gate-fresh gate-docs gate-rs
+gate: gate-lint gate-names gate-test cargo-test gate-docs gate-rs
 gate-all: gate gate-gpu
 
 build:
@@ -72,6 +72,11 @@ gate-lint: gate-venv
 	$(gate_env)
 	ruff check
 	MANIFESTO_SOURCE=docs/content/principles.md bash tools/manifesto_check.sh CONTRIBUTING.md
+
+# The Rust legs and the guards (fmt, clippy, tests, headers, header = exports, no global state, no python crate, words);
+# `sh ci/gate_rs.sh <leg>` runs one. Each leg prints what it examined and is red when that is nothing.
+gate-rs:
+	JOBS=$(GATE_JOBS) sh ci/gate_rs.sh
 
 # Every public name is referenced by a test or on the shrink-only allowlist
 gate-names: gate-venv

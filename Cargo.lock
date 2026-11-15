@@ -118,6 +118,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "raptor_support"
+version = "0.0.1"
+dependencies = [
+ "raptor_ir",
+ "raptor_wings",
+ "rcore",
+]
+
+[[package]]
+name = "raptor_wings"
+version = "0.0.1"
+dependencies = [
+ "raptor_ir",
+ "raptor_support",
+ "rcore",
+]
+
+[[package]]
 name = "rcore"
 version = "0.0.1"
 

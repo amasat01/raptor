@@ -1,94 +1,152 @@
-//! Manifest shape validation: a port of `raptor.schema.validate_manifest` and the `check_*` functions of
-//! `raptor.schema.manifest`. Returns `Err("ValueError: ...")` / `Err("TypeError: ...")` in Python's own words.
+//! Manifest shape validation: the checks a manifest document passes before it is loaded (schema version, execution axis, lane space,
+//! launch fields, team fields, index planes, the graph-block descriptor). Each check returns the text of the first fault it finds.
+//! The refusal texts are fixed, because callers and tests match on them: each starts with one of two fixed prefixes, one for a
+//! refused value (see `ve`) and one for a value of the wrong kind.
 
 use crate::pjson::Json;
 
-// every vocabulary below is a fact of raptor/ir/core.json (consts, group "schema"), read by the Python side too
+// every vocabulary below is a fact of raptor/ir/core.json (consts, group "schema"), read by every reader of the manifest
 pub use crate::facts::{AETHER_ABI_V1, AETHER_ABI_V2, MAX_SCHEMA_VERSION, SCHEMA_VERSION};
-use crate::facts::{ALL_PATTERNS, EXEC_ACCESS_CLASSES as EXEC_ACCESS, EXEC_KEYS, EXEC_OPS, EXEC_TARGETS, 
-    TOP_LEVEL_KEY_ORDER as ORDER_V1, TOP_LEVEL_KEY_ORDER_V2 as ORDER_V2, BLOCK_TOP_LEVEL_KEY_ORDER as ORDER_BLOCKS};
+use crate::facts::{
+    ALL_PATTERNS, BLOCK_TOP_LEVEL_KEY_ORDER as ORDER_BLOCKS, EXEC_ACCESS_CLASSES as EXEC_ACCESS,
+    EXEC_KEYS, EXEC_OPS, EXEC_TARGETS, TOP_LEVEL_KEY_ORDER as ORDER_V1,
+    TOP_LEVEL_KEY_ORDER_V2 as ORDER_V2,
+};
 
+/// The result of a check: Ok, or the text of the refusal.
 type R = Result<(), String>;
 
 /// The vocabulary a caller states and raptor validates against: `team_grids` (grid -> its extra keys, each `"record"` or `"plane"`),
 /// the `default_grid` of a team that names none, `team_dtypes` and `local_sources`. Empty by default: nothing is accepted.
 #[derive(Default, Clone)]
 pub struct Vocab {
+    /// Each grid name with the extra keys its teams carry, each key `"record"` or `"plane"`.
     pub grids: Vec<(String, Vec<(String, String)>)>,
+    /// The grid of a team that names none.
     pub default_grid: String,
+    /// The element types a team plane may have.
     pub dtypes: Vec<String>,
+    /// The places a launch may take its local memory limit from.
     pub local_sources: Vec<String>,
 }
 
 impl Vocab {
+    /// Reads the vocabulary from a document: a missing key is an empty list, a value of the wrong kind is refused.
     pub fn from_json(j: &Json) -> Result<Vocab, String> {
         let strs = |k: &str| -> Result<Vec<String>, String> {
             match j.get(k) {
                 None => Ok(vec![]),
-                Some(Json::Arr(a)) => a.iter().map(|x| match x { Json::Str(s) => Ok(s.clone()), _ => ve(format!("vocabulary '{k}' holds strings only")) }).collect(),
+                Some(Json::Arr(a)) => a
+                    .iter()
+                    .map(|x| match x {
+                        Json::Str(s) => Ok(s.clone()),
+                        _ => ve(format!("vocabulary '{k}' holds strings only")),
+                    })
+                    .collect(),
                 Some(_) => ve(format!("vocabulary '{k}' must be a list")),
             }
         };
         let mut grids = vec![];
         if let Some(Json::Obj(items)) = j.get("team_grids") {
             for (g, spec) in items {
-                let Json::Obj(extra) = spec else { return ve(format!("vocabulary team_grids[{g:?}] must be an object")) };
+                let Json::Obj(extra) = spec else {
+                    return ve(format!("vocabulary team_grids[{g:?}] must be an object"));
+                };
                 let mut e = vec![];
                 for (k, kind) in extra {
-                    match kind { Json::Str(x) if x == "record" || x == "plane" => e.push((k.clone(), x.clone())), _ => return ve(format!("vocabulary team_grids[{g:?}].{k} must be 'record' or 'plane'")) }
+                    match kind {
+                        Json::Str(x) if x == "record" || x == "plane" => {
+                            e.push((k.clone(), x.clone()))
+                        }
+                        _ => {
+                            return ve(format!(
+                                "vocabulary team_grids[{g:?}].{k} must be 'record' or 'plane'"
+                            ))
+                        }
+                    }
                 }
                 grids.push((g.clone(), e));
             }
         }
-        let default_grid = match j.get("default_grid") { Some(Json::Str(s)) => s.clone(), _ => String::new() };
-        Ok(Vocab { grids, default_grid, dtypes: strs("team_dtypes")?, local_sources: strs("local_sources")? })
+        let default_grid = match j.get("default_grid") {
+            Some(Json::Str(s)) => s.clone(),
+            _ => String::new(),
+        };
+        Ok(Vocab {
+            grids,
+            default_grid,
+            dtypes: strs("team_dtypes")?,
+            local_sources: strs("local_sources")?,
+        })
     }
 }
 /// `'a'`, `'a' or 'b'`, `'a', 'b' or 'c'`: the words in the order the caller gave them.
 fn or_list(v: &[String]) -> String {
     let q: Vec<String> = v.iter().map(|w| format!("'{w}'")).collect();
-    match q.split_last() { None => String::new(), Some((last, [])) => last.clone(), Some((last, head)) => format!("{} or {}", head.join(", "), last) }
+    match q.split_last() {
+        None => String::new(),
+        Some((last, [])) => last.clone(),
+        Some((last, head)) => format!("{} or {}", head.join(", "), last),
+    }
 }
+/// The words of `v` as references, sorted.
 fn refs(v: &[String]) -> Vec<&str> {
     let mut r: Vec<&str> = v.iter().map(String::as_str).collect();
     r.sort();
     r
 }
 
+/// A refusal of a value: `m` after the fixed prefix of such refusals.
 fn ve<T>(m: String) -> Result<T, String> {
     Err(format!("ValueError: {m}"))
 }
+/// A list of words in the key text layout, as in `['a', 'b']`.
 fn lst(v: &[&str]) -> String {
     Json::Arr(v.iter().map(|s| Json::Str((*s).into())).collect()).repr()
 }
+/// A list of owned words in the key text layout.
 fn slst(v: &[String]) -> String {
     Json::Arr(v.iter().map(|s| Json::Str(s.clone())).collect()).repr()
 }
+/// Whether `v` is an integer.
 fn is_int(v: &Json) -> bool {
     matches!(v, Json::Int(_))
 }
+/// Whether `v` is an integer of at least `low`.
 fn int_ge(v: &Json, low: i128) -> bool {
     matches!(v, Json::Int(i) if *i >= low)
 }
-/// `v in frozenset_of_str`: unhashable values raise TypeError, as in Python.
+/// Whether `v` is a string that is one of `set`; a list or an object is refused with the wrong-kind text, any other value is not in it.
 fn in_set(v: &Json, set: &[&str]) -> Result<bool, String> {
     match v {
-        Json::Arr(_) | Json::Obj(_) => Err(format!("TypeError: cannot use '{}' as a set element (unhashable type: '{}')", v.type_name(), v.type_name())),
+        Json::Arr(_) | Json::Obj(_) => Err(format!(
+            "TypeError: cannot use '{}' as a set element (unhashable type: '{}')",
+            v.type_name(),
+            v.type_name()
+        )),
         Json::Str(s) => Ok(set.contains(&s.as_str())),
         _ => Ok(false),
     }
 }
+/// Whether `v` is a string.
 fn is_str(v: &Json) -> bool {
     matches!(v, Json::Str(_))
 }
+/// Whether `v` is a string that is not empty.
 fn nonempty_str(v: &Json) -> bool {
     matches!(v, Json::Str(s) if !s.is_empty())
 }
 
+/// Validates a whole manifest document against the vocabulary: the schema version, the execution axis, the lane space,
+/// the launch fields, the team fields, the index planes, the pattern and the order of the top-level keys, in that order. The first
+/// fault is the result.
 pub fn validate(doc: &Json, voc: &Vocab) -> R {
     let nm = "'<document>'";
     if !matches!(doc, Json::Obj(_)) {
-        return Err(format!("TypeError: expected a dict, got {}", doc.type_name()));
+        return Err(format!(
+            "TypeError: expected a dict, got {}",
+            doc.type_name()
+        ));
     }
     let version = check_schema_version(doc, nm, true)?;
     check_execution_axis(doc, version, nm)?;
@@ -98,25 +156,51 @@ pub fn validate(doc: &Json, voc: &Vocab) -> R {
     check_index_planes(doc, nm)?;
     if let Some(p) = doc.get("pattern") {
         if *p != Json::Null && !in_set(p, &ALL_PATTERNS)? {
-            return ve(format!("pattern {} is not recognized; expected one of {}", p.repr(), lst(&ALL_PATTERNS)));
+            return ve(format!(
+                "pattern {} is not recognized; expected one of {}",
+                p.repr(),
+                lst(&ALL_PATTERNS)
+            ));
         }
     }
     if doc.has("plugins") {
-        let expected: Vec<&str> = if doc.has("blocks") { ORDER_BLOCKS.to_vec() } else if version >= 2 { ORDER_V2.to_vec() } else { ORDER_V1.to_vec() };
-        let got: Vec<String> = doc.keys().into_iter().filter(|k| expected.contains(k)).map(String::from).collect();
-        let want: Vec<String> = expected.iter().filter(|k| doc.has(k)).map(|s| s.to_string()).collect();
+        let expected: Vec<&str> = if doc.has("blocks") {
+            ORDER_BLOCKS.to_vec()
+        } else if version >= 2 {
+            ORDER_V2.to_vec()
+        } else {
+            ORDER_V1.to_vec()
+        };
+        let got: Vec<String> = doc
+            .keys()
+            .into_iter()
+            .filter(|k| expected.contains(k))
+            .map(String::from)
+            .collect();
+        let want: Vec<String> = expected
+            .iter()
+            .filter(|k| doc.has(k))
+            .map(|s| s.to_string())
+            .collect();
         if got != want {
             return ve(format!(
                 "manifest top-level key order violates the key-order contract: got {}, expected {}",
-                slst(&got), slst(&want)
+                slst(&got),
+                slst(&want)
             ));
         }
     }
     Ok(())
 }
 
+/// The schema version of `meta` (version 1 when none is written; `legacy` also reads the older key `version`); a version above
+/// the supported one is refused. `nm` is the quoted artifact name used in the text.
 pub fn check_schema_version(meta: &Json, nm: &str, legacy: bool) -> Result<i64, String> {
-    let v = meta.get("schema_version").or_else(|| if legacy { meta.get("version") } else { None }).cloned().unwrap_or(Json::Int(1));
+    let v = meta
+        .get("schema_version")
+        .or_else(|| if legacy { meta.get("version") } else { None })
+        .cloned()
+        .unwrap_or(Json::Int(1));
     match v {
         Json::Int(i) if i <= MAX_SCHEMA_VERSION as i128 => Ok(i.max(i64::MIN as i128) as i64),
         _ => ve(format!(
@@ -126,33 +210,67 @@ pub fn check_schema_version(meta: &Json, nm: &str, legacy: bool) -> Result<i64, 
     }
 }
 
+/// Checks the execution axis: version 1 carries none of its keys, version 2 carries all of them.
 pub fn check_execution_axis(meta: &Json, version: i64, nm: &str) -> R {
     let tag = meta.get("aether_abi");
     if version == 1 {
-        if let Some(t) = tag {
-            if *t != Json::Null && *t != Json::Str(AETHER_ABI_V1.into()) {
-                return ve(format!("{nm}: schema v1 requires aether_abi='aether-abi/1' when present; got {}", t.repr()));
-            }
-        }
-        let mut present: Vec<String> = EXEC_KEYS.iter().filter(|k| meta.has(k)).map(|s| s.to_string()).collect();
-        present.sort();
-        if !present.is_empty() {
+        return check_v1_execution_axis(meta, tag, nm);
+    }
+    check_v2_execution_axis(meta, tag, nm)
+}
+
+/// Version 1: the ABI tag, when present, must be the version 1 tag, and no execution key may be present.
+fn check_v1_execution_axis(meta: &Json, tag: Option<&Json>, nm: &str) -> R {
+    if let Some(t) = tag {
+        if *t != Json::Null && *t != Json::Str(AETHER_ABI_V1.into()) {
             return ve(format!(
+                "{nm}: schema v1 requires aether_abi='aether-abi/1' when present; got {}",
+                t.repr()
+            ));
+        }
+    }
+    let mut present: Vec<String> = EXEC_KEYS
+        .iter()
+        .filter(|k| meta.has(k))
+        .map(|s| s.to_string())
+        .collect();
+    present.sort();
+    if !present.is_empty() {
+        return ve(format!(
                 "{nm}: schema v1 must not carry execution key(s) {} (the execution axis is schema-v2-only; set schema_version=2 and aether_abi='aether-abi/2' to use it)",
                 slst(&present)
             ));
-        }
-        return Ok(());
     }
+    Ok(())
+}
+
+/// Version 2: the ABI tag, when present, must be the version 2 tag; targets and access class must be present and valid.
+fn check_v2_execution_axis(meta: &Json, tag: Option<&Json>, nm: &str) -> R {
     if let Some(t) = tag {
         if *t != Json::Null && *t != Json::Str(AETHER_ABI_V2.into()) {
-            return ve(format!("{nm}: schema v2 requires aether_abi='aether-abi/2'; got {}", t.repr()));
+            return ve(format!(
+                "{nm}: schema v2 requires aether_abi='aether-abi/2'; got {}",
+                t.repr()
+            ));
         }
     }
-    let missing: Vec<String> = ["exec_targets", "exec_access"].iter().filter(|k| !meta.has(k)).map(|s| s.to_string()).collect();
+    let missing: Vec<String> = ["exec_targets", "exec_access"]
+        .iter()
+        .filter(|k| !meta.has(k))
+        .map(|s| s.to_string())
+        .collect();
     if !missing.is_empty() {
-        return ve(format!("{nm}: schema v2 requires execution key(s) {} (absence = load refused)", slst(&missing)));
+        return ve(format!(
+            "{nm}: schema v2 requires execution key(s) {} (absence = load refused)",
+            slst(&missing)
+        ));
     }
+    check_exec_targets(meta, nm)?;
+    check_exec_access_and_op(meta, nm)
+}
+
+/// `exec_targets` is a non-empty list of known targets with no duplicates.
+fn check_exec_targets(meta: &Json, nm: &str) -> R {
     let targets = meta.get("exec_targets").unwrap();
     let mut valid = false;
     if let Json::Arr(a) = targets {
@@ -178,50 +296,86 @@ pub fn check_execution_axis(meta: &Json, version: i64, nm: &str) -> R {
     if !valid {
         return ve(format!(
             "{nm}: exec_targets must be a non-empty list drawn from {} with no duplicates; got {}",
-            lst(&EXEC_TARGETS), targets.repr()
+            lst(&EXEC_TARGETS),
+            targets.repr()
         ));
     }
+    Ok(())
+}
+
+/// `exec_access` is a known access class, and `exec_op` is present exactly for the map-reduce class and is a known operation.
+fn check_exec_access_and_op(meta: &Json, nm: &str) -> R {
     let access = meta.get("exec_access").unwrap();
     if !in_set(access, &EXEC_ACCESS)? {
-        return ve(format!("{nm}: exec_access {} is not a supported access class (supported: {})", access.repr(), lst(&EXEC_ACCESS)));
+        return ve(format!(
+            "{nm}: exec_access {} is not a supported access class (supported: {})",
+            access.repr(),
+            lst(&EXEC_ACCESS)
+        ));
     }
     let op = meta.get("exec_op");
     if *access == Json::Str("mapreduce".into()) {
         if op.is_none() {
-            return ve(format!("{nm}: exec_access='mapreduce' requires exec_op (one of {})", lst(&EXEC_OPS)));
+            return ve(format!(
+                "{nm}: exec_access='mapreduce' requires exec_op (one of {})",
+                lst(&EXEC_OPS)
+            ));
         }
     } else if op.is_some() {
-        return ve(format!("{nm}: exec_op is forbidden unless exec_access='mapreduce' (exec_access={})", access.repr()));
+        return ve(format!(
+            "{nm}: exec_op is forbidden unless exec_access='mapreduce' (exec_access={})",
+            access.repr()
+        ));
     }
     if let Some(o) = op {
         if !in_set(o, &EXEC_OPS)? {
-            return ve(format!("{nm}: exec_op {} is not a supported reduction op (supported: {})", o.repr(), lst(&EXEC_OPS)));
+            return ve(format!(
+                "{nm}: exec_op {} is not a supported reduction op (supported: {})",
+                o.repr(),
+                lst(&EXEC_OPS)
+            ));
         }
     }
     Ok(())
 }
 
+/// Checks `launch.lane_space`, when present: its axes (labels, extents, only the first extent may be run-time) and its group.
 pub fn check_lane_space(meta: &Json, nm: &str) -> R {
-    let Some(launch @ Json::Obj(_)) = meta.get("launch") else { return Ok(()) };
-    let Some(space) = launch.get("lane_space") else { return Ok(()) };
+    let Some(launch @ Json::Obj(_)) = meta.get("launch") else {
+        return Ok(());
+    };
+    let Some(space) = launch.get("lane_space") else {
+        return Ok(());
+    };
     let bad = |why: String| -> R { ve(format!("{nm}: launch.lane_space {why}")) };
-    let exactly = |j: &Json, ks: &[&str]| matches!(j, Json::Obj(_)) && j.keys().len() == ks.len() && ks.iter().all(|k| j.has(k));
+    let exactly = |j: &Json, ks: &[&str]| {
+        matches!(j, Json::Obj(_)) && j.keys().len() == ks.len() && ks.iter().all(|k| j.has(k))
+    };
     if !exactly(space, &["axes", "group"]) {
         return bad("must be an object with exactly 'axes' and 'group'".into());
     }
     let axes = space.get("axes").unwrap();
-    let Json::Arr(axes) = axes else { return bad("axes must be a non-empty list".into()) };
+    let Json::Arr(axes) = axes else {
+        return bad("axes must be a non-empty list".into());
+    };
     if axes.is_empty() {
         return bad("axes must be a non-empty list".into());
     }
     let mut seen: Vec<&str> = vec![];
     for (i, ax) in axes.iter().enumerate() {
         if !exactly(ax, &["label", "extent"]) {
-            return bad(format!("axes[{i}] must be an object with exactly 'label' and 'extent'"));
+            return bad(format!(
+                "axes[{i}] must be an object with exactly 'label' and 'extent'"
+            ));
         }
         let (label, ext) = (ax.get("label").unwrap(), ax.get("extent").unwrap());
         if *label != Json::Null {
-            let Json::Str(l) = label else { return bad(format!("axes[{i}].label must be a string or null; got {}", label.repr())) };
+            let Json::Str(l) = label else {
+                return bad(format!(
+                    "axes[{i}].label must be a string or null; got {}",
+                    label.repr()
+                ));
+            };
             if seen.contains(&l.as_str()) {
                 return bad(format!("axes[{i}].label {} is a duplicate", label.repr()));
             }
@@ -229,84 +383,163 @@ pub fn check_lane_space(meta: &Json, nm: &str) -> R {
         }
         if *ext == Json::Null {
             if i > 0 {
-                return bad(format!("axes[{i}].extent is null; only the first axis may be run-time"));
+                return bad(format!(
+                    "axes[{i}].extent is null; only the first axis may be run-time"
+                ));
             }
         } else if !int_ge(ext, 1) {
-            return bad(format!("axes[{i}].extent must be an integer >= 1 or null; got {}", ext.repr()));
+            return bad(format!(
+                "axes[{i}].extent must be an integer >= 1 or null; got {}",
+                ext.repr()
+            ));
         }
     }
     let group = space.get("group").unwrap();
     if !int_ge(group, 1) {
-        return bad(format!("group must be an integer >= 1; got {}", group.repr()));
+        return bad(format!(
+            "group must be an integer >= 1; got {}",
+            group.repr()
+        ));
     }
     Ok(())
 }
 
+/// Checks the fields of `launch`, when present: `box`, `index_set` and the three local-memory keys.
 pub fn check_launch_fields(meta: &Json, nm: &str, voc: &Vocab) -> R {
-    let Some(launch @ Json::Obj(_)) = meta.get("launch") else { return Ok(()) };
+    let Some(launch @ Json::Obj(_)) = meta.get("launch") else {
+        return Ok(());
+    };
+    check_launch_box(launch, nm)?;
+    check_launch_index_set(launch, nm)?;
+    check_launch_local(launch, nm, voc)
+}
+
+/// `launch.box` has exactly `axis`, `T` and `stride`, each an integer of at least its lower bound.
+fn check_launch_box(launch: &Json, nm: &str) -> R {
     let bad = |what: &str, why: String| -> R { ve(format!("{nm}: launch.{what} {why}")) };
     if let Some(b) = launch.get("box") {
-        let ok = matches!(b, Json::Obj(_)) && b.keys().len() == 3 && ["axis", "T", "stride"].iter().all(|k| b.has(k));
+        let ok = matches!(b, Json::Obj(_))
+            && b.keys().len() == 3
+            && ["axis", "T", "stride"].iter().all(|k| b.has(k));
         if !ok {
-            return bad("box", "must be an object with exactly 'axis', 'T' and 'stride'".into());
+            return bad(
+                "box",
+                "must be an object with exactly 'axis', 'T' and 'stride'".into(),
+            );
         }
         for (key, low) in [("axis", 0), ("T", 2), ("stride", 1)] {
             let v = b.get(key).unwrap();
             if !int_ge(v, low) {
-                return bad("box", format!("{key} must be an integer >= {low}; got {}", v.repr()));
+                return bad(
+                    "box",
+                    format!("{key} must be an integer >= {low}; got {}", v.repr()),
+                );
             }
         }
     }
+    Ok(())
+}
+
+/// `launch.index_set` has a width of 32 or 64 and, only for a prefix set of width 32, the name of its count plane.
+fn check_launch_index_set(launch: &Json, nm: &str) -> R {
+    let bad = |what: &str, why: String| -> R { ve(format!("{nm}: launch.{what} {why}")) };
     if let Some(iset) = launch.get("index_set") {
         let ks = iset.keys();
-        if !matches!(iset, Json::Obj(_)) || !iset.has("width") || ks.iter().any(|k| !["width", "prefix", "count"].contains(k)) {
-            return bad("index_set", "must be an object with 'width' and optionally 'prefix' and 'count'".into());
+        if !matches!(iset, Json::Obj(_))
+            || !iset.has("width")
+            || ks.iter().any(|k| !["width", "prefix", "count"].contains(k))
+        {
+            return bad(
+                "index_set",
+                "must be an object with 'width' and optionally 'prefix' and 'count'".into(),
+            );
         }
         let w = iset.get("width").unwrap();
         if !matches!(w, Json::Int(32) | Json::Int(64)) {
-            return bad("index_set", format!("width must be 32 or 64; got {}", w.repr()));
+            return bad(
+                "index_set",
+                format!("width must be 32 or 64; got {}", w.repr()),
+            );
         }
         let prefix = match iset.get("prefix") {
             None => false,
             Some(Json::Bool(b)) => *b,
-            Some(p) => return bad("index_set", format!("prefix must be a boolean; got {}", p.repr())),
+            Some(p) => {
+                return bad(
+                    "index_set",
+                    format!("prefix must be a boolean; got {}", p.repr()),
+                )
+            }
         };
         if prefix {
             if *w != Json::Int(32) {
                 return bad("index_set", "a prefix set has width 32".into());
             }
             if !iset.get("count").is_some_and(nonempty_str) {
-                return bad("index_set", "a prefix set names its count plane in 'count'".into());
+                return bad(
+                    "index_set",
+                    "a prefix set names its count plane in 'count'".into(),
+                );
             }
         } else if iset.has("count") {
-            return bad("index_set", "names a 'count' plane only for a prefix set".into());
-        }
-    }
-    let keys = ["local_bytes", "local_source", "local_limit"];
-    let present: Vec<&str> = keys.iter().copied().filter(|k| launch.has(k)).collect();
-    if !present.is_empty() && present.len() != 3 {
-        let missing: Vec<&str> = keys.iter().copied().filter(|k| !launch.has(k)).collect();
-        return bad(present[0], format!("comes with {}; missing {}", keys.join(", "), lst(&missing)));
-    }
-    if !present.is_empty() {
-        let (b, s, l) = (launch.get("local_bytes").unwrap(), launch.get("local_source").unwrap(), launch.get("local_limit").unwrap());
-        if !int_ge(b, 0) {
-            return bad("local_bytes", format!("must be an integer >= 0; got {}", b.repr()));
-        }
-        if !matches!(s, Json::Str(x) if voc.local_sources.contains(x)) {
-            return bad("local_source", format!("must be {}; got {}", or_list(&voc.local_sources), s.repr()));
-        }
-        if !int_ge(l, 1) {
-            return bad("local_limit", format!("must be an integer >= 1; got {}", l.repr()));
+            return bad(
+                "index_set",
+                "names a 'count' plane only for a prefix set".into(),
+            );
         }
     }
     Ok(())
 }
 
+/// The local-memory keys come together or not at all; the source is in the vocabulary, bytes and limit are in range.
+fn check_launch_local(launch: &Json, nm: &str, voc: &Vocab) -> R {
+    let bad = |what: &str, why: String| -> R { ve(format!("{nm}: launch.{what} {why}")) };
+    let keys = ["local_bytes", "local_source", "local_limit"];
+    let present: Vec<&str> = keys.iter().copied().filter(|k| launch.has(k)).collect();
+    if !present.is_empty() && present.len() != 3 {
+        let missing: Vec<&str> = keys.iter().copied().filter(|k| !launch.has(k)).collect();
+        return bad(
+            present[0],
+            format!("comes with {}; missing {}", keys.join(", "), lst(&missing)),
+        );
+    }
+    if !present.is_empty() {
+        let (b, s, l) = (
+            launch.get("local_bytes").unwrap(),
+            launch.get("local_source").unwrap(),
+            launch.get("local_limit").unwrap(),
+        );
+        if !int_ge(b, 0) {
+            return bad(
+                "local_bytes",
+                format!("must be an integer >= 0; got {}", b.repr()),
+            );
+        }
+        if !matches!(s, Json::Str(x) if voc.local_sources.contains(x)) {
+            return bad(
+                "local_source",
+                format!("must be {}; got {}", or_list(&voc.local_sources), s.repr()),
+            );
+        }
+        if !int_ge(l, 1) {
+            return bad(
+                "local_limit",
+                format!("must be an integer >= 1; got {}", l.repr()),
+            );
+        }
+    }
+    Ok(())
+}
+
+/// Checks one keyed record: a width, a list of (label, extent) axes and an optional list of payload widths. `whr` names it in the text.
 fn keyed_record(rec: &Json, whr: &str, nm: &str) -> R {
     let bad = |why: String| -> R { ve(format!("{nm}: {whr} {why}")) };
     let ks = rec.keys();
-    if !matches!(rec, Json::Obj(_)) || !rec.has("width") || !rec.has("axes") || ks.iter().any(|k| !["width", "axes", "payload"].contains(k)) {
+    if !matches!(rec, Json::Obj(_))
+        || !rec.has("width")
+        || !rec.has("axes")
+        || ks.iter().any(|k| !["width", "axes", "payload"].contains(k))
+    {
         return bad("must be an object with 'width', 'axes' and optionally 'payload'".into());
     }
     let w = rec.get("width").unwrap();
@@ -315,7 +548,9 @@ fn keyed_record(rec: &Json, whr: &str, nm: &str) -> R {
     }
     let axes_ok = match rec.get("axes").unwrap() {
         Json::Arr(a) => a.iter().all(|x| match x {
-            Json::Arr(p) if p.len() == 2 => (p[0] == Json::Null || is_str(&p[0])) && (p[1] == Json::Null || int_ge(&p[1], 1)),
+            Json::Arr(p) if p.len() == 2 => {
+                (p[0] == Json::Null || is_str(&p[0])) && (p[1] == Json::Null || int_ge(&p[1], 1))
+            }
             _ => false,
         }),
         _ => false,
@@ -326,85 +561,172 @@ fn keyed_record(rec: &Json, whr: &str, nm: &str) -> R {
     let empty = Json::Arr(vec![]);
     let pay = rec.get("payload").unwrap_or(&empty);
     if !matches!(pay, Json::Arr(a) if a.iter().all(|p| int_ge(p, 1))) {
-        return bad(format!("payload must be a list of integers >= 1; got {}", pay.repr()));
+        return bad(format!(
+            "payload must be a list of integers >= 1; got {}",
+            pay.repr()
+        ));
     }
     Ok(())
 }
 
+/// Checks the team fields of `meta`: the team of each stage, the team planes and the keyed records.
 pub fn check_team_fields(meta: &Json, nm: &str, voc: &Vocab) -> R {
-    let bad = |whr: &str, why: String| -> R { ve(format!("{nm}: {whr} {why}")) };
+    check_team_stages(meta, nm, voc)?;
+    check_team_planes(meta, nm, voc)?;
+    check_keyed_records(meta, nm)
+}
+
+/// Checks the team of each stage that has one.
+fn check_team_stages(meta: &Json, nm: &str, voc: &Vocab) -> R {
     if let Some(Json::Arr(stages)) = meta.get("stages") {
         for (k, st) in stages.iter().enumerate() {
             let Some(team) = st.get("team") else { continue };
             let whr = format!("stages[{k}].team");
-            if !matches!(team, Json::Obj(_)) || !team.has("threads") {
-                return bad(&whr, "must be an object with 'threads'".into());
-            }
-            let th = team.get("threads").unwrap();
-            if !int_ge(th, 1) {
-                return bad(&whr, format!("threads must be an integer >= 1; got {}", th.repr()));
-            }
-            let gj = team.get("grid").cloned().unwrap_or(Json::Str(voc.default_grid.clone()));
-            let names: Vec<&str> = { let mut n: Vec<&str> = voc.grids.iter().map(|g| g.0.as_str()).collect(); n.sort(); n };
-            if !in_set(&gj, &names)? {
-                return bad(&whr, format!("grid {} is not one of {}", gj.repr(), lst(&names)));
-            }
-            let Json::Str(grid) = &gj else { unreachable!() };
-            let extra: &[(String, String)] = &voc.grids.iter().find(|g| &g.0 == grid).unwrap().1;
-            let has_extra = |k: &str| extra.iter().any(|e| e.0 == k);
-            let mut surplus: Vec<String> = team.keys().into_iter().filter(|k| !["threads", "grid"].contains(k) && !has_extra(k)).map(String::from).collect();
-            surplus.sort();
-            if !surplus.is_empty() {
-                return bad(&whr, format!("has keys {} that grid {} does not carry", slst(&surplus), gj.repr()));
-            }
-            let mut need: Vec<String> = extra.iter().filter(|e| !team.has(&e.0)).map(|e| e.0.clone()).collect();
-            need.sort();
-            if !need.is_empty() {
-                return bad(&whr, format!("grid {} needs {}", gj.repr(), slst(&need)));
-            }
-            let mut records: Vec<&str> = extra.iter().filter(|e| e.1 == "record").map(|e| e.0.as_str()).collect();
-            records.sort();
-            for key in records {
-                keyed_record(team.get(key).unwrap(), &format!("{whr}.{key}"), nm)?;
-            }
-            // Python walks a set here: its order is hash-dependent. The port walks sorted order.
-            let mut planes: Vec<&str> = extra.iter().filter(|e| e.1 == "plane").map(|e| e.0.as_str()).collect();
-            planes.sort();
-            for key in planes {
-                let v = team.get(key).unwrap();
-                if !nonempty_str(v) {
-                    return bad(&whr, format!("{key} must be a plane name; got {}", v.repr()));
-                }
-            }
+            check_stage_team(team, &whr, nm, voc)?;
         }
     }
+    Ok(())
+}
+
+/// Checks one stage team: its thread count, its grid, the keys that grid carries and the value of each.
+fn check_stage_team(team: &Json, whr: &str, nm: &str, voc: &Vocab) -> R {
+    let bad = |whr: &str, why: String| -> R { ve(format!("{nm}: {whr} {why}")) };
+    if !matches!(team, Json::Obj(_)) || !team.has("threads") {
+        return bad(whr, "must be an object with 'threads'".into());
+    }
+    let th = team.get("threads").unwrap();
+    if !int_ge(th, 1) {
+        return bad(
+            whr,
+            format!("threads must be an integer >= 1; got {}", th.repr()),
+        );
+    }
+    let gj = team
+        .get("grid")
+        .cloned()
+        .unwrap_or(Json::Str(voc.default_grid.clone()));
+    let names: Vec<&str> = {
+        let mut n: Vec<&str> = voc.grids.iter().map(|g| g.0.as_str()).collect();
+        n.sort();
+        n
+    };
+    if !in_set(&gj, &names)? {
+        return bad(
+            whr,
+            format!("grid {} is not one of {}", gj.repr(), lst(&names)),
+        );
+    }
+    let Json::Str(grid) = &gj else { unreachable!() };
+    let extra: &[(String, String)] = &voc.grids.iter().find(|g| &g.0 == grid).unwrap().1;
+    let has_extra = |k: &str| extra.iter().any(|e| e.0 == k);
+    let mut surplus: Vec<String> = team
+        .keys()
+        .into_iter()
+        .filter(|k| !["threads", "grid"].contains(k) && !has_extra(k))
+        .map(String::from)
+        .collect();
+    surplus.sort();
+    if !surplus.is_empty() {
+        return bad(
+            whr,
+            format!(
+                "has keys {} that grid {} does not carry",
+                slst(&surplus),
+                gj.repr()
+            ),
+        );
+    }
+    let mut need: Vec<String> = extra
+        .iter()
+        .filter(|e| !team.has(&e.0))
+        .map(|e| e.0.clone())
+        .collect();
+    need.sort();
+    if !need.is_empty() {
+        return bad(whr, format!("grid {} needs {}", gj.repr(), slst(&need)));
+    }
+    let mut records: Vec<&str> = extra
+        .iter()
+        .filter(|e| e.1 == "record")
+        .map(|e| e.0.as_str())
+        .collect();
+    records.sort();
+    for key in records {
+        keyed_record(team.get(key).unwrap(), &format!("{whr}.{key}"), nm)?;
+    }
+    // The planes are checked in sorted order, so the first fault does not depend on any hash order.
+    let mut planes: Vec<&str> = extra
+        .iter()
+        .filter(|e| e.1 == "plane")
+        .map(|e| e.0.as_str())
+        .collect();
+    planes.sort();
+    for key in planes {
+        let v = team.get(key).unwrap();
+        if !nonempty_str(v) {
+            return bad(whr, format!("{key} must be a plane name; got {}", v.repr()));
+        }
+    }
+    Ok(())
+}
+
+/// Checks every entry of `team_planes`: dtype, per-lane size and at most one of the three sizing keys.
+fn check_team_planes(meta: &Json, nm: &str, voc: &Vocab) -> R {
+    let bad = |whr: &str, why: String| -> R { ve(format!("{nm}: {whr} {why}")) };
     if let Some(planes) = meta.get("team_planes") {
-        let Json::Obj(items) = planes else { return bad("team_planes", "must be an object of plane records".into()) };
+        let Json::Obj(items) = planes else {
+            return bad("team_planes", "must be an object of plane records".into());
+        };
         for (pname, spec) in items {
             let whr = format!("team_planes[{}]", crate::keytext::py_str(pname));
             let ks = spec.keys();
-            if !matches!(spec, Json::Obj(_)) || !spec.has("dtype") || !spec.has("per_lane")
-                || ks.iter().any(|k| !["dtype", "per_lane", "keys", "per_target", "once", "fill"].contains(k))
+            if !matches!(spec, Json::Obj(_))
+                || !spec.has("dtype")
+                || !spec.has("per_lane")
+                || ks.iter().any(|k| {
+                    !["dtype", "per_lane", "keys", "per_target", "once", "fill"].contains(k)
+                })
             {
                 return bad(&whr, "must be an object with 'dtype', 'per_lane' and optionally 'keys', 'per_target', 'once', 'fill'".into());
             }
             let dt = spec.get("dtype").unwrap();
             if !in_set(dt, &refs(&voc.dtypes))? {
-                return bad(&whr, format!("dtype must be one of {}; got {}", lst(&refs(&voc.dtypes)), dt.repr()));
+                return bad(
+                    &whr,
+                    format!(
+                        "dtype must be one of {}; got {}",
+                        lst(&refs(&voc.dtypes)),
+                        dt.repr()
+                    ),
+                );
             }
             let pl = spec.get("per_lane").unwrap();
             if !int_ge(pl, 1) {
-                return bad(&whr, format!("per_lane must be an integer >= 1; got {}", pl.repr()));
+                return bad(
+                    &whr,
+                    format!("per_lane must be an integer >= 1; got {}", pl.repr()),
+                );
             }
-            if ["keys", "per_target", "once"].iter().filter(|k| spec.has(k)).count() > 1 {
-                return bad(&whr, "sizes by at most one of 'keys', 'per_target' and 'once'".into());
+            if ["keys", "per_target", "once"]
+                .iter()
+                .filter(|k| spec.has(k))
+                .count()
+                > 1
+            {
+                return bad(
+                    &whr,
+                    "sizes by at most one of 'keys', 'per_target' and 'once'".into(),
+                );
             }
             if let Some(k) = spec.get("keys") {
                 keyed_record(k, &format!("{whr}.keys"), nm)?;
             }
             if let Some(pt) = spec.get("per_target") {
                 if !nonempty_str(pt) {
-                    return bad(&whr, format!("per_target must be a plane name; got {}", pt.repr()));
+                    return bad(
+                        &whr,
+                        format!("per_target must be a plane name; got {}", pt.repr()),
+                    );
                 }
             }
             if let Some(o) = spec.get("once") {
@@ -419,22 +741,47 @@ pub fn check_team_fields(meta: &Json, nm: &str, voc: &Vocab) -> R {
             }
         }
     }
+    Ok(())
+}
+
+/// Checks every entry of `keyed` as a keyed record.
+fn check_keyed_records(meta: &Json, nm: &str) -> R {
+    let bad = |whr: &str, why: String| -> R { ve(format!("{nm}: {whr} {why}")) };
     if let Some(k) = meta.get("keyed") {
-        let Json::Obj(items) = k else { return bad("keyed", "must be an object of keyed records".into()) };
+        let Json::Obj(items) = k else {
+            return bad("keyed", "must be an object of keyed records".into());
+        };
         for (kname, rec) in items {
-            keyed_record(rec, &format!("keyed[{}]", crate::keytext::py_str(kname)), nm)?;
+            keyed_record(
+                rec,
+                &format!("keyed[{}]", crate::keytext::py_str(kname)),
+                nm,
+            )?;
         }
     }
     Ok(())
 }
 
+/// Checks `index_planes`: a non-empty list of distinct plane names, each declared by `arg_spec` when that declares any.
 pub fn check_index_planes(meta: &Json, nm: &str) -> R {
-    let Some(planes) = meta.get("index_planes") else { return Ok(()) };
+    let Some(planes) = meta.get("index_planes") else {
+        return Ok(());
+    };
     let names: Option<Vec<&str>> = match planes {
-        Json::Arr(a) if !a.is_empty() => a.iter().map(|p| match p { Json::Str(s) if !s.is_empty() => Some(s.as_str()), _ => None }).collect(),
+        Json::Arr(a) if !a.is_empty() => a
+            .iter()
+            .map(|p| match p {
+                Json::Str(s) if !s.is_empty() => Some(s.as_str()),
+                _ => None,
+            })
+            .collect(),
         _ => None,
     };
-    let Some(names) = names else { return ve(format!("{nm}: index_planes must be a non-empty list of plane names")) };
+    let Some(names) = names else {
+        return ve(format!(
+            "{nm}: index_planes must be a non-empty list of plane names"
+        ));
+    };
     let mut uniq = names.clone();
     uniq.sort();
     uniq.dedup();
@@ -456,22 +803,37 @@ pub fn check_index_planes(meta: &Json, nm: &str) -> R {
             }
         }
         Some(j @ (Json::Int(_) | Json::Float(_) | Json::Bool(_))) => {
-            let falsy = matches!(j, Json::Int(0) | Json::Bool(false)) || matches!(j, Json::Float(f) if *f == 0.0);
+            let falsy = matches!(j, Json::Int(0) | Json::Bool(false))
+                || matches!(j, Json::Float(f) if *f == 0.0);
             if !falsy {
-                return Err(format!("TypeError: '{}' object is not iterable", j.type_name()));
+                return Err(format!(
+                    "TypeError: '{}' object is not iterable",
+                    j.type_name()
+                ));
             }
         }
         _ => {}
     }
-    let missing: Vec<String> = names.iter().filter(|p| !declared.iter().any(|d| matches!(d, Json::Str(s) if s == *p))).map(|s| s.to_string()).collect();
+    let missing: Vec<String> = names
+        .iter()
+        .filter(|p| {
+            !declared
+                .iter()
+                .any(|d| matches!(d, Json::Str(s) if s == *p))
+        })
+        .map(|s| s.to_string())
+        .collect();
     if !declared.is_empty() && !missing.is_empty() {
-        return ve(format!("{nm}: index_planes names {}, which arg_spec does not declare", slst(&missing)));
+        return ve(format!(
+            "{nm}: index_planes names {}, which arg_spec does not declare",
+            slst(&missing)
+        ));
     }
     Ok(())
 }
 
-
-// ---------------- the graph_block descriptor family (port of raptor.schema.blocks.validate_block_descriptor) ----------------
+// ---------------- the graph_block descriptor family ----------------
+/// Whether a value counts as set: present and not null, false, zero, or an empty string or collection.
 fn truthy(j: Option<&Json>) -> bool {
     match j {
         None | Some(Json::Null) | Some(Json::Bool(false)) | Some(Json::Int(0)) => false,
@@ -482,24 +844,46 @@ fn truthy(j: Option<&Json>) -> bool {
         _ => true,
     }
 }
+/// The length of a string, list, tuple or object; any other kind is refused with the wrong-kind text.
 fn len_of(j: &Json) -> Result<usize, String> {
     match j {
         Json::Arr(a) | Json::Tup(a) => Ok(a.len()),
         Json::Obj(o) => Ok(o.len()),
         Json::Str(s) => Ok(s.chars().count()),
-        o => Err(format!("TypeError: object of type '{}' has no len()", o.type_name())),
+        o => Err(format!(
+            "TypeError: object of type '{}' has no len()",
+            o.type_name()
+        )),
     }
 }
 use crate::facts::BLOCK_EXEC_REF_FIELDS;
 use crate::facts::BLOCK_REQUIRED_FIELDS as BLOCK_REQUIRED;
-const BLOCK_INT: [&str; 6] = ["in_degree", "input_width", "out_degree", "output_width", "param_width", "state_width"];
+/// The integer fields of a graph-block descriptor.
+const BLOCK_INT: [&str; 6] = [
+    "in_degree",
+    "input_width",
+    "out_degree",
+    "output_width",
+    "param_width",
+    "state_width",
+];
 use crate::facts::BLOCK_FORBIDDEN_FIELDS as BLOCK_FORBIDDEN;
-use crate::facts::SCATTER_POLICIES;
 use crate::facts::EXEC_REF_KINDS;
+use crate::facts::SCATTER_POLICIES;
 
+/// Checks one execution reference of a graph-block descriptor: an object with only `kind` and `kernel`, a known kind and a kernel id.
 fn exec_ref(r: &Json, field: &str, name: &str) -> R {
-    let Json::Obj(items) = r else { return ve(format!("{name}: graph_block {field} must be an object {{'kind': ..., 'kernel': ...}}; got {}", r.repr())) };
-    let mut unknown: Vec<String> = items.iter().map(|(k, _)| k.clone()).filter(|k| k != "kind" && k != "kernel").collect();
+    let Json::Obj(items) = r else {
+        return ve(format!(
+            "{name}: graph_block {field} must be an object {{'kind': ..., 'kernel': ...}}; got {}",
+            r.repr()
+        ));
+    };
+    let mut unknown: Vec<String> = items
+        .iter()
+        .map(|(k, _)| k.clone())
+        .filter(|k| k != "kind" && k != "kernel")
+        .collect();
     unknown.sort();
     if !unknown.is_empty() {
         return ve(format!("{name}: graph_block {field} carries unknown key(s) {} (exec references are closed to 'kind', 'kernel')", slst(&unknown)));
@@ -510,12 +894,15 @@ fn exec_ref(r: &Json, field: &str, name: &str) -> R {
     }
     let target = r.get("kernel").cloned().unwrap_or(Json::Null);
     if !nonempty_str(&target) {
-        return ve(format!("{name}: graph_block {field}.kernel must be a non-empty kernel id; got {}", target.repr()));
+        return ve(format!(
+            "{name}: graph_block {field}.kernel must be a non-empty kernel id; got {}",
+            target.repr()
+        ));
     }
     Ok(())
 }
 
-/// `raptor.schema.blocks.validate_block_descriptor`: the version gate, then the graph_block clause. `name` is the raw artifact name.
+/// Validates a graph-block descriptor: the version gate, then the descriptor clause. `name` is the raw artifact name.
 pub fn validate_block_descriptor(meta: &Json, name: &str) -> R {
     check_schema_version(meta, &crate::keytext::py_str(name), false)?;
     if !truthy(meta.get("kernel")) {
@@ -533,7 +920,11 @@ pub fn validate_block_descriptor(meta: &Json, name: &str) -> R {
     }
     for f in BLOCK_REQUIRED {
         if !meta.has(f) {
-            return ve(format!("{name}: missing required graph_block field {} (schema-v1 graph_block requires {})", crate::keytext::py_str(f), BLOCK_REQUIRED.join(", ")));
+            return ve(format!(
+                "{name}: missing required graph_block field {} (schema-v1 graph_block requires {})",
+                crate::keytext::py_str(f),
+                BLOCK_REQUIRED.join(", ")
+            ));
         }
     }
     for f in BLOCK_INT {
@@ -541,13 +932,21 @@ pub fn validate_block_descriptor(meta: &Json, name: &str) -> R {
         let nonneg = f == "param_width";
         let ok = matches!(v, Json::Int(i) if (if nonneg { *i >= 0 } else { *i > 0 }) && *i < (1i128 << 32));
         if !ok {
-            let what = if nonneg { "a non-negative integer" } else { "a positive integer" };
+            let what = if nonneg {
+                "a non-negative integer"
+            } else {
+                "a positive integer"
+            };
             return ve(format!("{name}: graph_block {f} must be {what} representable in a uint32 (< 2**32); got {}", v.repr()));
         }
     }
-    if let (Some(Json::Int(o)), Some(Json::Int(s))) = (meta.get("output_width"), meta.get("state_width")) {
+    if let (Some(Json::Int(o)), Some(Json::Int(s))) =
+        (meta.get("output_width"), meta.get("state_width"))
+    {
         if o > s {
-            return ve(format!("{name}: graph_block output_width ({o}) must not exceed state_width ({s})"));
+            return ve(format!(
+                "{name}: graph_block output_width ({o}) must not exceed state_width ({s})"
+            ));
         }
     }
     let policy = meta.get("scatter_policy").unwrap();

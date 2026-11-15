@@ -1,0 +1,1541 @@
+[
+{
+"kind": "bogus",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "unknown op kind 'bogus'; the vocabulary is ('add', 'sub', 'mul', 'div', 'pow', 'min', 'max', 'atan2', 'hypot', 'copysign', 'fmod', 'remainder', 'fdim', 'neg', 'abs', 'sqrt', 'rsqrt', 'exp', 'log', 'sin', 'cos', 'tan', 'tanh', 'asin', 'acos', 'atan', 'floor', 'exp2', 'expm1', 'log2', 'log10', 'log1p', 'cbrt', 'sinh', 'cosh', 'asinh', 'acosh', 'atanh', 'ceil', 'trunc', 'round', 'rint', 'sign', 'erf', 'erfc', 'spacing', 'lt', 'le', 'gt', 'ge', 'eq', 'ne', 'land', 'lor', 'lnot', 'dot', 'cross', 'norm', 'sum', 'component', 'component_at', 'set_component_at', 'add_at', 'vec', 'splat', 'mv', 'mm', 'transpose', 'outer', 'lu', 'chol', 'eigh', 'chol_from', 'qr', 'lu_solve', 'lu_solve_t', 'cho_solve', 'tri_lower', 'tri_upper_t', 'qr_solve', 'qr_gram_solve', 'lu_info', 'lu_det', 'chol_info', 'chol_factor', 'eigh_w', 'eigh_v', 'eigh_info', 'qr_info', 'lstsq', 'lstsq_gram_solve', 'lstsq_info', 'ray_tri', 'ray_aabb', 'ray_sphere', 'quat_mul', 'quat_conj', 'quat_recip', 'quat_rotate', 'as_pure', 'as_vec3', 'random_uniform', 'random_normal', 'select', 'dispatch', 'at', 'fma', 'clip', 'isnan', 'isinf', 'isfinite', 'floordiv', 'mod', 'band', 'bor', 'bxor', 'shl', 'shr', 'clamp_index', 'invert', 'cast')"
+},
+{
+"kind": "vec",
+"operands": [],
+"literal": "None",
+"message": "vec: at least one component is required"
+},
+{
+"kind": "dispatch",
+"operands": [
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "dispatch: a kind plus at least 2 branches is required, got 2 operand(s)"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'add' takes 2 operand(s), got 1"
+},
+{
+"kind": "neg",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'neg' takes 1 operand(s), got 2"
+},
+{
+"kind": "select",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'select' takes 3 operand(s), got 2"
+},
+{
+"kind": "cast",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "'i16'",
+"message": "cast: the target dtype must be one of ('int32', 'uint32', 'i32', 'f64'), got 'i16'"
+},
+{
+"kind": "cast",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "'f64'",
+"message": "[cast operand] cast: converts a rank-0 number, got TensorType(shape=(3,), dtype='f64', tag=None); a bool is not a number: choose between two values with a select"
+},
+{
+"kind": "cast",
+"operands": [
+{
+"dtype": "bool",
+"shape": [],
+"tag": null
+}
+],
+"literal": "'f64'",
+"message": "[cast operand] cast: converts a rank-0 number, got TensorType(shape=(), dtype='bool', tag=None); a bool is not a number: choose between two values with a select"
+},
+{
+"kind": "qr",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'qr': a tall matrix (rows >= columns) is factored, got TensorType(shape=(2, 3), dtype='f64', tag=None)"
+},
+{
+"kind": "qr",
+"operands": [
+{
+"dtype": "i32",
+"shape": [
+3,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'qr': an f64/f32 matrix is factored, got TensorType(shape=(3, 2), dtype='i32', tag=None)"
+},
+{
+"kind": "lu",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lu': a square matrix is factored, got TensorType(shape=(2, 3), dtype='f64', tag=None)"
+},
+{
+"kind": "lu",
+"operands": [
+{
+"dtype": "i32",
+"shape": [
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lu': an f64/f32 matrix is factored, got TensorType(shape=(2, 2), dtype='i32', tag=None)"
+},
+{
+"kind": "lu",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+0,
+0
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lu': the dimension is static and n >= 1, got n=0"
+},
+{
+"kind": "qr",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+0
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'qr': the columns are static and n >= 1, got n=0"
+},
+{
+"kind": "lstsq",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3,
+2
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lstsq': the right-hand side is a f64 vector or matrix of 3 rows against the 3x2 matrix, got TensorType(shape=(4,), dtype='f64', tag=None)"
+},
+{
+"kind": "lstsq_gram_solve",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3,
+2
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lstsq_gram_solve': the right-hand side is a f64 vector or matrix of 2 rows against the 3x2 matrix, got TensorType(shape=(3,), dtype='f64', tag=None)"
+},
+{
+"kind": "lu_solve",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lu_solve' reads the result of 'lu' (a lu_factor), got TensorType(shape=(2, 2), dtype='f64', tag=None)"
+},
+{
+"kind": "lu_solve",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": "lu_factor"
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lu_solve': the right-hand side is a f64 vector (2,) or matrix (2, k) against the 2x2 factor, got TensorType(shape=(3,), dtype='f64', tag=None)"
+},
+{
+"kind": "qr_solve",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3,
+2
+],
+"tag": "qr_factor"
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'qr_solve': the right-hand side is a f64 vector (3,) or matrix (3, k) against the 3x2 factor, got TensorType(shape=(4,), dtype='f64', tag=None)"
+},
+{
+"kind": "lu_det",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lu_det' reads the result of 'lu' (a lu_factor), got TensorType(shape=(2, 2), dtype='f64', tag=None)"
+},
+{
+"kind": "eigh_w",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": "lu_factor"
+}
+],
+"literal": "None",
+"message": "op 'eigh_w' reads the result of 'eigh' (a eigh_factor), got TensorType(shape=(2, 2), dtype='f64', tag='lu_factor')"
+},
+{
+"kind": "ray_tri",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": null
+},
+{
+"kind": "ray_aabb",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'ray_aabb': operand 4 is a rank-0 f64/f32 value, got TensorType(shape=(2,), dtype='f64', tag=None)"
+},
+{
+"kind": "ray_sphere",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'ray_sphere': operand 3 is a rank-0 f64/f32 value, got TensorType(shape=(), dtype='i32', tag=None)"
+},
+{
+"kind": "floordiv",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[integer operator operands] op 'floordiv' is an integer operator and takes rank-0 integer operands, got TensorType(shape=(), dtype='f64', tag=None); for floats use a floor or remainder op, or convert the operands to integers"
+},
+{
+"kind": "band",
+"operands": [
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[integer operator operands] op 'band' is an integer operator and takes rank-0 integer operands, got TensorType(shape=(3,), dtype='i32', tag=None); for floats use a floor or remainder op, or convert the operands to integers"
+},
+{
+"kind": "sqrt",
+"operands": [
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[integer plane value] op 'sqrt' is not defined on an int32 value; convert it to a float first to compute in floating point"
+},
+{
+"kind": "div",
+"operands": [
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[integer plane value] op 'div' is not defined on an int32 value (an integer value divides with the integer division op); convert it to a float first to compute in floating point"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "int32",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "int32",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'add': an int32 value is rank-0 (a per-sample integer plane), got operands [TensorType(shape=(3,), dtype='int32', tag=None), TensorType(shape=(3,), dtype='int32', tag=None)]"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[mixed scalar types] an int32 value does not mix with f64 without a cast (no silent promotion): convert explicitly: the float side to int32 for the integer result, or the int32 side to a float for the float one"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "uint32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[mixed scalar types] an int32 value does not mix with uint32 without a cast (no silent promotion): convert one side to the other's type explicitly"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[mixed scalar types] an int32 value does not mix with i32 without a cast (no silent promotion): convert the other side to int32 explicitly"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "int32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "bool",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[mixed scalar types] an int32 value does not mix with bool without a cast (no silent promotion): convert the other side to int32 explicitly"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "bool",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[bool operand] op 'add' takes numbers, not a bool condition: use land, lor, lnot for logic, or a select between values for a number"
+},
+{
+"kind": "sin",
+"operands": [
+{
+"dtype": "bool",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[bool operand] op 'sin' takes numbers, not a bool condition: use land, lor, lnot for logic, or a select between values for a number"
+},
+{
+"kind": "fma",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "bool",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[bool operand] op 'fma' takes numbers, not a bool condition: use land, lor, lnot for logic, or a select between values for a number"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'add': shapes (3,) and (4,) do not broadcast \u2014 an elementwise op takes equal shapes or one rank-0 operand"
+},
+{
+"kind": "fma",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'fma': shapes (3,) and (4,) do not broadcast \u2014 an elementwise op takes equal shapes or one rank-0 operand"
+},
+{
+"kind": "lt",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'lt': shapes (3,) and (4,) do not broadcast \u2014 an elementwise op takes equal shapes or one rank-0 operand"
+},
+{
+"kind": "select",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "select: the condition must be bool-typed, got TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "select",
+"operands": [
+{
+"dtype": "bool",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "select: the branches disagree \u2014 TensorType(shape=(), dtype='f64', tag=None) vs TensorType(shape=(), dtype='f32', tag=None)"
+},
+{
+"kind": "dispatch",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "dispatch: kind must be a rank-0 i32 value, got TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "dispatch",
+"operands": [
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "dispatch: the branches disagree \u2014 TensorType(shape=(), dtype='f64', tag=None) vs TensorType(shape=(), dtype='f32', tag=None)"
+},
+{
+"kind": "random_uniform",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "random_uniform: seed must be a rank-0 i32/i64 value (a literal, a by-value uniform wire, or a plane read), got TensorType(shape=(), dtype='f64', tag=None)"
+},
+{
+"kind": "random_normal",
+"operands": [
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "random_normal: counter must be a rank-0 i32/i64 value (a literal, a by-value uniform wire, or a plane read), got TensorType(shape=(2,), dtype='i32', tag=None)"
+},
+{
+"kind": "dot",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'dot': operand typed TensorType(shape=(2, 2), dtype='f64', tag=None) is not the expected rank-1 value"
+},
+{
+"kind": "dot",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'dot': operand shapes (3,) and (4,) disagree"
+},
+{
+"kind": "cross",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'cross': operand typed TensorType(shape=(4,), dtype='f64', tag=None) is not the expected rank-1 extent-3 value"
+},
+{
+"kind": "cross",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'cross': operand typed TensorType(shape=(2,), dtype='f64', tag=None) is not the expected rank-1 extent-3 value"
+},
+{
+"kind": "norm",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'norm': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+},
+{
+"kind": "sum",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "sum: expected a rank-1 or rank-2 operand, got TensorType(shape=(2, 2, 2), dtype='f64', tag=None)"
+},
+{
+"kind": "splat",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "(3,)",
+"message": "op 'splat': operand typed TensorType(shape=(2,), dtype='f64', tag=None) is not the expected rank-0 value"
+},
+{
+"kind": "splat",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "splat: the literal must be a target shape, got None"
+},
+{
+"kind": "splat",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "()",
+"message": "splat: the literal must be a target shape, got ()"
+},
+{
+"kind": "component",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "0",
+"message": "op 'component': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+},
+{
+"kind": "component",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "5",
+"message": "component: index 5 is out of the static extent 3 (an extent is a type, not a runtime value)"
+},
+{
+"kind": "component",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "True",
+"message": "component: index True is out of the static extent 3 (an extent is a type, not a runtime value)"
+},
+{
+"kind": "component",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "(1, 4)",
+"message": "component: index (1, 4) is out of the static extent (2, 2) (an extent is a type, not a runtime value)"
+},
+{
+"kind": "component_at",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'component_at': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+},
+{
+"kind": "component_at",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "[component index type] component_at: the index must be a rank-0 integer value, got TensorType(shape=(), dtype='f64', tag=None). A runtime component index is an address, so it must be an integer value, never a float"
+},
+{
+"kind": "set_component_at",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "set_component_at: the index must be a rank-0 integer value, got TensorType(shape=(), dtype='f64', tag=None) (see component_at)"
+},
+{
+"kind": "set_component_at",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'set_component_at': operand typed TensorType(shape=(2,), dtype='f64', tag=None) is not the expected rank-0 value"
+},
+{
+"kind": "add_at",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "i32",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'add_at': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+},
+{
+"kind": "vec",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'vec': operand typed TensorType(shape=(2,), dtype='f64', tag=None) is not the expected rank-0 value"
+},
+{
+"kind": "vec",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "(2, 2)",
+"message": "vec: a matrix shape literal must be (rows, cols) with rows * cols == 3 entries, got (2, 2)"
+},
+{
+"kind": "vec",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "(1, 2, 3)",
+"message": "vec: a matrix shape literal must be (rows, cols) with rows * cols == 2 entries, got (1, 2, 3)"
+},
+{
+"kind": "mv",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'mv': operand typed TensorType(shape=(3,), dtype='f64', tag=None) is not the expected rank-2 value"
+},
+{
+"kind": "mv",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "mv: (2, 3) does not contract with (2,)"
+},
+{
+"kind": "mm",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3,
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'mm': operand typed TensorType(shape=(3,), dtype='f64', tag=None) is not the expected rank-2 value"
+},
+{
+"kind": "mm",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2,
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "mm: (2, 3) does not contract with (2, 3)"
+},
+{
+"kind": "outer",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'outer': operand typed TensorType(shape=(2, 2), dtype='f64', tag=None) is not the expected rank-1 value"
+},
+{
+"kind": "transpose",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'transpose': operand typed TensorType(shape=(3,), dtype='f64', tag=None) is not the expected rank-2 value"
+},
+{
+"kind": "quat_mul",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'quat_mul': operand typed TensorType(shape=(3,), dtype='f64', tag=None) is not the expected rank-1 extent-4 value"
+},
+{
+"kind": "quat_conj",
+"operands": [
+{
+"dtype": "f64",
+"shape": [],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'quat_conj': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 extent-4 value"
+},
+{
+"kind": "as_pure",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'as_pure': operand typed TensorType(shape=(4,), dtype='f64', tag=None) is not the expected rank-1 extent-3 value"
+},
+{
+"kind": "quat_rotate",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'quat_rotate': operand typed TensorType(shape=(3,), dtype='f64', tag=None) is not the expected rank-1 extent-4 value"
+},
+{
+"kind": "quat_rotate",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+},
+{
+"dtype": "f64",
+"shape": [
+4
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'quat_rotate': operand typed TensorType(shape=(4,), dtype='f64', tag=None) is not the expected rank-1 extent-3 value"
+},
+{
+"kind": "as_vec3",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "op 'as_vec3': operand typed TensorType(shape=(3,), dtype='f64', tag=None) is not the expected rank-1 extent-4 value"
+},
+{
+"kind": "add",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": "lu_factor"
+},
+{
+"dtype": "f64",
+"shape": [
+3
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "an LU factor is not a matrix: it carries pivots and a status, so it is read with lu_solve, lu_det or lu_info, never as an operand of arithmetic"
+},
+{
+"kind": "mul",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": "eigh_factor"
+},
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "an eigh factor is not a matrix: it carries pivots and a status, so it is read with eigh_w, eigh_v or eigh_info, never as an operand of arithmetic"
+},
+{
+"kind": "sub",
+"operands": [
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": "qr_factor"
+},
+{
+"dtype": "f64",
+"shape": [
+2,
+2
+],
+"tag": null
+}
+],
+"literal": "None",
+"message": "a QR factor is not a matrix: it carries pivots and a status, so it is read with qr_solve or qr_info, never as an operand of arithmetic"
+}
+]

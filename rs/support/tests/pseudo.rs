@@ -1,7 +1,13 @@
 //! Pseudo-code through the door's C functions.
 mod common;
 use common::*;
-use raptor_ir::door::*;
+use raptor_ir::record::Ctx;
+use raptor_support::safe::*;
+
+/// The pseudo-code of a node in a context.
+fn pseudo(c: *mut Ctx, h: u32) -> String {
+    raptor_support::pseudo::pseudo(unsafe { &*c }, h).unwrap()
+}
 
 #[test]
 fn probe_expression() {
@@ -18,7 +24,13 @@ fn shared_node_is_named_and_sink_kind_shows() {
     let c = rx_ctx_new();
     let x = leaf(c, "x");
     let s = mk(c, "Op", None, &[x], "(('kind', 'neg'), ('literal', None))");
-    let e = mk(c, "Op", None, &[s, s], "(('kind', 'mul'), ('literal', None))");
+    let e = mk(
+        c,
+        "Op",
+        None,
+        &[s, s],
+        "(('kind', 'mul'), ('literal', None))",
+    );
     let w = mk(c, "WideWrite", None, &[e], "(('name', 'w'),)");
     assert_eq!(pseudo(c, w), "t0 = neg(x)\nwide_write w = (t0 * t0)\n");
     rx_ctx_free(c);
@@ -29,7 +41,10 @@ fn a_loop_renders() {
     let c = rx_ctx_new();
     let (lp, _) = a_loop(c);
     let t = pseudo(c, lp);
-    assert_eq!(t, "loop i in 0..2 step 1 carry [c = 0]\n  c <- p\n  o = c\n");
+    assert_eq!(
+        t,
+        "loop i in 0..2 step 1 carry [c = 0]\n  c <- p\n  o = c\n"
+    );
     assert_eq!(t, pseudo(c, lp));
     rx_ctx_free(c);
 }

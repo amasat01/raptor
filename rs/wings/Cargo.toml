@@ -1,0 +1,16 @@
+[package]
+name = "raptor_wings"
+version = "0.0.1"
+edition = "2021"
+license = "Apache-2.0"
+
+[lib]
+crate-type = ["rlib", "staticlib"]
+
+[dependencies]
+raptor_ir = { path = "../ir" }
+rcore = { path = "../core" }
+
+[dev-dependencies]
+# the safe forms of the door's pointer functions for tests
+raptor_support = { path = "../support" }

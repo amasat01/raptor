@@ -17,6 +17,38 @@ pub struct SegmentedDispatch {
     pub branches: usize,
 }
 
+/// How a dispatch group is lowered, decided by the feathers the kind of its node states.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Strategy {
+    /// Every branch is evaluated and the result selected.
+    Predicated,
+    /// A plain dispatch: a switch.
+    Switch,
+    /// The branches are split apart, one unit each.
+    Segmented,
+    /// The branches are counted and the form is chosen at run time.
+    Auto,
+}
+
+/// The strategy of each dispatch group of the walk, by the group's name, in the walk's order.
+pub fn strategies(ctx: &Ctx, walk: u32) -> R<Vec<(String, Strategy)>> {
+    let order = walk_order(ctx, walk)?;
+    let mut out = vec![];
+    for (index, node) in ctx.dispatch_nodes(&order)?.into_iter().enumerate() {
+        let strategy = if ctx.has_feather(node, "splits_by_branch")? {
+            Strategy::Segmented
+        } else if ctx.has_feather(node, "counts_branch_mix")? {
+            Strategy::Auto
+        } else if ctx.has_feather(node, "evaluates_all_branches")? {
+            Strategy::Predicated
+        } else {
+            Strategy::Switch
+        };
+        out.push((group_name(index), strategy));
+    }
+    Ok(out)
+}
+
 /// The name of the dispatch group at `index`.
 pub fn group_name(index: usize) -> String {
     format!("dispatch{index}")
@@ -28,12 +60,12 @@ pub fn offsets_name(group: &str) -> String {
 }
 
 /// The name of the plane a split unit writes each sample's branch class to.
-fn class_name(group: &str) -> String {
+pub fn class_name(group: &str) -> String {
     format!("{group}_class")
 }
 
 /// The name of the plane a split unit marks each sample on whose selector no longer picks the unit's branch.
-fn stale_name(group: &str) -> String {
+pub fn stale_name(group: &str) -> String {
     format!("{group}_stale")
 }
 

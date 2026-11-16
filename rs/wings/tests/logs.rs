@@ -1,7 +1,7 @@
 //! The log of an ordered gradient: each ordered accumulate of a table's gradient is stored into slots of two log planes and one team
 //! stage folds each target's log, each on a small hand-made kernel.
 use raptor_ir::record::Ctx;
-use raptor_support::safe::{rx_ctx_new, rx_last_error, rx_make};
+use raptor_support::safe::{rx_ctx_new, rx_last_error, rx_make, rx_new_loop};
 use raptor_wings::blocks::LinalgForm;
 use raptor_wings::declare::rw_declare_kinds;
 use raptor_wings::stages::{stages, StageFacts, Stages};
@@ -176,7 +176,94 @@ fn an_ordered_accumulate_of_a_vector_is_refused_by_name() {
         &[vector, key, key],
         fields,
     );
-    let refused = stages(unsafe { &mut *c }, &[sink], &facts()).unwrap_err();
-    let text = format!("{refused:?}");
-    assert!(text.contains("accumulates scalars; g is not one"), "{text}");
+    let Stages::Refused(why) = stages(unsafe { &mut *c }, &[sink], &facts()).unwrap() else {
+        panic!("a vector accumulate is refused");
+    };
+    assert!(why.contains("the one into g is not a scalar"), "{why}");
+}
+
+/// A loop at nesting `depth` over `start..stop` by `step` holding the sinks `body`. It carries one value, which it leaves as it is:
+/// a lowered loop carries at least one.
+fn lp(c: *mut Ctx, depth: i64, (start, stop, step): (i64, i64, i64), body: &[u32]) -> u32 {
+    let (index, start_value) = (loop_index(c, depth), read(c, "x"));
+    let fields = format!("((\"depth\", {depth}), (\"slot\", 0), (\"name\", \"s\"))");
+    let carry = make(c, "LoopCarry", "f64", &[], &[], &fields);
+    let none: [u32; 0] = [];
+    let mut out = 0;
+    let status = rx_new_loop(
+        c,
+        index,
+        &carry,
+        1,
+        &start_value,
+        &carry,
+        start,
+        stop,
+        step,
+        body.as_ptr(),
+        body.len(),
+        std::ptr::null(),
+        none.as_ptr(),
+        0,
+        std::ptr::null(),
+        0,
+        std::ptr::null(),
+        &mut out,
+    );
+    assert_eq!(status, 0, "{}", unsafe {
+        CStr::from_ptr(rx_last_error(c)).to_string_lossy()
+    });
+    out
+}
+
+/// The index of a loop at nesting depth `depth`.
+fn loop_index(c: *mut Ctx, depth: i64) -> u32 {
+    let fields = format!("((\"depth\", {depth}), (\"name\", \"h{depth}\"), (\"bounds\", None))");
+    make(c, "LoopIndex", "i32", &[], &[], &fields)
+}
+
+/// Three accumulates of the net kernel's shape in a loop of eight trips take 3 x 8 slots: one slot per site and iteration, one
+/// fold of that width, and the loop keeps its stores of the log in its body.
+#[test]
+fn the_accumulates_of_a_loop_take_one_slot_per_site_and_iteration() {
+    let c = fresh();
+    let (x, key, zero) = (read(c, "x"), read_int(c, "k"), read_int(c, "i0"));
+    let body: Vec<u32> = (0..3).map(|_| accumulate(c, "g", (x, zero, key))).collect();
+    let looped = lp(c, 0, (0, 8, 1), &body);
+    let Stages::Cut(cut) = stages(unsafe { &mut *c }, &[looped], &facts()).unwrap() else {
+        panic!("a kernel with ordered accumulates in a loop is cut into stages");
+    };
+    assert_eq!(
+        cut.stages.len(),
+        2,
+        "the stage that fills the logs, then the fold"
+    );
+    let fold = cut.stages[1].team.as_ref().expect("a fold is a team stage");
+    assert_eq!((fold.steps[0].op, fold.steps[0].n), ("ordered_fold", 24));
+    assert!(fold.planes.iter().all(|p| p.per_lane == 24));
+    let kept = &cut.stages[0].sinks;
+    assert_eq!(kept.len(), 1, "the loop is the one sink of the fill stage");
+    let ctx = unsafe { &*c };
+    let mut inner = vec![];
+    raptor_ir::dump::refs(&ctx.field(kept[0], "body_sinks").unwrap(), &mut inner);
+    assert_eq!(inner.len(), 6, "two log stores per accumulate");
+    assert!(inner
+        .iter()
+        .all(|&s| ctx.table.is_a(ctx.nodes[s as usize].class, "LogStore")));
+}
+
+/// A loop that steps by two, a loop inside a loop and a vector accumulate in a loop are each refused with their reason.
+#[test]
+fn a_loop_the_log_cannot_hold_is_refused_with_its_reason() {
+    let c = fresh();
+    let (x, key, zero) = (read(c, "x"), read_int(c, "k"), read_int(c, "i0"));
+    let stepped = lp(c, 0, (0, 8, 2), &[accumulate(c, "g", (x, zero, key))]);
+    let inner = lp(c, 1, (0, 4, 1), &[accumulate(c, "g", (x, zero, key))]);
+    let nested = lp(c, 0, (0, 8, 1), &[accumulate(c, "g", (inner, zero, key))]);
+    for (sink, reason) in [(stepped, "a loop of step 2"), (nested, "nested loops")] {
+        let Stages::Refused(why) = stages(unsafe { &mut *c }, &[sink], &facts()).unwrap() else {
+            panic!("{reason} is refused");
+        };
+        assert!(why.contains(reason), "{why}");
+    }
 }

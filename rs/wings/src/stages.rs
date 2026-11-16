@@ -91,8 +91,8 @@ pub enum Stages {
     Whole,
     /// The kernel is cut into stages.
     Cut(Cut),
-    /// An ordered accumulate sits in the body of a loop, whose slots by iteration are not planned.
-    LoopLog,
+    /// An ordered accumulate the log cannot hold, and why; the lowering names the kernel.
+    Refused(String),
     /// A sum over the lanes of a key has a payload whose block stages are not planned.
     Unwritten,
 }
@@ -314,7 +314,7 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
     };
     let (sinks, logs) = match logs::ordered(ctx, &sinks)? {
         Logged::Done(sinks, logs) => (sinks, logs),
-        Logged::InLoop => return Ok(Stages::LoopLog),
+        Logged::Refused(why) => return Ok(Stages::Refused(why)),
     };
     let sinks = &sinks[..];
     let order = Graph::build(ctx, sinks)?.order;

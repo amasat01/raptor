@@ -8,6 +8,7 @@ pub mod boxing;
 pub mod cells;
 pub mod chain;
 pub mod construct;
+pub mod cost;
 pub mod declare;
 pub mod lanes;
 pub mod loops;

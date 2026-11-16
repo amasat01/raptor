@@ -13,8 +13,16 @@ pub struct WalkRes {
     pub positions: HashMap<u32, u32>,
     /// The nodes in canonical order.
     pub order: Vec<u32>,
-    /// The slots the walk binds, as (role, name), in argument order.
-    pub slots: Vec<Key>,
+    /// The slots the walk binds, each with its key and type, in argument order.
+    pub leaves: Vec<(Key, Tt)>,
+    /// The access class of the walk.
+    pub access: String,
+    /// The name of the finish statement among the sinks, when there is one.
+    pub finish: Option<String>,
+    /// The names of the planes whose launch-start value the walk reads, sorted.
+    pub prior: Vec<String>,
+    /// For each dispatch of the walk, whether no sink of the walk writes a plane its selector reads.
+    pub static_selector: Vec<bool>,
     /// The text of each field of the walk, by name.
     pub fields: Vec<(&'static str, String)>,
     /// The digest of the walk.
@@ -26,13 +34,13 @@ pub type Key = (String, String);
 
 /// A TensorType's parts, as a binding carries them.
 #[derive(Clone, PartialEq)]
-struct Tt {
+pub struct Tt {
     /// The element type name.
-    dtype: String,
+    pub dtype: String,
     /// The extents.
-    shape: Vec<i64>,
+    pub shape: Vec<i64>,
     /// The tag, if any.
-    tag: Option<String>,
+    pub tag: Option<String>,
 }
 impl Tt {
     /// The type as a TensorType value.
@@ -129,7 +137,7 @@ impl Quantity {
 }
 
 /// The declared slots: a tuple of Slot records.
-fn declared_slots(text: Option<&str>) -> Result<Vec<(String, String, Tt)>, Fault> {
+fn declared_slots(text: Option<&str>) -> Result<Vec<(Key, Tt)>, Fault> {
     let (Val::Tuple(v) | Val::List(v)) = parse(text.unwrap_or("()")).map_err(Fault::Refused)?
     else {
         return refuse("declared: expected a tuple of Slot records");
@@ -145,7 +153,7 @@ fn declared_slots(text: Option<&str>) -> Result<Vec<(String, String, Tt)>, Fault
             else {
                 return refuse("Slot: role, name and ttype");
             };
-            Ok((r.clone(), n.clone(), Tt::of(t)?))
+            Ok(((r.clone(), n.clone()), Tt::of(t)?))
         })
         .collect()
 }
@@ -180,12 +188,11 @@ impl Ctx {
     pub fn canonical(
         &mut self,
         sinks: &[u32],
-        declared: Option<&str>,
+        declared: &[(Key, Tt)],
         force: Option<&str>,
-        exempt: Option<&str>,
+        exempt: &[String],
     ) -> Result<usize, Fault> {
         self.check_roots(sinks)?;
-        let exempt = parse_exempt(exempt)?;
         let finish = self.finish_name(sinks)?;
         let tr = self.traverse(sinks)?;
         let mut bound = self.merge_bindings(&tr)?;
@@ -196,8 +203,8 @@ impl Ctx {
         let ordered = order_slots(&layout)?;
         let spans = quantity_spans(&reached, &ordered, sep)?;
         let watched = self.watched_nodes(&tr);
-        let access = self.access_class(&watched, &exempt, force)?;
-        let listing = self.dispatch_listing(&watched)?;
+        let access = self.access_class(&watched, exempt, force)?;
+        let (listing, static_selector) = self.dispatch_listing(&watched)?;
         let prior = self.prior_reads(&tr)?;
         let (fields, digest) = render_fields(
             &ordered,
@@ -205,13 +212,19 @@ impl Ctx {
             access,
             &tr.walk.pre,
             listing,
-            prior,
+            &prior,
             &finish,
         );
         let (objs, w) = (&tr.objs, &tr.walk);
-        let slots = ordered.iter().map(|slot| slot.0.clone()).collect();
         self.walks.push(WalkRes {
-            slots,
+            leaves: ordered,
+            access: access.to_string(),
+            finish: match finish {
+                Val::Str(name) => Some(name),
+                _ => None,
+            },
+            prior: prior.into_iter().collect(),
+            static_selector,
             positions: objs
                 .iter()
                 .enumerate()
@@ -471,7 +484,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
 
     /// The dispatch listing: for each dispatch node its selector reads, and whether the selector is static (reads no
     /// plane the walk writes).
-    fn dispatch_listing(&self, watched: &[u32]) -> Result<Vec<Val>, Fault> {
+    fn dispatch_listing(&self, watched: &[u32]) -> Result<(Vec<Val>, Vec<bool>), Fault> {
         let mut written: HashSet<String> = HashSet::new();
         for &h in watched {
             if self.is_a(h, "Sink") {
@@ -485,7 +498,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 }
             }
         }
-        let mut listing = vec![];
+        let (mut listing, mut statics) = (vec![], vec![]);
         for (i, &h) in self.dispatch_nodes(watched)?.iter().enumerate() {
             let (mut seen, mut reads, mut st) = (
                 HashSet::new(),
@@ -504,6 +517,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 st.extend(self.nodes[n as usize].ops.iter().copied());
             }
             let stat = !reads.iter().any(|(_, nm)| written.contains(nm));
+            statics.push(stat);
             listing.push(Val::Tuple(vec![
                 s(&format!("dispatch{i}")),
                 self.field(h, "K")?,
@@ -511,7 +525,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 Val::Bool(stat),
             ]));
         }
-        Ok(listing)
+        Ok((listing, statics))
     }
 
     /// The names of the prior reads in the walk.
@@ -591,15 +605,15 @@ fn parse_exempt(exempt: Option<&str>) -> Result<Vec<String>, Fault> {
 
 /// Adds the declared slots to the bound ones: a read is minted when the body binds none, a sink slot is kept for the
 /// order and returned. Refuses a declared slot typed differently from the body's.
-fn merge_declared(bound: &mut Bindings, declared: Option<&str>) -> Result<Vec<(Key, Tt)>, Fault> {
+fn merge_declared(bound: &mut Bindings, declared: &[(Key, Tt)]) -> Result<Vec<(Key, Tt)>, Fault> {
     let Bindings { held, at } = bound;
     let sink_roles = CONSTS
         .iter()
         .find(|c| c.0 == "SINK_ROLES")
         .map_or(&[][..], |c| c.1);
     let mut declared_sinks: Vec<(Key, Tt)> = vec![];
-    for (role, name, tt) in declared_slots(declared)? {
-        let key = (role.clone(), name.clone());
+    for (key, tt) in declared.iter().cloned() {
+        let (role, name) = key.clone();
         match at.get(&key) {
             None if sink_roles.contains(&role.as_str()) => declared_sinks.push((key, tt)),
             None => {
@@ -751,7 +765,7 @@ fn render_fields(
     access: &str,
     pre: &str,
     listing: Vec<Val>,
-    prior: BTreeSet<String>,
+    prior: &BTreeSet<String>,
     finish: &Val,
 ) -> (Vec<(&'static str, String)>, String) {
     let (mut tail, mut leaves, mut spec, mut types, mut index) =
@@ -835,9 +849,9 @@ pub unsafe extern "C" fn rx_canonical(
         }
         let w = c.canonical(
             slice(sinks, n, "sinks")?,
-            opt(declared_kt, "declared_kt")?,
+            &declared_slots(opt(declared_kt, "declared_kt")?)?,
             opt(force_access, "force_access")?,
-            opt(exempt_kt, "exempt_kt")?,
+            &parse_exempt(opt(exempt_kt, "exempt_kt")?)?,
         )?;
         unsafe { *out = w as u32 }
         Ok(())
@@ -862,14 +876,8 @@ pub unsafe extern "C" fn rx_canonical_like(
         if out.is_null() {
             return badarg("out is NULL");
         }
-        let kept = c
-            .walk(like)?
-            .fields
-            .iter()
-            .find(|x| x.0 == "leaves")
-            .map(|x| x.1.clone())
-            .map_or_else(|| refuse("a walk has no field \"leaves\""), Ok)?;
-        let w = c.canonical(slice(sinks, n, "sinks")?, Some(&kept), None, Some("()"))?;
+        let kept = c.walk(like)?.leaves.clone();
+        let w = c.canonical(slice(sinks, n, "sinks")?, &kept, None, &[])?;
         unsafe { *out = w as u32 }
         Ok(())
     })

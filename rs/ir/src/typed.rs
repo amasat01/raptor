@@ -411,9 +411,9 @@ pub unsafe extern "C" fn rx_walk_binds(
         let (role, name) = (cstr(role, "role")?, cstr(name, "name")?);
         let bound = c
             .walk(walk)?
-            .slots
+            .leaves
             .iter()
-            .any(|s| s.0 == role && s.1 == name);
+            .any(|s| s.0 .0 == role && s.0 .1 == name);
         store(out, bound as c_int)
     })
 }
@@ -435,9 +435,9 @@ pub unsafe extern "C" fn rx_walk_args(
     count: *mut usize,
 ) -> c_int {
     guard(ctx, |c| {
-        let slots = &c.walk(walk)?.slots;
+        let slots = &c.walk(walk)?.leaves;
         let mut packed = String::new();
-        for (role, name) in slots {
+        for ((role, name), _) in slots {
             packed.push_str(role);
             packed.push('\0');
             packed.push_str(name);

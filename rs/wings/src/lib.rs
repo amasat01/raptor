@@ -26,7 +26,7 @@ pub mod team;
 pub mod wide;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
-use raptor_ir::value::{parse, Val};
+use raptor_ir::value::Val;
 use std::ffi::{c_char, c_int, CStr};
 
 /// A list of the core manifest's constants.
@@ -111,23 +111,9 @@ pub(crate) fn walk_order(c: &Ctx, w: u32) -> R<Vec<u32>> {
     Ok(c.walk(w)?.order.clone())
 }
 
-/// The access class the walk was recorded with; refuses when it has none.
-fn walk_access(c: &Ctx, w: u32) -> R<String> {
-    let t = c
-        .walk(w)?
-        .fields
-        .iter()
-        .find(|x| x.0 == "access")
-        .map(|x| x.1.clone());
-    match t.as_deref().map(parse) {
-        Some(Ok(Val::Str(s))) => Ok(s),
-        _ => refuse("the walk has no readable access class"),
-    }
-}
-
 /// Whether the lanes of a tile may run side by side over the walk.
 fn lane_form(c: &Ctx, w: u32) -> R<bool> {
-    match walk_access(c, w)?.as_str() {
+    match c.walk(w)?.access.as_str() {
         "sample_local" => Ok(true),
         "cross_sample_read" => {
             let mut all = vec![];

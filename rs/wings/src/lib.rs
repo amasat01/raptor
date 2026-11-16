@@ -256,7 +256,7 @@ fn library_kind(k: &str) -> bool {
 }
 
 /// The lookup planes read as parameter cells, in first-seen order.
-fn param_cells(c: &Ctx, w: u32) -> R<Vec<String>> {
+pub fn param_cells(c: &Ctx, w: u32) -> R<Vec<String>> {
     let mut out: Vec<String> = vec![];
     for n in walk_order(c, w)? {
         if !is_a(c, n, "At") {
@@ -274,6 +274,31 @@ fn param_cells(c: &Ctx, w: u32) -> R<Vec<String>> {
         }
     }
     Ok(out)
+}
+
+/// The matrix input planes the walk reads only through `at`, sorted by name: their column count is the caller's, not the lane
+/// count.
+pub fn gather_mats(c: &Ctx, w: u32) -> R<Vec<String>> {
+    let (mut direct, mut crossed) = (vec![], vec![]);
+    for n in walk_order(c, w)? {
+        let at = is_a(c, n, "At");
+        for (place, &o) in c.nodes[n as usize].ops.iter().enumerate() {
+            let matrix = is_a(c, o, "Leaf") && c.str_field(o, "role")? == "mat_in";
+            if !matrix {
+                continue;
+            }
+            let name = c.str_field(o, "name")?;
+            if at && place == 0 {
+                crossed.push(name);
+            } else {
+                direct.push(name);
+            }
+        }
+    }
+    crossed.retain(|name| !direct.contains(name));
+    crossed.sort();
+    crossed.dedup();
+    Ok(crossed)
 }
 
 /// The accumulates of the walk that keep a companion plane, once per name.

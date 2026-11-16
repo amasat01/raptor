@@ -5,6 +5,7 @@
 //! each stage records which values it recomputes.
 use crate::blockteam::{self, Block};
 use crate::cells::{build, cell_read, stored};
+use crate::logs::{self, Log, Logged};
 use crate::place::{kind_of, Graph};
 use crate::planes::type_parts;
 use crate::scatter;
@@ -90,8 +91,8 @@ pub enum Stages {
     Whole,
     /// The kernel is cut into stages.
     Cut(Cut),
-    /// The body folds an ordered log, whose team stage is not planned.
-    Team,
+    /// An ordered accumulate sits in the body of a loop, whose slots by iteration are not planned.
+    LoopLog,
     /// A sum over the lanes of a key has a payload whose block stages are not planned.
     Unwritten,
 }
@@ -311,6 +312,10 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
     let Some((sinks, scattered)) = scatter::logged(ctx, sinks, limits)? else {
         return Ok(Stages::Unwritten);
     };
+    let (sinks, logs) = match logs::ordered(ctx, &sinks)? {
+        Logged::Done(sinks, logs) => (sinks, logs),
+        Logged::InLoop => return Ok(Stages::LoopLog),
+    };
     let sinks = &sinks[..];
     let order = Graph::build(ctx, sinks)?.order;
     let mut cuts = vec![];
@@ -319,11 +324,8 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
             cuts.push(node);
         }
     }
-    if sinks.iter().any(|&sink| is_a(ctx, sink, "LogStore")) {
-        return Ok(Stages::Team);
-    }
     let groups = team::groups(ctx, &order, &facts.team)?;
-    if cuts.is_empty() && groups.is_empty() && scattered.is_empty() {
+    if cuts.is_empty() && groups.is_empty() && scattered.is_empty() && logs.is_empty() {
         return Ok(Stages::Whole);
     }
     for &cut in cuts.iter().filter(|&&cut| !is_a(ctx, cut, "BlockSum")) {
@@ -336,7 +338,13 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
             );
         }
     }
-    cut_stages(ctx, (sinks, &order, &cuts), (groups, scattered), facts).map(Stages::Cut)
+    cut_stages(
+        ctx,
+        (sinks, &order, &cuts),
+        (groups, scattered, logs),
+        facts,
+    )
+    .map(Stages::Cut)
 }
 
 /// The cell each cut is read through, and for each cut whether the cell is a fresh one.
@@ -458,7 +466,7 @@ fn team_stage(ctx: &mut Ctx, spec: TeamSpec) -> R<Stage> {
 fn cut_stages(
     ctx: &mut Ctx,
     (given, order, cuts): (&[u32], &[u32], &[u32]),
-    (groups, scattered): (Vec<Group>, scatter::Slots),
+    (groups, scattered, logs): (Vec<Group>, scatter::Slots, Vec<Log>),
     facts: &StageFacts,
 ) -> R<Cut> {
     let (cell_of, marks) = name_cells(ctx, given, order, cuts)?;
@@ -544,6 +552,9 @@ fn cut_stages(
     }
     for (target, slots) in &scattered {
         scatter_stages(ctx, (target, *slots), facts.scatter, &mut out)?;
+    }
+    for log in &logs {
+        out.push(team_stage(ctx, logs::fold_spec(log, &facts.team))?);
     }
     for cell in &mut cells {
         cell.internal = out.iter().any(|st| st.cells_in.contains(&cell.name));

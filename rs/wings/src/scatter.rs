@@ -23,7 +23,7 @@ pub fn names(target: &str) -> [String; 4] {
 }
 
 /// A constant of the type.
-fn constant(ctx: &mut Ctx, value: i64, dtype: &str) -> R<u32> {
+pub(crate) fn constant(ctx: &mut Ctx, value: i64, dtype: &str) -> R<u32> {
     build(
         ctx,
         "Const",

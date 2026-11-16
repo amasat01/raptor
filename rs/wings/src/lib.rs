@@ -11,6 +11,7 @@ pub mod construct;
 pub mod cost;
 pub mod declare;
 pub mod lanes;
+pub mod logs;
 pub mod loops;
 pub mod lstsq;
 pub mod place;

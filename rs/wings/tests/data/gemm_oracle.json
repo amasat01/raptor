@@ -1,0 +1,745 @@
+{
+ "cases": {
+  "both_minor": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#2, #3)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#4, #3)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#2, #5)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#6, #7)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 8), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#8, #9)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_row_stride'))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#4, #13)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 8), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#14, #15)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #11)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#10, #20)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #17)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#16, #23)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #10, #11, #12, #16, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "w",
+    "f"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "f",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "f_bar",
+       "transpose_a": false,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "forward": [
+      {
+       "a": "f",
+       "b": "w",
+       "out": "y",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "f": 5,
+      "w": 6
+     },
+     "lane_flat": true,
+     "n": 30,
+     "shapes": {
+      "f": [
+       5,
+       8
+      ],
+      "f_bar": [
+       5,
+       8
+      ],
+      "w": [
+       6,
+       8
+      ],
+      "w_bar": [
+       6,
+       8
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": []
+  },
+  "contract": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'f_row_stride'))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#5, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "w",
+    "f"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "f",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "f_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "f",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "f": 5,
+      "w": 6
+     },
+     "lane_flat": true,
+     "n": 30,
+     "shapes": {
+      "f": [
+       8,
+       5
+      ],
+      "f_bar": [
+       8,
+       5
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": []
+  },
+  "contract_staged": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'feat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|i32|()|None|()|(('kind', 'nsamples'), ('role', 'nsamples'), ('name', 'n_samples'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|PlaneExtent|i32|()|None|(#12,)|()\nn|Op|i32|()|None|(#5, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'feat_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "w",
+    "feat"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "feat",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "feat_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "feat",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "feat": null,
+      "w": 6
+     },
+     "lane_flat": true,
+     "n": 30,
+     "shapes": {
+      "feat": [
+       8,
+       5
+      ],
+      "feat_bar": [
+       8,
+       5
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    },
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "feat",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "feat_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "feat",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "feat": null,
+      "w": 6
+     },
+     "lane_flat": true,
+     "n": 60,
+     "shapes": {
+      "feat": [
+       8,
+       10
+      ],
+      "feat_bar": [
+       8,
+       10
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       10,
+       6
+      ],
+      "y_bar": [
+       10,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": [
+    "feat"
+   ]
+  },
+  "f_minor": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#5, #13)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 8), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#14, #15)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #17)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#16, #23)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #16, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "w",
+    "f"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "f",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "f_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": false
+      }
+     ],
+     "forward": [
+      {
+       "a": "f",
+       "b": "w",
+       "out": "y",
+       "transpose_a": false,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "f": 5,
+      "w": 6
+     },
+     "lane_flat": true,
+     "n": 30,
+     "shapes": {
+      "f": [
+       5,
+       8
+      ],
+      "f_bar": [
+       5,
+       8
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": []
+  },
+  "swapped": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'f_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#5, #6)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #12)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#13, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #11)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#10, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #9, #10, #11, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "f",
+    "w"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "f_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "f",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "f",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "f": 5,
+      "w": 6
+     },
+     "lane_flat": false,
+     "n": 30,
+     "shapes": {
+      "f": [
+       8,
+       5
+      ],
+      "f_bar": [
+       8,
+       5
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": []
+  },
+  "swapped_staged": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'feat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|i32|()|None|()|(('kind', 'nsamples'), ('role', 'nsamples'), ('name', 'n_samples'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|PlaneExtent|i32|()|None|(#1,)|()\nn|Op|i32|()|None|(#5, #6)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'feat_sample_stride'))\nn|Op|i32|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #12)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#13, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #11)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#10, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #9, #10, #11, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "feat",
+    "w"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "feat_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "feat",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "feat",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "feat": null,
+      "w": 6
+     },
+     "lane_flat": false,
+     "n": 30,
+     "shapes": {
+      "feat": [
+       8,
+       5
+      ],
+      "feat_bar": [
+       8,
+       5
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    },
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "feat_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "feat",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "feat",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "feat": null,
+      "w": 6
+     },
+     "lane_flat": false,
+     "n": 60,
+     "shapes": {
+      "feat": [
+       8,
+       10
+      ],
+      "feat_bar": [
+       8,
+       10
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       10,
+       6
+      ],
+      "y_bar": [
+       10,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": [
+    "feat"
+   ]
+  },
+  "two_outputs": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'f_row_stride'))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#5, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'z'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\nroot|#31\n",
+   "operands": [
+    "w",
+    "f"
+   ],
+   "plans": null,
+   "sinks": [
+    30,
+    31
+   ],
+   "staged": []
+  },
+  "unit_major": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'w_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#5, #6)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'f_row_stride'))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #12)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#13, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #11)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#10, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #9, #10, #11, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "w",
+    "f"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "f",
+       "out": "w_bar",
+       "transpose_a": false,
+       "transpose_b": true,
+       "transpose_out": true
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "f_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "w",
+       "b": "f",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": false,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "f": 5,
+      "w": 6
+     },
+     "lane_flat": false,
+     "n": 30,
+     "shapes": {
+      "f": [
+       8,
+       5
+      ],
+      "f_bar": [
+       8,
+       5
+      ],
+      "w": [
+       8,
+       6
+      ],
+      "w_bar": [
+       8,
+       6
+      ],
+      "y": [
+       6,
+       5
+      ],
+      "y_bar": [
+       6,
+       5
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": []
+  },
+  "w_minor": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#2, #3)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#4, #3)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#2, #5)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#6, #7)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 8), ('label', 'w_neuron_stride'))\nn|Op|i32|()|None|(#8, #9)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_row_stride'))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'f_row_stride'))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#4, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'f_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#18, #11)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#10, #20)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #10, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "operands": [
+    "w",
+    "f"
+   ],
+   "plans": [
+    {
+     "adjoint": [
+      {
+       "a": "y_bar",
+       "b": "f",
+       "out": "w_bar",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": false
+      },
+      {
+       "a": "y_bar",
+       "b": "w",
+       "out": "f_bar",
+       "transpose_a": false,
+       "transpose_b": false,
+       "transpose_out": true
+      }
+     ],
+     "forward": [
+      {
+       "a": "f",
+       "b": "w",
+       "out": "y",
+       "transpose_a": true,
+       "transpose_b": true,
+       "transpose_out": false
+      }
+     ],
+     "free_sizes": {
+      "f": 5,
+      "w": 6
+     },
+     "lane_flat": true,
+     "n": 30,
+     "shapes": {
+      "f": [
+       8,
+       5
+      ],
+      "f_bar": [
+       8,
+       5
+      ],
+      "w": [
+       6,
+       8
+      ],
+      "w_bar": [
+       6,
+       8
+      ],
+      "y": [
+       5,
+       6
+      ],
+      "y_bar": [
+       5,
+       6
+      ]
+     }
+    }
+   ],
+   "sinks": [
+    30
+   ],
+   "staged": []
+  }
+ }
+}

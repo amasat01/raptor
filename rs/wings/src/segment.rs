@@ -5,6 +5,7 @@
 use crate::planes::{type_parts, NodeType};
 use crate::{is_a, walk_order, R};
 use raptor_ir::record::{refuse, Ctx, Fault};
+use raptor_ir::typed::{pair_part, put_pairs, RxPair};
 use raptor_ir::value::{ttype_val, Val};
 
 /// The dispatch a kernel is split by.
@@ -52,6 +53,11 @@ pub fn strategies(ctx: &Ctx, walk: u32) -> R<Vec<(String, Strategy)>> {
 /// The name of the dispatch group at `index`.
 pub fn group_name(index: usize) -> String {
     format!("dispatch{index}")
+}
+
+/// The name of the slot that counts the branch mix of an automatic group.
+pub fn mix_name(group: &str) -> String {
+    format!("{group}_mix")
 }
 
 /// The name of the plane that holds a group's run offsets.
@@ -345,5 +351,31 @@ pub unsafe extern "C" fn rw_dispatch_strategies(
 ) -> std::ffi::c_int {
     raptor_ir::door::guard(ctx, |_| {
         raptor_ir::consts::put_names(&dispatch_strategies(), buf, cap, len, count)
+    })
+}
+
+/// The dispatch groups of the walk in the walk's order, each as a pair (group name, name of its branch-mix slot): the slot is the
+/// absent part for a group that has none, which only an automatic group does.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_walk_mix_slots(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> std::ffi::c_int {
+    raptor_ir::door::guard(ctx, |c| {
+        let mut pairs = vec![];
+        for (group, strategy) in strategies(c, walk)? {
+            let mix = (strategy == Strategy::Auto).then(|| Val::Str(mix_name(&group)));
+            pairs.push(RxPair {
+                first: pair_part(&Val::Str(group))?,
+                second: pair_part(&mix.unwrap_or(Val::None))?,
+            });
+        }
+        put_pairs(&pairs, buf, cap, n)
     })
 }

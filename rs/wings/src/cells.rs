@@ -324,7 +324,12 @@ pub fn kernel_walk(
     let mixes: Vec<(Key, Tt)> = strategies(ctx, found)?
         .into_iter()
         .filter(|(_, s)| *s == Strategy::Auto)
-        .map(|(group, _)| (("lookup".into(), format!("{group}_mix")), uint32.clone()))
+        .map(|(group, _)| {
+            (
+                ("lookup".into(), crate::segment::mix_name(&group)),
+                uint32.clone(),
+            )
+        })
         .collect();
     if mixes.is_empty() {
         return Ok(found);

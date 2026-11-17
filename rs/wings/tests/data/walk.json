@@ -734,5 +734,77 @@
     "auto"
    ]
   ]
+ },
+ {
+  "id": "finishing_declared",
+  "digest": "db2124820d844bd7dcc447a7d6d51a9ab2278010c2285663df9e00e63acd6141",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": "done",
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "finished_count"
+    ],
+    [
+     [],
+     "uint32",
+     null
+    ]
+   ],
+   [
+    [
+     "terminated",
+     "done"
+    ],
+    [
+     [],
+     "bool",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "finishing_declared_mistyped",
+  "error": "declared slot (role='lookup', name='finished_count') is typed TensorType(shape=(), dtype='uint32', tag=None) but the body binds it as TensorType(shape=(), dtype='f64', tag=None); a slot is keyed on (role, name) ALONE"
  }
 ]

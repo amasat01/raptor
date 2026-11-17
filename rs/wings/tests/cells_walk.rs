@@ -1,12 +1,12 @@
 //! The canonical walk of a kernel's sinks with the companion, finished-count, fused-steps and branch-mix rules, and the typed reads of
 //! the walk. Oracle: tests/data/walk.json, recorded from the previous Python `cells.walk` on the same sinks.
 use raptor_ir::record::{Ctx, Fault};
-use raptor_ir::typed::RxType;
+use raptor_ir::typed::{RxPair, RxPairPart, RxType};
 use raptor_ir::value::{ttype_val, Val};
 use raptor_ir::walkreads::{rx_walk_prior, rx_walk_slot_type, rx_walk_static_selector};
 use raptor_wings::cells::kernel_walk;
 use raptor_wings::declare::declare_kinds;
-use raptor_wings::segment::{rw_walk_strategies, strategies, Strategy};
+use raptor_wings::segment::{rw_walk_mix_slots, rw_walk_strategies, strategies, Strategy};
 use rcore::json::{self, J};
 use std::ffi::{c_char, CStr, CString};
 
@@ -84,7 +84,15 @@ fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
             sample_sum(c, "s", x, "sum"),
             sample_sum(c, "s_comp", y, "sum"),
         ],
-        "finishing" => {
+        "finishing" | "finishing_declared" | "finishing_declared_mistyped" => {
+            let dtype = if name.ends_with("mistyped") {
+                "f64"
+            } else {
+                "uint32"
+            };
+            if name != "finishing" {
+                declared = format!("(Slot(role='lookup', name='finished_count', ttype=TensorType(shape=(), dtype='{dtype}', tag=None)),)");
+            }
             let done = c.make_op("gt", &[x, y], &Val::None).unwrap();
             vec![sink(c, "Assign", "o", x), sink(c, "Finish", "done", done)]
         }
@@ -129,7 +137,7 @@ fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
 #[test]
 fn the_kernel_walk_is_the_recorded_one() {
     let data = json::parse(include_str!("data/walk.json")).unwrap();
-    assert_eq!(data.arr().len(), 13);
+    assert_eq!(data.arr().len(), 15);
     for case in data.arr() {
         let id = case.get("id").and_then(J::str).unwrap();
         let mut c = Ctx::new().unwrap();
@@ -177,6 +185,33 @@ fn the_kernel_walk_is_the_recorded_one() {
                 "{id}"
             );
         }
+    }
+}
+
+/// A pair of absent parts, to be written by a door.
+fn empty_pair() -> RxPair {
+    let part = || RxPairPart {
+        kind: 0,
+        number: 0,
+        text: [0; 64],
+    };
+    RxPair {
+        first: part(),
+        second: part(),
+    }
+}
+
+/// The text of a pair part, None for an absent one.
+fn part_text(part: &RxPairPart) -> Option<String> {
+    match part.kind {
+        0 => None,
+        2 => Some(
+            unsafe { CStr::from_ptr(part.text.as_ptr()) }
+                .to_str()
+                .unwrap()
+                .to_string(),
+        ),
+        kind => panic!("a part of kind {kind}"),
     }
 }
 
@@ -247,6 +282,20 @@ fn the_typed_reads_of_a_walk_are_the_recorded_members() {
                 .collect::<Vec<_>>(),
             "{id}"
         );
+        let slots = case.get("slot_types").unwrap().arr();
+        let binds = |slot: &str| slots.iter().any(|r| r.arr()[0].strs() == ["lookup", slot]);
+        let mut mixes: Vec<RxPair> = (0..rows.len()).map(|_| empty_pair()).collect();
+        let mut count = 0;
+        let status =
+            unsafe { rw_walk_mix_slots(ctx, w, mixes.as_mut_ptr(), mixes.len(), &mut count) };
+        assert_eq!((status, count), (0, rows.len()), "{id}: mix slots");
+        for (pair, row) in mixes.iter().zip(rows) {
+            let group = row.arr()[0].str().unwrap();
+            let mix = format!("{group}_mix");
+            assert_eq!(part_text(&pair.first), Some(group.to_string()), "{id}");
+            // the previous walk bound the mix slot of a group exactly when it had one
+            assert_eq!(part_text(&pair.second), binds(&mix).then_some(mix), "{id}");
+        }
         for (i, row) in rows.iter().enumerate() {
             let mut flag = 9;
             assert_eq!(
@@ -270,4 +319,24 @@ fn the_dispatch_strategies_are_the_recorded_four() {
     assert_eq!(got, ["switch", "predicated", "segmented", "auto"]);
     got.sort();
     assert_eq!(got, ["auto", "predicated", "segmented", "switch"]); // the recorded tuple ("predicated", "switch", "segmented", "auto")
+}
+
+/// The names the wings own are the previous package's: the special kinds (as a set), and the two reserved planes.
+#[test]
+fn the_wing_names_are_the_recorded_ones() {
+    let data = json::parse(include_str!("data/wing_names.json")).unwrap();
+    let mut special: Vec<String> = raptor_wings::special_kinds()
+        .into_iter()
+        .map(String::from)
+        .collect();
+    special.sort();
+    assert_eq!(special, data.get("SPECIAL_KINDS").unwrap().strs());
+    assert_eq!(
+        [raptor_wings::cells::FUSED_STEPS_PLANE],
+        data.get("FUSED_STEPS_PLANE").unwrap().strs().as_slice()
+    );
+    assert_eq!(
+        [raptor_wings::cells::FINISHED_PLANE],
+        data.get("FINISHED_PLANE").unwrap().strs().as_slice()
+    );
 }

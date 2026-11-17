@@ -58,6 +58,21 @@ enum {
   RX_KIND_OTHER = 8
 };
 int rx_field_kind(rx_ctx* ctx, rx_node node, const char* name, int* out);
+
+/* A pair of parts, each absent (kind 0), a whole number (kind 1, in number) or a text shorter than RX_TAG_CAP (kind 2, in text): what a tuple of
+   pairs holds, such as the kept lane axes (label, extent). An absent part is the kind, never a text that stands for it. */
+typedef struct {
+  int kind;
+  int64_t number;
+  char text[RX_TAG_CAP];
+} rx_pair_part;
+typedef struct {
+  rx_pair_part first;
+  rx_pair_part second;
+} rx_pair;
+/* A field that holds a tuple of pairs (the tuple field of kind RX_KIND_OTHER): *n is the count (RX_TRUNC when cap is smaller). A field that holds
+   None answers RX_ABSENT; anything but pairs of those parts is a refusal. */
+int rx_field_pairs(rx_ctx* ctx, rx_node node, const char* name, rx_pair* buf, size_t cap, size_t* n);
 /* A tuple or list of integers (the two-call array protocol: *n is the count, RX_TRUNC when cap is smaller). */
 int rx_field_ints(rx_ctx* ctx, rx_node node, const char* name, int64_t* buf, size_t cap, size_t* n);
 /* A tuple or list of texts: *count names, each NUL-terminated, back to back in buf; *len is the

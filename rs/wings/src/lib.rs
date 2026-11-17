@@ -8,8 +8,10 @@ pub mod boxing;
 pub mod cells;
 pub mod chain;
 pub mod construct;
+pub mod contraction;
 pub mod cost;
 pub mod declare;
+pub mod gemm;
 pub mod lanes;
 pub mod logs;
 pub mod loops;
@@ -29,6 +31,7 @@ pub mod wide;
 pub mod working_set;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
+use raptor_ir::typing::all_kinds;
 use raptor_ir::value::Val;
 use std::ffi::{c_char, c_int, CStr};
 
@@ -242,6 +245,38 @@ fn library_kind(k: &str) -> bool {
     (konst("UNARY_MATH").contains(&k) && !CHEAP_UNARY.contains(&k))
         || LIBRARY_BINARY.contains(&k)
         || konst("RANDOM_OPS").contains(&k)
+}
+
+/// The op kinds that call into the math library or draw a random number (what the cost counts as special), in the order of the op list.
+pub fn special_kinds() -> Vec<&'static str> {
+    all_kinds()
+        .into_iter()
+        .filter(|k| library_kind(k))
+        .collect()
+}
+
+/// The names a wing owns, by name, as the names protocol: `SPECIAL_KINDS`, `FUSED_STEPS_PLANE` and `FINISHED_PLANE`.
+///
+/// # Safety
+/// `name` is a NUL-terminated string; `buf` is valid for `cap` bytes; `len` and `count` for one write each.
+#[no_mangle]
+pub unsafe extern "C" fn rw_wing_names(
+    ctx: *mut Ctx,
+    name: *const c_char,
+    buf: *mut c_char,
+    cap: usize,
+    len: *mut usize,
+    count: *mut usize,
+) -> c_int {
+    guard(ctx, |_| {
+        let names: Vec<String> = match name_of(name, "name")? {
+            "SPECIAL_KINDS" => special_kinds().into_iter().map(String::from).collect(),
+            "FUSED_STEPS_PLANE" => vec![cells::FUSED_STEPS_PLANE.to_string()],
+            "FINISHED_PLANE" => vec![cells::FINISHED_PLANE.to_string()],
+            other => return refuse(format!("the wings own no list of names under {other:?}")),
+        };
+        raptor_ir::consts::put_names(&names, buf, cap, len, count)
+    })
 }
 
 /// The lookup planes read as parameter cells, in first-seen order.

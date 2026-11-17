@@ -5,6 +5,7 @@
 #define RAPTOR_WINGS_FRONT_H
 #include <stddef.h>
 #include "raptor_ir.h"
+#include "raptor_ir_front.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -25,6 +26,10 @@ int rw_slotwise(rx_ctx* ctx, const rx_node* roots, size_t nroots, rx_node* buf, 
    value that is not a scalar). The wing kinds must be declared (rw_declare_kinds). */
 int rw_logs_ordered(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, rx_node* buf, size_t cap, size_t* n);
 
+/* The names a wing owns, by name, as the names protocol: SPECIAL_KINDS (the op kinds that call the math library or draw a random number),
+   FUSED_STEPS_PLANE and FINISHED_PLANE (the reserved lookup planes). Refuses any other name. */
+int rw_wing_names(rx_ctx* ctx, const char* name, char* buf, size_t cap, size_t* len, size_t* count);
+
 /* The strategies a dispatch can be pinned to: "switch", then one for each wing kind that refines dispatch (<strategy>_dispatch) in the order of the
    wing manifests, as the names protocol. */
 int rw_dispatch_strategies(rx_ctx* ctx, char* buf, size_t cap, size_t* len, size_t* count);
@@ -32,6 +37,10 @@ int rw_dispatch_strategies(rx_ctx* ctx, char* buf, size_t cap, size_t* len, size
 /* The strategy word of each dispatch group of the walk in the walk's order ("switch", "predicated", "segmented" or "auto"), as the names protocol;
    the nodes are rx_dispatch_nodes', the group's name is dispatch<index>. */
 int rw_walk_strategies(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len, size_t* count);
+
+/* The dispatch groups of the walk in the walk's order as pairs (group name, name of its branch-mix slot): the second part is absent (kind 0) for a
+   group that has no mix slot, which only an automatic group has. The two-call protocol of rx_field_pairs (*n is the count, RX_TRUNC when cap is smaller). */
+int rw_walk_mix_slots(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
 
 /* The canonical walk of a kernel's sinks, a walk number like rx_canonical's: over declared_kt (the key text of a tuple of Slot records), the
    compensation slot <name>_comp of every summing sample_sum (refused, by name, when a sink already holds a plane of that role and name),

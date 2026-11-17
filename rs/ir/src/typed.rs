@@ -452,3 +452,103 @@ pub unsafe extern "C" fn rx_walk_args(
         put(buf, cap, len, &packed)
     })
 }
+
+/// One part of a pair: absent, a whole number, or a text. `kind` tells which of `number` and `text` holds the value.
+#[repr(C)]
+pub struct RxPairPart {
+    /// 0: absent; 1: a whole number in `number`; 2: a text in `text`.
+    pub kind: c_int,
+    /// The whole number of a part of kind 1.
+    pub number: i64,
+    /// The text of a part of kind 2, NUL-terminated.
+    pub text: [c_char; TAG_CAP],
+}
+
+/// A pair, each part possibly absent: what a tuple of pairs such as the kept lane axes (label, extent) holds.
+#[repr(C)]
+pub struct RxPair {
+    /// The first part.
+    pub first: RxPairPart,
+    /// The second part.
+    pub second: RxPairPart,
+}
+
+/// A value as one part of a pair: None, a whole number or a text shorter than `TAG_CAP`.
+pub fn pair_part(v: &Val) -> Result<RxPairPart, Fault> {
+    let mut part = RxPairPart {
+        kind: 0,
+        number: 0,
+        text: [0; TAG_CAP],
+    };
+    match v {
+        Val::None => {}
+        Val::Int(i) => {
+            part.kind = 1;
+            part.number =
+                i64::try_from(*i).or_else(|_| refuse("the integer does not fit 64 bits"))?;
+        }
+        Val::Str(t) if t.len() < TAG_CAP => {
+            part.kind = 2;
+            for (slot, byte) in part.text.iter_mut().zip(t.bytes()) {
+                *slot = byte as c_char;
+            }
+        }
+        _ => return refuse("a part of a pair is None, a whole number or a short text"),
+    }
+    Ok(part)
+}
+
+/// Copies `pairs` into the caller's buffer by the two-call protocol: `*n` is the count, and the status is RX_TRUNC when `cap` is smaller.
+/// The doors of other crates call it with their caller's pointers, so it stays callable without `unsafe`.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub fn put_pairs(
+    pairs: &[RxPair],
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> Result<(), Fault> {
+    if n.is_null() {
+        return badarg("n is NULL");
+    }
+    unsafe { *n = pairs.len() }
+    if cap < pairs.len() || (buf.is_null() && !pairs.is_empty()) {
+        return Err(Fault::Truncated);
+    }
+    unsafe { std::ptr::copy_nonoverlapping(pairs.as_ptr(), buf, pairs.len()) }
+    Ok(())
+}
+
+/// A field that holds a tuple or list of pairs: `*n` is the count, with the status RX_TRUNC when `cap` is smaller. RX_ABSENT when
+/// the field holds None; a refusal when it holds anything else or an element that is no pair of None, whole numbers and short texts.
+///
+/// # Safety
+/// `name` is a NUL-terminated string; `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_field_pairs(
+    ctx: *mut Ctx,
+    node: Node,
+    name: *const c_char,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let (Val::Tuple(items) | Val::List(items)) = c.present(node, cstr(name, "name")?)? else {
+            return refuse("the field is not a list of pairs");
+        };
+        let mut pairs = vec![];
+        for item in &items {
+            let (Val::Tuple(two) | Val::List(two)) = item else {
+                return refuse("the field holds an element that is not a pair");
+            };
+            let [a, b] = two.as_slice() else {
+                return refuse("the field holds an element that is not a pair");
+            };
+            pairs.push(RxPair {
+                first: pair_part(a)?,
+                second: pair_part(b)?,
+            });
+        }
+        put_pairs(&pairs, buf, cap, n)
+    })
+}

@@ -1,0 +1,743 @@
+{
+ "cases": {
+  "diagonal": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'square'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 4), ('label', 'square_row_stride'))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'square_col_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#4, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #3)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#6, #7)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #8)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#5, #9)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #3)|(('index', #4), ('carries', (#5,)), ('nexts', (#10,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 4))\nn|LoopValue|f64|()|None|(#11,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#12,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemv",
+    "operands": [
+     {
+      "dense": true,
+      "name": "square",
+      "reduce_dim": null,
+      "reduce_stride": 5,
+      "refusals": [],
+      "role": "named"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "bare_read"
+   },
+   "sinks": [
+    13
+   ],
+   "staged": []
+  },
+  "dot_staged_64": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|PlaneExtent|i32|()|None|(#1,)|()\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'feat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 64), ('label', 'feat_plane_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 64),)\nn|Op|i32|()|None|(#5, #6)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'feat_sample_stride'))\nn|Op|i32|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'total'))\nn|Op|i32|()|None|(#10, #2)|(('kind', 'clamp_index'), ('literal', None))\nn|At|f64|()|None|(#1, #12)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#10, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#14, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#3, #15)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#13, #16)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#11, #17)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #3, #4, #9)|(('index', #10), ('carries', (#11,)), ('nexts', (#18,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 6))\nn|LoopValue|f64|()|None|(#19,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#20,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": null,
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "feat",
+      "reduce_dim": "plane",
+      "reduce_stride": 64,
+      "refusals": [],
+      "role": "staged"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [],
+    "staged_fanin": [
+     [
+      "feat",
+      null
+     ]
+    ],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    21
+   ],
+   "staged": [
+    "feat"
+   ]
+  },
+  "dot_staged_7": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|PlaneExtent|i32|()|None|(#1,)|()\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'feat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 7), ('label', 'feat_plane_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 7),)\nn|Op|i32|()|None|(#5, #6)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'feat_sample_stride'))\nn|Op|i32|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'total'))\nn|Op|i32|()|None|(#10, #2)|(('kind', 'clamp_index'), ('literal', None))\nn|At|f64|()|None|(#1, #12)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#10, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#14, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#3, #15)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#13, #16)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#11, #17)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #3, #4, #9)|(('index', #10), ('carries', (#11,)), ('nexts', (#18,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 6))\nn|LoopValue|f64|()|None|(#19,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#20,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": null,
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "feat",
+      "reduce_dim": "plane",
+      "reduce_stride": 7,
+      "refusals": [],
+      "role": "staged"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [],
+    "staged_fanin": [
+     [
+      "feat",
+      null
+     ]
+    ],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    21
+   ],
+   "staged": [
+    "feat"
+   ]
+  },
+  "fold_and_plain": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#2, #3)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'a'))\nn|Op|i32|()|None|(#7, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #10)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#6, #7)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#11, #12)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#8, #13)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #4, #5, #6)|(('index', #7), ('carries', (#8,)), ('nexts', (#14,)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#15,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#16,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'u'))\nn|Const|i32|()|None|()|(('literal', 1),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#18, #19)|(('kind', 'mul'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Op|i32|()|None|(#21, #22)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #23)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #24)|(('kind', 'at'), ('literal', None))\nn|Assign|f64|()|None|(#25,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'v'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\n",
+   "record": null,
+   "sinks": [
+    17,
+    26
+   ],
+   "staged": []
+  },
+  "gathered": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'base'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'span'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|SampleIndex|i32|()|None|()|()\nn|PlaneExtent|i32|()|None|(#2,)|()\nn|Op|i32|()|None|(#3, #4)|(('kind', 'clamp_index'), ('literal', None))\nn|At|f64|()|None|(#2, #5)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#6,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Const|i32|()|None|()|(('literal', 4),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'base_row_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'base_col_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'c'), ('bounds', (0, 5)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#13, #12)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#11, #15)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #16)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#14, #17)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #11, #12)|(('index', #13), ('carries', (#14,)), ('nexts', (#18,)), ('start', 0), ('stop', 6), ('step', 1), ('trip', 6), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 4))\nn|LoopValue|f64|()|None|(#19,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#20,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\n",
+   "record": {
+    "carry": "y",
+    "dense": false,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": false,
+      "name": "base",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [
+       "base: the index depends on a value read from a plane, so the row it walks is chosen at runtime"
+      ],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "span",
+      "reduce_dim": null,
+      "reduce_stride": 0,
+      "refusals": [],
+      "role": "flat"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 6,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "c",
+    "refusals": [
+     "base: the index depends on a value read from a plane, so the row it walks is chosen at runtime"
+    ],
+    "staged_fanin": [],
+    "term_form": "transformed"
+   },
+   "sinks": [
+    21
+   ],
+   "staged": []
+  },
+  "hand_folded": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'flat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|SampleIndex|i32|()|None|()|()\nn|PlaneExtent|i32|()|None|(#1,)|()\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#5, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#7, #3)|(('kind', 'add'), ('literal', None))\nn|Op|i32|()|None|(#8, #4)|(('kind', 'clamp_index'), ('literal', None))\nn|At|f64|()|None|(#1, #9)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#6, #10)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #3, #4)|(('index', #5), ('carries', (#6,)), ('nexts', (#11,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#12,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#13,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\n",
+   "record": {
+    "carry": "y",
+    "dense": false,
+    "operand_class": "gemv",
+    "operands": [
+     {
+      "dense": false,
+      "name": "flat",
+      "reduce_dim": null,
+      "reduce_stride": 6,
+      "refusals": [
+       "flat: the reduce-axis stride is built from an anonymous integer literal, so it is not derivable from the declaration"
+      ],
+      "role": "flat"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [
+     "flat: the reduce-axis stride is built from an anonymous integer literal, so it is not derivable from the declaration"
+    ],
+    "staged_fanin": [],
+    "term_form": "bare_read"
+   },
+   "sinks": [
+    14
+   ],
+   "staged": []
+  },
+  "masked_sum": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|(384,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 1),)\nn|RoleConst|i32|()|None|()|(('literal', 384), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#4, #5)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 383)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#1, #9)|(('kind', 'component_at'), ('literal', None))\nn|Op|bool|()|None|(#11, #2)|(('kind', 'gt'), ('literal', None))\nn|Op|i32|()|None|(#9, #7)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#6, #13)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#3, #14)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#1, #9)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|Select|f64|()|None|(#12, #17, #8)|()\nn|Op|f64|()|None|(#10, #18)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #3, #6, #7, #8)|(('index', #9), ('carries', (#10,)), ('nexts', (#19,)), ('start', 0), ('stop', 384), ('step', 1), ('trip', 384), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#20,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#21,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "bf",
+      "reduce_dim": "component",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "wide"
+     },
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 384,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "j",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "transformed"
+   },
+   "sinks": [
+    22
+   ],
+   "staged": []
+  },
+  "matvec_computed": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 3),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#2, #3)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(512,)|None|(#6,)|(('kind', 'exp'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Op|f64|(512,)|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#10, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #12)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #13)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#9, #10)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#14, #15)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#11, #16)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #4, #5, #9)|(('index', #10), ('carries', (#11,)), ('nexts', (#17,)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#18,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#19,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "computed#0",
+      "reduce_dim": "component",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "computed"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 512,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "j",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    20
+   ],
+   "staged": []
+  },
+  "matvec_input": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 3),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#2, #3)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#7, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #10)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#6, #7)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#11, #12)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#8, #13)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #4, #5, #6)|(('index', #7), ('carries', (#8,)), ('nexts', (#14,)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#15,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#16,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "bf",
+      "reduce_dim": "component",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "wide"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 512,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "j",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    17
+   ],
+   "staged": []
+  },
+  "max_fold": {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 't'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 't_row_stride'))\nn|Op|i32|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#0, #3)|(('kind', 'at'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 't_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'best'))\nn|Op|i32|()|None|(#6, #5)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#0, #8)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#7, #9)|(('kind', 'max'), ('literal', None))\nn|Loop|f64|()|None|(#4, #0, #5)|(('index', #6), ('carries', (#7,)), ('nexts', (#10,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 3))\nn|LoopValue|f64|()|None|(#11,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#12,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\n",
+   "record": null,
+   "sinks": [
+    13
+   ],
+   "staged": []
+  },
+  "moe_contract": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 3), ('label', 'w_hidden_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_model_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'act'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'act_plane_stride'))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#5, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'act_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'h'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'total'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": "hidden",
+      "reduce_stride": 3,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "act",
+      "reduce_dim": "plane",
+      "reduce_stride": 5,
+      "refusals": [],
+      "role": "staged"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "h",
+    "refusals": [],
+    "staged_fanin": [
+     [
+      "act",
+      3
+     ]
+    ],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    30
+   ],
+   "staged": [
+    "act"
+   ]
+  },
+  "offset_sum": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 1.5),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 't'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 't_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#3, #2)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#1, #5)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#4, #6)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2)|(('index', #3), ('carries', (#4,)), ('nexts', (#7,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 3))\nn|LoopValue|f64|()|None|(#8,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#9,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\n",
+   "record": null,
+   "sinks": [
+    10
+   ],
+   "staged": []
+  },
+  "one_term": {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 't'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#1, #2)|(('kind', 'div'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 4),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 't_row_stride'))\nn|Op|i32|()|None|(#5, #6)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#1, #8)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#9, #10)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 't_col_stride'))\nn|Op|i32|()|None|(#11, #12)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#7, #13)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#0, #14)|(('kind', 'at'), ('literal', None))\nn|Assign|f64|()|None|(#15,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\n",
+   "record": null,
+   "sinks": [
+    16
+   ],
+   "staged": []
+  },
+  "row_sum_exp": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'scores'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 4),)\nn|Op|i32|()|None|(#2, #3)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 6), ('label', 'scores_row_stride'))\nn|Op|i32|()|None|(#4, #5)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'scores_col_stride'))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'peak'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 4),)\nn|Op|i32|()|None|(#2, #9)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'peak_row_stride'))\nn|Op|i32|()|None|(#10, #11)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#8, #12)|(('kind', 'at'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'c'), ('bounds', (0, 5)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#14, #7)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#6, #16)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #17)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#18, #13)|(('kind', 'sub'), ('literal', None))\nn|Op|f64|()|None|(#19,)|(('kind', 'exp'), ('literal', None))\nn|Op|f64|()|None|(#15, #20)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #6, #7, #13)|(('index', #14), ('carries', (#15,)), ('nexts', (#21,)), ('start', 0), ('stop', 6), ('step', 1), ('trip', 6), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#22,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#23,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'total'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\n",
+   "record": {
+    "carry": "total",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "scores",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "peak",
+      "reduce_dim": null,
+      "reduce_stride": 0,
+      "refusals": [],
+      "role": "named"
+     }
+    ],
+    "outputs": [
+     [
+      "total",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 6,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "c",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "transformed"
+   },
+   "sinks": [
+    24
+   ],
+   "staged": []
+  },
+  "spline_contract": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w_fold'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 3), ('label', 'w_fold_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_fold_neuron_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'feat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 5), ('label', 'feat_plane_stride'))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#5, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'feat_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'total'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w_fold",
+      "reduce_dim": "row",
+      "reduce_stride": 3,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "feat",
+      "reduce_dim": "plane",
+      "reduce_stride": 5,
+      "refusals": [],
+      "role": "staged"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [],
+    "staged_fanin": [
+     [
+      "feat",
+      3
+     ]
+    ],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    30
+   ],
+   "staged": [
+    "feat"
+   ]
+  },
+  "spline_contract_n": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w_fold'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 3), ('label', 'w_fold_row_stride'))\nn|SampleIndex|i32|()|None|()|()\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#3, #4)|(('kind', 'div'), ('literal', None))\nn|Op|i32|()|None|(#5, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#3, #6)|(('kind', 'sub'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_fold_neuron_stride'))\nn|Op|i32|()|None|(#9, #10)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'feat'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|i32|()|None|()|(('kind', 'nsamples'), ('role', 'nsamples'), ('name', 'n_samples'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|PlaneExtent|i32|()|None|(#12,)|()\nn|Op|i32|()|None|(#5, #14)|(('kind', 'clamp_index'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'feat_sample_stride'))\nn|Op|i32|()|None|(#15, #16)|(('kind', 'mul'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'total'))\nn|Op|i32|()|None|(#18, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#20, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #21)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#18, #13)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#23, #17)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#12, #24)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#22, #25)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#19, #26)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #11, #12, #13, #17)|(('index', #18), ('carries', (#19,)), ('nexts', (#27,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#28,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#29,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w_fold",
+      "reduce_dim": "row",
+      "reduce_stride": 3,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "feat",
+      "reduce_dim": "plane",
+      "reduce_stride": "n_samples",
+      "refusals": [],
+      "role": "staged"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [],
+    "staged_fanin": [
+     [
+      "feat",
+      3
+     ]
+    ],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    30
+   ],
+   "staged": [
+    "feat"
+   ]
+  },
+  "strided_by_literal": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#2, #3)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 2),)\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 255)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#8, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #10)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #11)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#6, #13)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#12, #14)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#9, #15)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #4, #5, #6, #7)|(('index', #8), ('carries', (#9,)), ('nexts', (#16,)), ('start', 0), ('stop', 256), ('step', 1), ('trip', 256), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 6))\nn|LoopValue|f64|()|None|(#17,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#18,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\n",
+   "record": {
+    "carry": "y",
+    "dense": false,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": false,
+      "name": "bf",
+      "reduce_dim": null,
+      "reduce_stride": 2,
+      "refusals": [
+       "bf: the reduce-axis stride is built from an anonymous integer literal, so it is not derivable from the declaration"
+      ],
+      "role": "wide"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 256,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "j",
+    "refusals": [
+     "bf: the reduce-axis stride is built from an anonymous integer literal, so it is not derivable from the declaration"
+    ],
+    "staged_fanin": [],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    19
+   ],
+   "staged": []
+  },
+  "three_operands": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#2, #3)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'g'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'g_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#9, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #11)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #12)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#9, #7)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#6, #14)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#13, #15)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#8, #9)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#16, #17)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#10, #18)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #4, #5, #6, #7, #8)|(('index', #9), ('carries', (#10,)), ('nexts', (#19,)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#20,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#21,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\n",
+   "record": null,
+   "sinks": [
+    22
+   ],
+   "staged": []
+  },
+  "three_planes": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'a_row_stride'))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'b_row_stride'))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'c'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'c_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#7, #2)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#1, #9)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#7, #4)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#3, #11)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#10, #12)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#8, #13)|(('kind', 'add'), ('literal', None))\nn|Op|i32|()|None|(#7, #6)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#5, #15)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#14, #16)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #3, #4, #5, #6)|(('index', #7), ('carries', (#8,)), ('nexts', (#17,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 7))\nn|LoopValue|f64|()|None|(#18,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#19,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\n",
+   "record": null,
+   "sinks": [
+    20
+   ],
+   "staged": []
+  },
+  "two_loops": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#2, #3)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'a'))\nn|Op|i32|()|None|(#7, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#4, #9)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #10)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#6, #7)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#11, #12)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#8, #13)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #4, #5, #6)|(('index', #7), ('carries', (#8,)), ('nexts', (#14,)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#15,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#16,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'u'))\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|i32|()|None|()|(('literal', 1),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#19, #20)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'b'))\nn|Op|i32|()|None|(#23, #22)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#21, #25)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#1, #26)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#6, #23)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#27, #28)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#24, #29)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#18, #1, #21, #22, #6)|(('index', #23), ('carries', (#24,)), ('nexts', (#30,)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#31,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#32,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'v'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\nroot|#31\nroot|#32\nroot|#33\n",
+   "record": null,
+   "sinks": [
+    17,
+    33
+   ],
+   "staged": []
+  },
+  "two_sinks": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#3, #4)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|Leaf|f64|(512,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'bf'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|i32|()|None|()|(('literal', 1),)\nn|RoleConst|i32|()|None|()|(('literal', 512), ('label', 'w_row_stride'))\nn|Op|i32|()|None|(#8, #9)|(('kind', 'mul'), ('literal', None))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 'w_col_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'j'), ('bounds', (0, 511)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'a'))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 1), ('name', 'b'))\nn|Op|i32|()|None|(#12, #6)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#5, #15)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#2, #16)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#7, #12)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#17, #18)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#13, #19)|(('kind', 'add'), ('literal', None))\nn|Op|i32|()|None|(#12, #11)|(('kind', 'mul'), ('literal', None))\nn|Op|i32|()|None|(#10, #21)|(('kind', 'add'), ('literal', None))\nn|At|f64|()|None|(#2, #22)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#7, #12)|(('kind', 'component_at'), ('literal', None))\nn|Op|f64|()|None|(#23, #24)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#14, #25)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2, #5, #6, #7, #10, #11)|(('index', #12), ('carries', (#13, #14)), ('nexts', (#20, #26)), ('start', 0), ('stop', 512), ('step', 1), ('trip', 512), ('carry_count', 2), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 8))\nn|LoopValue|f64|()|None|(#27,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|()|None|(#28,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'u'))\nn|LoopValue|f64|()|None|(#27,)|(('kind', 'loop_value'), ('literal', 1))\nn|Assign|f64|()|None|(#30,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'v'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\nroot|#31\n",
+   "record": {
+    "carry": "u",
+    "dense": true,
+    "operand_class": "gemm",
+    "operands": [
+     {
+      "dense": true,
+      "name": "w",
+      "reduce_dim": "col",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     },
+     {
+      "dense": true,
+      "name": "bf",
+      "reduce_dim": "component",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "wide"
+     }
+    ],
+    "outputs": [
+     [
+      "u",
+      "scalar"
+     ],
+     [
+      "v",
+      "scalar"
+     ]
+    ],
+    "reduce_extent": 512,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "j",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "product_of_reads"
+   },
+   "sinks": [
+    29,
+    31
+   ],
+   "staged": []
+  },
+  "vec_committed": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 't'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 't_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#3, #2)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#1, #5)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#4, #6)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2)|(('index', #3), ('carries', (#4,)), ('nexts', (#7,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 3))\nn|LoopValue|f64|()|None|(#8,)|(('kind', 'loop_value'), ('literal', 0))\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Op|f64|(2,)|None|(#9, #10)|(('kind', 'vec'), ('literal', None))\nn|Assign|f64|(2,)|None|(#11,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\n",
+   "record": {
+    "carry": "y",
+    "dense": true,
+    "operand_class": "gemv",
+    "operands": [
+     {
+      "dense": true,
+      "name": "t",
+      "reduce_dim": "row",
+      "reduce_stride": 1,
+      "refusals": [],
+      "role": "named"
+     }
+    ],
+    "outputs": [
+     [
+      "y",
+      "vector"
+     ]
+    ],
+    "reduce_extent": 4,
+    "reduce_start": 0,
+    "reduce_step": 1,
+    "reduce_var": "r",
+    "refusals": [],
+    "staged_fanin": [],
+    "term_form": "bare_read"
+   },
+   "sinks": [
+    12
+   ],
+   "staged": []
+  },
+  "vec_committed_twice": {
+   "dump": "raptor.ir.dump/1\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 't'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|RoleConst|i32|()|None|()|(('literal', 1), ('label', 't_row_stride'))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'r'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#3, #2)|(('kind', 'mul'), ('literal', None))\nn|At|f64|()|None|(#1, #5)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#4, #6)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#0, #1, #2)|(('index', #3), ('carries', (#4,)), ('nexts', (#7,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 3))\nn|LoopValue|f64|()|None|(#8,)|(('kind', 'loop_value'), ('literal', 0))\nn|Op|f64|(2,)|None|(#9, #9)|(('kind', 'vec'), ('literal', None))\nn|Assign|f64|(2,)|None|(#10,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\n",
+   "record": null,
+   "sinks": [
+    11
+   ],
+   "staged": []
+  }
+ }
+}

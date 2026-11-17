@@ -348,19 +348,25 @@ impl Ctx {
                  cannot be rewritten by substitution",
             );
         }
-        let swapped: HashMap<Node, Node> = self.nodes[lp as usize]
+        let mut swapped: HashMap<Node, Node> = self.nodes[lp as usize]
             .ops
             .iter()
             .zip(operands)
             .filter(|(old, new)| old != new)
             .map(|(&o, &n)| (o, n))
             .collect();
+        // the rebuilt loop owns an index and carries of its own: two loops never share a placeholder, so a template
+        // instantiated twice yields loops that each read only their own
+        let index = self.rebuild(self.refs(lp, "index")?[0], &[])?;
+        swapped.insert(self.refs(lp, "index")?[0], index);
+        let mut carries = vec![];
+        for old in self.refs(lp, "carries")? {
+            let fresh = self.rebuild(old, &[])?;
+            swapped.insert(old, fresh);
+            carries.push(fresh);
+        }
         let roots = self.body_roots(lp)?;
-        let done = if swapped.is_empty() {
-            roots
-        } else {
-            self.substitute(&roots, &swapped)?
-        };
+        let done = self.substitute(&roots, &swapped)?;
         let carry_count = self.refs(lp, "carries")?.len();
         let has_exit = self.field(lp, "exit_cond")? != Val::None;
         let int = |f: &str, me: &Ctx| match me.field(lp, f) {
@@ -377,8 +383,8 @@ impl Ctx {
             _ => None,
         };
         let parts = LoopParts {
-            index: self.refs(lp, "index")?[0],
-            carries: &self.refs(lp, "carries")?,
+            index,
+            carries: &carries,
             inits: &operands[..carry_count],
             nexts: &done[..carry_count],
             range: (int("start", self)?, int("stop", self)?, int("step", self)?),

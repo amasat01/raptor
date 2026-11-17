@@ -58,6 +58,8 @@ pub struct Ctx {
     pub body_cache: std::cell::RefCell<std::collections::HashMap<u32, String>>,
     /// The compiled constructor programs of the manifest.
     pub progs: crate::ctor::Progs,
+    /// The manifest's rule tables and refinable kinds, read when the context is made.
+    pub tables: std::sync::Arc<crate::rules::ManifestTables>,
 }
 
 impl Ctx {
@@ -70,6 +72,7 @@ impl Ctx {
             walks: vec![],
             body_cache: Default::default(),
             progs: crate::ctor::Progs::compile()?,
+            tables: std::sync::Arc::new(crate::rules::ManifestTables::load()?),
         })
     }
     /// Stores `m` as the last refusal text.

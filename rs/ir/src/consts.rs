@@ -1,6 +1,6 @@
 //! The constants raptor owns, by name, as JSON text: the vocabularies and policy names of the manifest the crate embeds.
 use crate::door::{cstr, guard, put};
-use crate::record::{refuse, Ctx};
+use crate::record::{refuse, Ctx, Fault};
 use rcore::{Fact, CONSTS, FACT_ROWS, STR_CONSTS};
 use std::ffi::{c_char, c_int};
 
@@ -105,17 +105,29 @@ pub unsafe extern "C" fn rx_const_names(
         let Some(items) = names(n) else {
             return refuse(format!("raptor owns no list of names under {n:?}"));
         };
-        let mut packed = String::new();
-        for item in &items {
-            packed.push_str(item);
-            packed.push('\0');
-        }
-        if count.is_null() {
-            return Err(crate::record::Fault::BadArg("count is NULL".into()));
-        }
-        unsafe { *count = items.len() }
-        put(buf, cap, len, &packed)
+        put_names(&items, buf, cap, len, count)
     })
+}
+
+/// Writes `items` as the names protocol: each text NUL-terminated, back to back in `buf`, `*count` the number of texts and
+/// `*len` the bytes they take with their NULs.
+pub(crate) fn put_names<S: AsRef<str>>(
+    items: &[S],
+    buf: *mut c_char,
+    cap: usize,
+    len: *mut usize,
+    count: *mut usize,
+) -> Result<(), Fault> {
+    let mut packed = String::new();
+    for item in items {
+        packed.push_str(item.as_ref());
+        packed.push('\0');
+    }
+    if count.is_null() {
+        return Err(Fault::BadArg("count is NULL".into()));
+    }
+    unsafe { *count = items.len() }
+    put(buf, cap, len, &packed)
 }
 
 /// Whether an accumulate under `contract` commits through a companion plane: the `compensated` contract and the

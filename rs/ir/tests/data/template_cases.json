@@ -1,0 +1,26 @@
+{
+ "template": {
+  "ok_plain": "ok",
+  "ok_loop": "ok",
+  "free_leaf": "primitive 'p': a rule template reads uniform 'zz': only its inputs, the incoming adjoint and the input tangents may be free in a rule (['$dot0', '$in0', '$out'])",
+  "free_leaf_in_loop": "primitive 'p': a rule template reads uniform 'zz' inside a loop body: only its inputs, the incoming adjoint and the input tangents may be free in a rule (['$dot0', '$in0', '$out'])",
+  "index_outside": "primitive 'p': a rule template reads the index or a carry of a loop outside that loop",
+  "carry_outside": "primitive 'p': a rule template reads the index or a carry of a loop outside that loop",
+  "tape_read": "primitive 'p': a rule template may not read a tape (it belongs to a loop outside the template)",
+  "body_sinks": "primitive 'p': a loop in a rule template may not write a plane (it has body sinks)",
+  "edges_outside": "primitive 'p': a rule template may not hold a reduce node (it holds edges outside a loop)"
+ },
+ "reserved": {
+  "primitive": true,
+  "assign": true,
+  "node": true,
+  "sink": true,
+  "at": true,
+  "dispatch": true,
+  "wide_write": true,
+  "leaf": false,
+  "const": false,
+  "add": false,
+  "my_prim": false
+ }
+}

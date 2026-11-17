@@ -112,6 +112,53 @@ int rx_structural_keys(rx_ctx* ctx, const rx_node* order, size_t n, int64_t* buf
    (role, name) pairs, in declaration order, such as (('vec_in', 'x'), ('mat_in', 'm')). Answers RX_OK for a sound one. */
 int rx_quantity_check(rx_ctx* ctx, const char* slug, const char* pack, const char* wires_kt);
 
+/* The derivative rules, as templates of the manifest run over the nodes of the context. A table is one of the manifest's rule
+   tables (unary_d, bin_vjp, bin_jvp for rx_rule_factor; core, linalg, rays for the programs of rx_rule_vjp / rx_rule_jvp).
+   Results come back as nodes in buf (the array protocol: *n is the count, RX_TRUNC when cap is smaller). */
+
+/* The factor table/kind names over the nodes bound by name: bound is the names separated by white space, nodes[i] the node of
+   the i-th name; the names in absent are bound to no value (an operand without a tangent). Answers one node for a factor, the
+   live entries for bin_jvp (their sum is the tangent), the pairs (child, contribution) flattened for bin_vjp. */
+int rx_rule_factor(rx_ctx* ctx, const char* table, const char* kind, const char* bound, size_t bound_len, const rx_node* nodes,
+                   size_t nnodes, const char* absent, size_t absent_len, rx_node* buf, size_t cap, size_t* n);
+
+/* The reverse contributions of node under the program table/kind, cot the incoming adjoint: pairs (child, adjoint) flattened. */
+int rx_rule_vjp(rx_ctx* ctx, const char* table, const char* kind, rx_node node, rx_node cot, rx_node* buf, size_t cap, size_t* n);
+
+/* The tangent of node under the program table/kind: tangent[i] is the tangent of the operand tangent_of[i], an operand not
+   listed has none. Answers one node, or none when the rule yields no derivative. */
+int rx_rule_jvp(rx_ctx* ctx, const char* table, const char* kind, rx_node node, const rx_node* tangent_of, const rx_node* tangent,
+                size_t count, rx_node* buf, size_t cap, size_t* n);
+
+/* The same two directions for a sum over samples read in the body (a ReduceSamples node); any other reduction is refused by
+   name. The reverse answers the pair (operand, the sum over cot). */
+int rx_reduce_vjp(rx_ctx* ctx, rx_node node, rx_node cot, rx_node* buf, size_t cap, size_t* n);
+int rx_reduce_jvp(rx_ctx* ctx, rx_node node, const rx_node* tangent_of, const rx_node* tangent, size_t count, rx_node* buf,
+                  size_t cap, size_t* n);
+
+/* The kinds a rule table has templates for, in manifest order (the names protocol of rx_const_names). */
+int rx_rule_kinds(rx_ctx* ctx, const char* table, char* buf, size_t cap, size_t* len, size_t* count);
+
+/* The kinds of a rule mode, in table order: "zero" (no derivative) or "walker" (left to the transform). */
+int rx_rule_modes(rx_ctx* ctx, const char* mode, char* buf, size_t cap, size_t* len, size_t* count);
+
+/* kind over the nodes entry by entry when any is not rank-0, re-assembled with vec. */
+int rx_entrywise(rx_ctx* ctx, const char* kind, const rx_node* nodes, size_t nnodes, rx_node* out);
+
+/* A structural zero of the dtype and shape: a rank-0 constant, else a splat of it. */
+int rx_zero_of(rx_ctx* ctx, const char* dtype, const int64_t* shape, size_t rank, rx_node* out);
+
+/* Checks that the graph under roots is a CLOSED rule template of the primitive name: its free leaves are the names in allowed
+   (separated by white space; inside a loop body too), a loop's index and carries are read only inside that loop, and nothing
+   in it holds edges outside a loop, writes a plane (body sinks) or reads a tape. Answers RX_OK, or refuses with the first
+   violation by name (rx_last_error). */
+int rx_rule_template_check(rx_ctx* ctx, const char* name, const rx_node* roots, size_t nroots, const char* allowed,
+                           size_t allowed_len);
+
+/* Whether name is taken as a kind name, so a primitive may not be registered under it: the primitive kind, a core kind a
+   declaration may refine, or a kind declared in the context (*out is 0 or 1). */
+int rx_kind_reserved(rx_ctx* ctx, const char* name, int* out);
+
 #ifdef __cplusplus
 }
 #endif

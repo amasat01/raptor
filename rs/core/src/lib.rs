@@ -60,6 +60,10 @@ pub struct ClassSpec {
     pub dedup: Dedup,
     /// Which nodes the access and dispatch passes look at: 0 none, 1 all, 2 raw ones.
     pub watch: u8,
+    /// The feathers the kind states itself; a refining kind inherits them through its class chain.
+    pub feathers: &'static [&'static str],
+    /// The slots a node of the class writes as its identity state when its dedup recipe is the generic one.
+    pub state: &'static [&'static str],
 }
 include!(concat!(env!("OUT_DIR"), "/specs.rs"));
 

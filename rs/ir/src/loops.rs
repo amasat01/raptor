@@ -10,7 +10,7 @@ const BODY_KEY_HEX: usize = rcore::facts::BODY_KEY_HEX as usize;
 
 impl Ctx {
     /// The node a field holds, or None when it holds none.
-    fn node_field(&self, h: u32, f: &str) -> Result<Option<u32>, Fault> {
+    pub(crate) fn node_field(&self, h: u32, f: &str) -> Result<Option<u32>, Fault> {
         match self.field(h, f)? {
             Val::Node(n) => Ok(Some(n)),
             Val::None => Ok(None),

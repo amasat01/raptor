@@ -80,8 +80,17 @@ impl Ctx {
         if !known.contains(&format!("\"{name}: ")) {
             return refuse(format!("unknown feather {}", rcore::keytext::py_str(name)));
         }
-        Ok(matches!(self.field(node, "feathers")?,
-                Val::Tuple(held) if held.contains(&Val::Str(name.into()))))
+        let declared = matches!(self.field(node, "feathers")?,
+            Val::Tuple(held) if held.contains(&Val::Str(name.into())));
+        // a core kind states its feathers in the manifest; a refining kind inherits them through its class chain
+        let chain = &self.table.classes[self.node(node)?.class].chain;
+        let core = chain.iter().any(|&c| {
+            let class = &self.table.classes[c].name;
+            rcore::CLASSES
+                .iter()
+                .any(|spec| spec.name == class && spec.feathers.contains(&name))
+        });
+        Ok(declared || core)
     }
 
     /// The sample-sum sinks of `sinks`, in order.
@@ -195,5 +204,68 @@ pub unsafe extern "C" fn rx_dispatch_nodes(
         let order = c.walk(walk)?.order.clone();
         let v = c.dispatch_nodes(&order)?;
         give(buf, cap, n, &v)
+    })
+}
+
+/// Whether the kind of a node states the feather `name`; an unknown feather is a refusal.
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_has_feather(
+    ctx: *mut Ctx,
+    node: Node,
+    name: *const c_char,
+    out: *mut c_int,
+) -> c_int {
+    guard(ctx, |c| {
+        flag(out, c.has_feather(node, cstr(name, "name")?)?)
+    })
+}
+
+/// Whether a node reads a parameter cell (an `At` of a role constant labelled so).
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_is_param_cell(ctx: *mut Ctx, node: Node, out: *mut c_int) -> c_int {
+    guard(ctx, |c| flag(out, c.is_param_cell(node)?))
+}
+
+/// The sink `sink` committing `value` instead of the value it commits.
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_with_value(
+    ctx: *mut Ctx,
+    sink: Node,
+    value: Node,
+    out: *mut Node,
+) -> c_int {
+    guard(ctx, |c| {
+        let rebuilt = c.with_value(sink, value)?;
+        if out.is_null() {
+            return Err(Fault::BadArg("out is NULL".into()));
+        }
+        unsafe { *out = rebuilt };
+        Ok(())
+    })
+}
+
+/// The node where a matrix is wanted: a Cholesky factor becomes its projection, any other factor is refused.
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_as_matrix(ctx: *mut Ctx, node: Node, out: *mut Node) -> c_int {
+    guard(ctx, |c| {
+        c.node(node)?;
+        let matrix = c.as_matrix(node)?;
+        if out.is_null() {
+            return Err(Fault::BadArg("out is NULL".into()));
+        }
+        unsafe { *out = matrix };
+        Ok(())
     })
 }

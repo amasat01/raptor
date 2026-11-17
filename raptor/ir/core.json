@@ -79,6 +79,13 @@
   "DISPATCH_KIND": "dispatch",
   "NAMESPACE_SEP": "__",
   "PARAM_CELL": "param_cell",
+  "CELL_PLANE": "param_cell",
+  "RAW_LANGUAGE": "aether",
+  "GATHER_ROLES": ["lookup", "wide_in"],
+  "PER_SAMPLE_ROLES": ["per_sample", "vec_in", "mat_in", "terminated", "mutable", "out"],
+  "ACCESS_CLASSES": ["sample_local", "cross_sample_read", "cross_sample_write", "mapreduce"],
+  "COMPANION_SUFFIX": "_c",
+  "ADJOINT_PREFIX": "bar",
   "ROLE_ORDER": [
    "mutable",
    "out",

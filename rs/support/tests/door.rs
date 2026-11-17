@@ -1,6 +1,5 @@
 //! The door's C functions only.
 use raptor_ir::record::Ctx;
-use raptor_ir::record::Fault;
 use raptor_support::safe::*;
 use rcore::{walk, Rec};
 use std::ffi::{CStr, CString};
@@ -347,15 +346,7 @@ fn every_core_class() {
             text(c, |c, buf, cap, len| rx_class(c, *h, buf, cap, len)),
             *cls
         );
-        let r = unsafe { &*c }.rec_of(*h);
-        if cls == "Loop" {
-            assert!(
-                matches!(r, Err(Fault::Refused(m)) if m.contains("not in this build")),
-                "{cls}"
-            )
-        } else {
-            assert!(r.is_ok(), "{cls}")
-        }
+        assert!(unsafe { &*c }.rec_of(*h).is_ok(), "{cls}");
     }
     rx_ctx_free(c);
 }

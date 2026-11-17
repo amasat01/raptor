@@ -170,7 +170,7 @@ impl Table {
                 binds: sp.binds,
                 watch: sp.watch == 1 || sp.watch == 2,
                 decl: None,
-                state_fields: vec![],
+                state_fields: sp.state.iter().map(|f| (*f).to_string()).collect(),
                 defaults: vec![],
             });
         }

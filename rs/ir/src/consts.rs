@@ -118,6 +118,34 @@ pub unsafe extern "C" fn rx_const_names(
     })
 }
 
+/// Whether an accumulate under `contract` commits through a companion plane: the `compensated` contract and the
+/// contract a keyed accumulate takes by default.
+pub fn compensates(contract: &str) -> bool {
+    contract == "compensated"
+        || STR_CONSTS
+            .iter()
+            .any(|c| c.0 == "KEYED_AUTO" && c.1 == contract)
+}
+
+/// Whether an accumulate under `contract` commits through a companion plane (`*out` is 0 or 1).
+///
+/// # Safety
+/// `contract` is a NUL-terminated string; `out` is valid for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_compensates(
+    ctx: *mut Ctx,
+    contract: *const c_char,
+    out: *mut c_int,
+) -> c_int {
+    guard(ctx, |_| {
+        if out.is_null() {
+            return Err(crate::record::Fault::BadArg("out is NULL".into()));
+        }
+        unsafe { *out = compensates(cstr(contract, "contract")?) as c_int };
+        Ok(())
+    })
+}
+
 /// The texts of a constant that is a list of strings, or the one text of a constant that is a
 /// string; `None` for any other name or kind (an integer).
 pub fn names(name: &str) -> Option<Vec<&'static str>> {

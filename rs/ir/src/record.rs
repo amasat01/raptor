@@ -448,8 +448,8 @@ impl Ctx {
             match &spec.dedup {
                 Dedup::None => Val::None,
                 Dedup::Py if c.state_fields.is_empty() && c.name == "Node" => Val::None, // the state of a bare node is empty
-                Dedup::Py if c.decl.is_some() => {
-                    // the state of a declared kind: its fields, by name
+                Dedup::Py if c.decl.is_some() || !c.state_fields.is_empty() => {
+                    // the state of a declared kind or of a core kind that lists its state: its fields, by name
                     let mut st: Vec<(&String, Val)> = c
                         .state_fields
                         .iter()
@@ -570,7 +570,7 @@ fn first_ref(v: &Val, len: usize) -> Option<u32> {
 }
 
 /// The key text of a value: the written form, except a raw block, which writes its name, its access and a digest of its text.
-fn key_text(v: &Val) -> Result<String, Fault> {
+pub(crate) fn key_text(v: &Val) -> Result<String, Fault> {
     let Val::Rec(n, f) = v else {
         return Ok(text_val(v));
     };

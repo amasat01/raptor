@@ -1,0 +1,1899 @@
+{
+ "cases": [
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'exp'), ('literal', None))\nn|Op|f64|()|None|(#1, #1)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Op|f64|()|None|(#5, #6)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#7,)|(('kind', 'log'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'z'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#8, #9)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #4, #10)|()\nn|Assign|f64|()|None|(#11,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\n",
+   "fp64_ops": 7,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 3.0,
+       "chain32": 0.0,
+       "chain64": 3.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "scalar_mixed",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'pow'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'sqrt'), ('literal', None))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'atan2'), ('literal', None))\nn|Op|f64|()|None|(#4, #5)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'fmod'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'sin'), ('literal', None))\nn|Op|f64|()|None|(#2,)|(('kind', 'cos'), ('literal', None))\nn|Op|f64|()|None|(#8, #9)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #6, #7, #10)|()\nn|Assign|f64|()|None|(#11,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\n",
+   "fp64_ops": 9,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 2.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 2.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "scalar_library",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|bool|()|None|()|(('kind', 'terminated'), ('role', 'terminated'), ('name', 'p'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Select|f64|()|None|(#1, #2, #3)|()\nn|Op|f64|()|None|(#2,)|(('kind', 'exp'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'z'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#3, #6)|(('kind', 'mul'), ('literal', None))\nn|Select|f64|()|None|(#1, #5, #7)|()\nn|Dispatch|f64|()|None|(#0, #4, #8)|()\nn|Assign|f64|()|None|(#9,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\n",
+   "fp64_ops": 5,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 3.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 2.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 4.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "scalar_select",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1,)|(('kind', 'norm'), ('literal', None))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #3)|(('kind', 'dot'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#4, #5)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'sum'), ('literal', None))\nn|Op|f64|(3,)|None|(#1, #3)|(('kind', 'cross'), ('literal', None))\nn|Op|f64|()|None|(#8,)|(('kind', 'sum'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #2, #6, #7, #9)|()\nn|Assign|f64|()|None|(#10,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\n",
+   "fp64_ops": 30,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 7.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 3.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 7.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 7.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 3.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 3.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 12.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 6.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "vector_totals",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#1, #2)|(('kind', 'cross'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#1, #4)|(('kind', 'mul'), ('literal', None))\nn|Leaf|f64|(4,)|'quaternion'|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'q'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#6, #1)|(('kind', 'quat_rotate'), ('literal', None))\nn|Leaf|f64|(4,)|'quaternion'|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'r'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(4,)|'quaternion'|(#6, #8)|(('kind', 'quat_mul'), ('literal', None))\nn|Op|f64|(3,)|None|(#9,)|(('kind', 'as_vec3'), ('literal', None))\nn|Dispatch|f64|(3,)|None|(#0, #3, #5, #7, #10)|()\nn|Assign|f64|(3,)|None|(#11,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\n",
+   "fp64_ops": 99,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 9.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 6.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 3.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 4.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 56.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 7.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 28.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 8.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "vector_values",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(4,)|'quaternion'|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'q'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(4,)|'quaternion'|(#1,)|(('kind', 'quat_conj'), ('literal', None))\nn|Op|f64|(3,)|None|(#2,)|(('kind', 'as_vec3'), ('literal', None))\nn|Op|f64|(4,)|'quaternion'|(#1,)|(('kind', 'quat_recip'), ('literal', None))\nn|Op|f64|(3,)|None|(#4,)|(('kind', 'as_vec3'), ('literal', None))\nn|Dispatch|f64|(3,)|None|(#0, #3, #5)|()\nn|Assign|f64|(3,)|None|(#6,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\n",
+   "fp64_ops": 11,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 4.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 8.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 4.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "quaternion_free_and_priced",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|None|(#1, #2)|(('kind', 'outer'), ('literal', None))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'm'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'n'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|None|(#4, #5)|(('kind', 'mm'), ('literal', None))\nn|Op|f64|(3, 3)|None|(#4,)|(('kind', 'transpose'), ('literal', None))\nn|Dispatch|f64|(3, 3)|None|(#0, #3, #6, #7)|()\nn|Assign|f64|(3, 3)|None|(#8,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\n",
+   "fp64_ops": 72,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 9.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 6.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 9.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 54.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 18.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 9.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 9.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 9.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "matrix_products",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'm'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#1, #2)|(('kind', 'mv'), ('literal', None))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#2, #4)|(('kind', 'add'), ('literal', None))\nn|Dispatch|f64|(3,)|None|(#0, #3, #5)|()\nn|Assign|f64|(3,)|None|(#6,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\n",
+   "fp64_ops": 24,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 18.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 12.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 3.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 6.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "matrix_vector",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'f'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'g'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f32|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f32|()|None|(#1,)|(('kind', 'sin'), ('literal', None))\nn|Op|f32|()|None|(#2,)|(('kind', 'exp'), ('literal', None))\nn|Op|f32|()|None|(#5, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f32|()|None|(#1, #6)|(('kind', 'add'), ('literal', None))\nn|Dispatch|f32|()|None|(#0, #3, #4, #7)|()\nn|Assign|f32|()|None|(#8,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\n",
+   "fp64_ops": 0,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 1.0,
+       "arith64": 0.0,
+       "chain32": 1.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 1.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 1.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 2.0,
+       "arith64": 0.0,
+       "chain32": 2.0,
+       "chain64": 0.0,
+       "chainSpecial32": 1.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 1.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "single_precision",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #1)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Op|f64|()|None|(#2, #3)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #1)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Op|f64|()|None|(#5, #6)|(('kind', 'add'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #4, #7)|()\nn|Assign|f64|()|None|(#8,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\n",
+   "fp64_ops": 4,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 2.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 2.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "shared_value",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    6,
+    7,
+    8,
+    9
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #1)|()\nn|Assign|f64|()|None|(#4,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\n",
+   "fp64_ops": 2,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "selector_reused",
+   "order": [
+    0,
+    1,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'tab'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#2,)|(('kind', 'cast'), ('literal', 'i32'))\nn|PlaneExtent|i32|()|None|(#1,)|()\nn|Op|i32|()|None|(#3, #4)|(('kind', 'clamp_index'), ('literal', None))\nn|At|f64|()|None|(#1, #5)|(('kind', 'at'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Op|f64|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #6, #9)|()\nn|Assign|f64|()|None|(#10,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\n",
+   "fp64_ops": 2,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 1.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "gather_branch",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'tabk'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'w'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#1,)|(('kind', 'cast'), ('literal', 'i32'))\nn|PlaneExtent|i32|()|None|(#0,)|()\nn|Op|i32|()|None|(#2, #3)|(('kind', 'clamp_index'), ('literal', None))\nn|At|int32|()|'index'|(#0, #4)|(('kind', 'at'), ('literal', None))\nn|Op|i32|()|None|(#5,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#7, #8)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|()|None|(#6, #9, #7)|()\nn|Assign|f64|()|None|(#10,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\n",
+   "fp64_ops": 2,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "lookup",
+       "tabk"
+      ],
+      [
+       "per_sample",
+       "w"
+      ]
+     ]
+    }
+   ],
+   "name": "selector_gathers",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'exp'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #4)|()\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Op|f64|()|None|(#5, #6)|(('kind', 'mul'), ('literal', None))\nn|Assign|f64|()|None|(#7,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\n",
+   "fp64_ops": 4,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": null
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": null
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "value_not_stored_directly",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'exp'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #4)|()\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1,)|(('kind', 'log'), ('literal', None))\nn|Dispatch|f64|()|None|(#6, #1, #7)|()\nn|Op|f64|()|None|(#5, #8)|(('kind', 'add'), ('literal', None))\nn|Assign|f64|()|None|(#9,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\n",
+   "fp64_ops": 6,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": null
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": null
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    },
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": null
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": null
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "two_groups_one_sink",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'y'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#1,)|(('kind', 'exp'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #4)|()\nn|Assign|f64|()|None|(#5,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))\nn|Assign|f64|()|None|(#7,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'w2'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\n",
+   "fp64_ops": 3,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "two_sinks",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 0.5),)\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'n'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#4,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|Op|i32|()|None|(#5, #6)|(('kind', 'max'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 2147483646)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#9, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#10, #3)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#2, #3, #7)|(('index', #8), ('carries', (#9,)), ('nexts', (#11,)), ('start', 0), ('stop', 2147483647), ('step', 1), ('trip', 2147483647), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', #7), ('count_tail', False), ('dynamic', 'open'), ('_free_end', 2))\nn|LoopValue|f64|()|None|(#12,)|(('kind', 'loop_value'), ('literal', 0))\nn|Dispatch|f64|()|None|(#1, #13, #2)|()\nn|Assign|f64|()|None|(#14,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\n",
+   "fp64_ops": 3,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 1.0,
+       "arith64": 2.0,
+       "chain32": 1.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_open_bound",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    12,
+    13,
+    14,
+    15
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 0.5),)\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'n'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#4,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|Op|i32|()|None|(#5, #6)|(('kind', 'max'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#7, #8)|(('kind', 'min'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 5)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#11, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#12, #3)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#2, #3, #9)|(('index', #10), ('carries', (#11,)), ('nexts', (#13,)), ('start', 0), ('stop', 6), ('step', 1), ('trip', 6), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', #9), ('count_tail', False), ('dynamic', 'max'), ('_free_end', 2))\nn|LoopValue|f64|()|None|(#14,)|(('kind', 'loop_value'), ('literal', 0))\nn|Dispatch|f64|()|None|(#1, #15, #2)|()\nn|Assign|f64|()|None|(#16,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\n",
+   "fp64_ops": 13,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 2.0,
+       "arith64": 12.0,
+       "chain32": 2.0,
+       "chain64": 12.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_runtime_bound_with_max",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    14,
+    15,
+    16,
+    17
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 3)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#6, #3)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#7, #4)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#2, #3, #4)|(('index', #5), ('carries', (#6,)), ('nexts', (#8,)), ('start', 0), ('stop', 4), ('step', 1), ('trip', 4), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 3))\nn|LoopValue|f64|()|None|(#9,)|(('kind', 'loop_value'), ('literal', 0))\nn|Dispatch|f64|()|None|(#1, #10, #3)|()\nn|Assign|f64|()|None|(#11,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\n",
+   "fp64_ops": 9,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 8.0,
+       "chain32": 0.0,
+       "chain64": 8.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_one_carry",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'a'))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 1), ('name', 'b'))\nn|Op|f64|()|None|(#8, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#10, #5)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#9, #4)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#12, #6)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#2, #3, #4, #5, #6)|(('index', #7), ('carries', (#8, #9)), ('nexts', (#11, #13)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 2), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 5))\nn|LoopValue|f64|()|None|(#14,)|(('kind', 'loop_value'), ('literal', 0))\nn|LoopValue|f64|()|None|(#14,)|(('kind', 'loop_value'), ('literal', 1))\nn|Op|f64|()|None|(#15, #16)|(('kind', 'add'), ('literal', None))\nn|Dispatch|f64|()|None|(#1, #17, #4)|()\nn|Assign|f64|()|None|(#18,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\n",
+   "fp64_ops": 34,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 33.0,
+       "chain32": 0.0,
+       "chain64": 17.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_two_chains",
+   "order": [
+    0,
+    1,
+    2,
+    4,
+    5,
+    6,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'table_read'), ('role', 'lookup'), ('name', 'table'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'where'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#4,)|(('kind', 'cast'), ('literal', 'i32'))\nn|PlaneExtent|i32|()|None|(#3,)|()\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', 'i'), ('bounds', (0, 7)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|i32|()|None|(#5, #7)|(('kind', 'add'), ('literal', None))\nn|Op|i32|()|None|(#9, #6)|(('kind', 'clamp_index'), ('literal', None))\nn|At|f64|()|None|(#3, #10)|(('kind', 'at'), ('literal', None))\nn|Op|f64|()|None|(#8, #11)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#2, #3, #5, #6)|(('index', #7), ('carries', (#8,)), ('nexts', (#12,)), ('start', 0), ('stop', 8), ('step', 1), ('trip', 8), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 4))\nn|LoopValue|f64|()|None|(#13,)|(('kind', 'loop_value'), ('literal', 0))\nn|Dispatch|f64|()|None|(#1, #14, #2)|()\nn|Assign|f64|()|None|(#15,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\n",
+   "fp64_ops": 9,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 16.0,
+       "arith64": 8.0,
+       "chain32": 0.0,
+       "chain64": 8.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 8.0,
+       "loads": 3.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_with_gather",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    13,
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 2)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#4,)|(('kind', 'sin'), ('literal', None))\nn|Op|f64|()|None|(#5, #2)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#2,)|(('index', #3), ('carries', (#4,)), ('nexts', (#6,)), ('start', 0), ('stop', 3), ('step', 1), ('trip', 3), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))\nn|LoopValue|f64|()|None|(#7,)|(('kind', 'loop_value'), ('literal', 0))\nn|Op|f64|()|None|(#2,)|(('kind', 'exp'), ('literal', None))\nn|Dispatch|f64|()|None|(#1, #8, #9)|()\nn|Assign|f64|()|None|(#10,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\n",
+   "fp64_ops": 8,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 3.0,
+       "chain32": 0.0,
+       "chain64": 3.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 3.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 3.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_with_library_call",
+   "order": [
+    0,
+    1,
+    2,
+    7,
+    8,
+    9,
+    10,
+    11
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 1)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|LoopIndex|i32|()|None|()|(('depth', 1), ('name', '_'), ('bounds', (0, 2)))\nn|LoopCarry|f64|()|None|()|(('depth', 1), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#7, #2)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|()|None|(#8, #3)|(('kind', 'add'), ('literal', None))\nn|Loop|f64|()|None|(#5, #2, #3)|(('index', #6), ('carries', (#7,)), ('nexts', (#9,)), ('start', 0), ('stop', 3), ('step', 1), ('trip', 3), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 3))\nn|LoopValue|f64|()|None|(#10,)|(('kind', 'loop_value'), ('literal', 0))\nn|Loop|f64|()|None|(#2, #3)|(('index', #4), ('carries', (#5,)), ('nexts', (#11,)), ('start', 0), ('stop', 2), ('step', 1), ('trip', 2), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 2))\nn|LoopValue|f64|()|None|(#12,)|(('kind', 'loop_value'), ('literal', 0))\nn|Dispatch|f64|()|None|(#1, #13, #2)|()\nn|Assign|f64|()|None|(#14,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\n",
+   "fp64_ops": 13,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 12.0,
+       "chain32": 0.0,
+       "chain64": 12.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_nested",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    12,
+    13,
+    14,
+    15
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|int32|()|'index'|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|i32|()|None|(#0,)|(('kind', 'cast'), ('literal', 'i32'))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 4)))\nn|LoopCarry|f64|()|None|()|(('depth', 0), ('slot', 0), ('name', 'acc'))\nn|Op|f64|()|None|(#4, #4)|(('kind', 'mul'), ('literal', None))\nn|Loop|f64|()|None|(#2,)|(('index', #3), ('carries', (#4,)), ('nexts', (#5,)), ('start', 0), ('stop', 5), ('step', 1), ('trip', 5), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 1))\nn|LoopValue|f64|()|None|(#6,)|(('kind', 'loop_value'), ('literal', 0))\nn|Op|f64|()|None|(#7,)|(('kind', 'sqrt'), ('literal', None))\nn|Op|f64|()|None|(#8, #2)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|()|None|(#1, #9, #7)|()\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Op|f64|()|None|(#10, #11)|(('kind', 'add'), ('literal', None))\nn|Assign|f64|()|None|(#12,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\n",
+   "fp64_ops": 9,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 7.0,
+       "chain32": 0.0,
+       "chain64": 7.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": null
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 5.0,
+       "chain32": 0.0,
+       "chain64": 5.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 1.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": null
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "loop_then_work_after",
+   "order": [
+    0,
+    1,
+    2,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'm'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'lu_factor'|(#1,)|(('kind', 'lu'), ('literal', None))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#2, #3)|(('kind', 'lu_solve'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#3, #5)|(('kind', 'mul'), ('literal', None))\nn|Dispatch|f64|(3,)|None|(#0, #4, #6)|()\nn|Assign|f64|(3,)|None|(#7,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\n",
+   "fp64_ops": 24,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 18.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 12.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 3.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 4.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "linalg_solve",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'm'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'lu_factor'|(#1,)|(('kind', 'lu'), ('literal', None))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#2, #3)|(('kind', 'lu_solve'), ('literal', None))\nn|Op|f64|(3, 3)|'chol_factor'|(#1,)|(('kind', 'chol'), ('literal', None))\nn|Op|f64|(3,)|None|(#5, #3)|(('kind', 'cho_solve'), ('literal', None))\nn|Dispatch|f64|(3,)|None|(#0, #4, #6)|()\nn|Assign|f64|(3,)|None|(#7,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\n",
+   "fp64_ops": 34,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 18.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 12.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 13.5,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 12.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 3.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "linalg_lu_and_cholesky",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'm'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'lu_factor'|(#1,)|(('kind', 'lu'), ('literal', None))\nn|Leaf|f64|(3, 2)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'B'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 2)|None|(#2, #3)|(('kind', 'lu_solve'), ('literal', None))\nn|Dispatch|f64|(3, 2)|None|(#0, #4, #3)|()\nn|Assign|f64|(3, 2)|None|(#5,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\n",
+   "fp64_ops": 33,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 27.0,
+       "chain32": 0.0,
+       "chain64": 2.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 15.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 6.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 6.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 6.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "linalg_multiple_rhs",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(4,)|None|(#1, #2, #1, #2, #1, #3)|(('kind', 'ray_tri'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', inf),)\nn|Op|f64|(4,)|None|(#1, #2, #1, #2, #5)|(('kind', 'ray_aabb'), ('literal', None))\nn|Op|f64|(4,)|None|(#1, #2, #1, #3, #5)|(('kind', 'ray_sphere'), ('literal', None))\nn|Dispatch|f64|(4,)|None|(#0, #4, #6, #7)|()\nn|Assign|f64|(4,)|None|(#8,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\n",
+   "fp64_ops": 179,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 70.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 7.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 4.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 60.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 6.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 4.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 45.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 0.0,
+       "gathers": 0.0,
+       "loads": 7.0,
+       "special32": 0.0,
+       "special64": 0.0,
+       "stores": 4.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "ray_ops",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'k'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'seed'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|i32|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'counter'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#1, #2)|(('kind', 'random_normal'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#4, #5)|(('kind', 'mul'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 16),)\nn|Op|i32|()|None|(#2, #7)|(('kind', 'mul'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 0),)\nn|Op|i32|()|None|(#8, #9)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #10)|(('kind', 'random_uniform'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#11, #12)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#13, #14, #15)|()\nn|Const|i32|()|None|()|(('literal', 1),)\nn|Op|i32|()|None|(#8, #17)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #18)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#11, #19)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#20, #21)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#22, #23, #24)|()\nn|Op|f64|()|None|(#16, #25)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 2),)\nn|Op|i32|()|None|(#8, #27)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #28)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#20, #29)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#30, #31)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#32, #33, #34)|()\nn|Op|f64|()|None|(#26, #35)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 3),)\nn|Op|i32|()|None|(#8, #37)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #38)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#30, #39)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#40, #41)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#42, #43, #44)|()\nn|Op|f64|()|None|(#36, #45)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 4),)\nn|Op|i32|()|None|(#8, #47)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #48)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#40, #49)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#50, #51)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#52, #53, #54)|()\nn|Op|f64|()|None|(#46, #55)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 5),)\nn|Op|i32|()|None|(#8, #57)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #58)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#50, #59)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#60, #61)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#62, #63, #64)|()\nn|Op|f64|()|None|(#56, #65)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 6),)\nn|Op|i32|()|None|(#8, #67)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #68)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#60, #69)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#70, #71)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#72, #73, #74)|()\nn|Op|f64|()|None|(#66, #75)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 7),)\nn|Op|i32|()|None|(#8, #77)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #78)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#70, #79)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#80, #81)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#82, #83, #84)|()\nn|Op|f64|()|None|(#76, #85)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 8),)\nn|Op|i32|()|None|(#8, #87)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #88)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#80, #89)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#90, #91)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#92, #93, #94)|()\nn|Op|f64|()|None|(#86, #95)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 9),)\nn|Op|i32|()|None|(#8, #97)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #98)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#90, #99)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#100, #101)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#102, #103, #104)|()\nn|Op|f64|()|None|(#96, #105)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 10),)\nn|Op|i32|()|None|(#8, #107)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #108)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#100, #109)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#110, #111)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#112, #113, #114)|()\nn|Op|f64|()|None|(#106, #115)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 11),)\nn|Op|i32|()|None|(#8, #117)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #118)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#110, #119)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#120, #121)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#122, #123, #124)|()\nn|Op|f64|()|None|(#116, #125)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 12),)\nn|Op|i32|()|None|(#8, #127)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #128)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#120, #129)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#130, #131)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#132, #133, #134)|()\nn|Op|f64|()|None|(#126, #135)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 13),)\nn|Op|i32|()|None|(#8, #137)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #138)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#130, #139)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#140, #141)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#142, #143, #144)|()\nn|Op|f64|()|None|(#136, #145)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 14),)\nn|Op|i32|()|None|(#8, #147)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #148)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#140, #149)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#150, #151)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#152, #153, #154)|()\nn|Op|f64|()|None|(#146, #155)|(('kind', 'add'), ('literal', None))\nn|Const|i32|()|None|()|(('literal', 15),)\nn|Op|i32|()|None|(#8, #157)|(('kind', 'add'), ('literal', None))\nn|Op|f64|()|None|(#1, #158)|(('kind', 'random_uniform'), ('literal', None))\nn|Op|f64|()|None|(#150, #159)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 0.36787944117144233),)\nn|Op|bool|()|None|(#160, #161)|(('kind', 'gt'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Select|f64|()|None|(#162, #163, #164)|()\nn|Op|f64|()|None|(#156, #165)|(('kind', 'add'), ('literal', None))\nn|Dispatch|f64|()|None|(#0, #3, #6, #166)|()\nn|Assign|f64|()|None|(#167,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\nroot|#25\nroot|#26\nroot|#27\nroot|#28\nroot|#29\nroot|#30\nroot|#31\nroot|#32\nroot|#33\nroot|#34\nroot|#35\nroot|#36\nroot|#37\nroot|#38\nroot|#39\nroot|#40\nroot|#41\nroot|#42\nroot|#43\nroot|#44\nroot|#45\nroot|#46\nroot|#47\nroot|#48\nroot|#49\nroot|#50\nroot|#51\nroot|#52\nroot|#53\nroot|#54\nroot|#55\nroot|#56\nroot|#57\nroot|#58\nroot|#59\nroot|#60\nroot|#61\nroot|#62\nroot|#63\nroot|#64\nroot|#65\nroot|#66\nroot|#67\nroot|#68\nroot|#69\nroot|#70\nroot|#71\nroot|#72\nroot|#73\nroot|#74\nroot|#75\nroot|#76\nroot|#77\nroot|#78\nroot|#79\nroot|#80\nroot|#81\nroot|#82\nroot|#83\nroot|#84\nroot|#85\nroot|#86\nroot|#87\nroot|#88\nroot|#89\nroot|#90\nroot|#91\nroot|#92\nroot|#93\nroot|#94\nroot|#95\nroot|#96\nroot|#97\nroot|#98\nroot|#99\nroot|#100\nroot|#101\nroot|#102\nroot|#103\nroot|#104\nroot|#105\nroot|#106\nroot|#107\nroot|#108\nroot|#109\nroot|#110\nroot|#111\nroot|#112\nroot|#113\nroot|#114\nroot|#115\nroot|#116\nroot|#117\nroot|#118\nroot|#119\nroot|#120\nroot|#121\nroot|#122\nroot|#123\nroot|#124\nroot|#125\nroot|#126\nroot|#127\nroot|#128\nroot|#129\nroot|#130\nroot|#131\nroot|#132\nroot|#133\nroot|#134\nroot|#135\nroot|#136\nroot|#137\nroot|#138\nroot|#139\nroot|#140\nroot|#141\nroot|#142\nroot|#143\nroot|#144\nroot|#145\nroot|#146\nroot|#147\nroot|#148\nroot|#149\nroot|#150\nroot|#151\nroot|#152\nroot|#153\nroot|#154\nroot|#155\nroot|#156\nroot|#157\nroot|#158\nroot|#159\nroot|#160\nroot|#161\nroot|#162\nroot|#163\nroot|#164\nroot|#165\nroot|#166\nroot|#167\nroot|#168\n",
+   "fp64_ops": 82,
+   "groups": [
+    {
+     "branches": [
+      {
+       "arith32": 0.0,
+       "arith64": 0.0,
+       "chain32": 0.0,
+       "chain64": 0.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 0.0,
+       "arith64": 1.0,
+       "chain32": 0.0,
+       "chain64": 1.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 3.0,
+       "special32": 0.0,
+       "special64": 1.0,
+       "stores": 1.0
+      },
+      {
+       "arith32": 17.0,
+       "arith64": 62.0,
+       "chain32": 2.0,
+       "chain64": 18.0,
+       "chainSpecial32": 0.0,
+       "chainSpecial64": 1.0,
+       "gathers": 0.0,
+       "loads": 2.0,
+       "special32": 0.0,
+       "special64": 16.0,
+       "stores": 1.0
+      }
+     ],
+     "selector_reads": [
+      [
+       "per_sample",
+       "k"
+      ]
+     ]
+    }
+   ],
+   "name": "random_draws",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    22,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    32,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    42,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    52,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    62,
+    65,
+    66,
+    67,
+    68,
+    69,
+    70,
+    72,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    82,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    92,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    102,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    112,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    122,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    132,
+    135,
+    136,
+    137,
+    138,
+    139,
+    140,
+    142,
+    145,
+    146,
+    147,
+    148,
+    149,
+    150,
+    152,
+    155,
+    156,
+    157,
+    158,
+    159,
+    160,
+    162,
+    165,
+    166,
+    167,
+    168
+   ]
+  }
+ ]
+}

@@ -15,6 +15,8 @@ type ClassRow = (
     Option<bool>,
     Option<String>,
     Option<u8>,
+    Vec<String>,
+    Vec<String>,
 );
 
 /// One row of the rule table: (min, max or -1, result code, operand index, dtype, shape).
@@ -156,7 +158,9 @@ fn read_classes(kinds: &[json::J]) -> Vec<ClassRow> {
             .get("watch")
             .and_then(|w| w.str())
             .map(|w| if w == "all" { 1 } else { 2 });
-        cl.push((name, base, slots, binds, dedup, watch));
+        let feathers = k.get("feathers").map(|f| f.strs()).unwrap_or_default();
+        let state = k.get("state").map(|f| f.strs()).unwrap_or_default();
+        cl.push((name, base, slots, binds, dedup, watch, feathers, state));
     }
     for i in 0..cl.len() {
         let base = cl[i].1.clone();
@@ -240,9 +244,9 @@ fn emit_rules(kinds: &[json::J], out: &mut String) {
 /// Writes the table of class specs.
 fn emit_classes(cl: &[ClassRow], out: &mut String) {
     out.push_str("/// The node classes of the manifest, in its order.\npub static CLASSES: &[ClassSpec] = &[\n");
-    for (n, b, s, bind, d, wt) in cl {
-        out.push_str(&format!("    ClassSpec {{ name: {}, base: {}, slots: &[{}], binds: {}, dedup: {}, watch: {} }},\n", q(n), q(b),
-            s.iter().map(|x| q(x)).collect::<Vec<_>>().join(", "), bind.unwrap_or(false), d.clone().unwrap_or("Dedup::Py".into()), wt.unwrap_or(0)));
+    for (n, b, s, bind, d, wt, f, st) in cl {
+        out.push_str(&format!("    ClassSpec {{ name: {}, base: {}, slots: &[{}], binds: {}, dedup: {}, watch: {}, feathers: &[{}], state: &[{}] }},\n", q(n), q(b),
+            s.iter().map(|x| q(x)).collect::<Vec<_>>().join(", "), bind.unwrap_or(false), d.clone().unwrap_or("Dedup::Py".into()), wt.unwrap_or(0), f.iter().map(|x| q(x)).collect::<Vec<_>>().join(", "), st.iter().map(|x| q(x)).collect::<Vec<_>>().join(", ")));
     }
     out.push_str("];\n");
 }

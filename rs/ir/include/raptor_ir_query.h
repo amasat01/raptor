@@ -52,6 +52,66 @@ int rx_dispatch_nodes(rx_ctx* ctx, rx_walk walk, rx_node* buf, size_t cap, size_
    list is a refusal. */
 int rx_const_names(rx_ctx* ctx, const char* name, char* buf, size_t cap, size_t* len, size_t* count);
 
+/* Whether the kind of a node states the feather `name` (*out is 0 or 1); a name that is no feather is a refusal. */
+int rx_has_feather(rx_ctx* ctx, rx_node node, const char* name, int* out);
+
+/* Whether a node reads a parameter cell: an At of a role constant labelled so (*out is 0 or 1). */
+int rx_is_param_cell(rx_ctx* ctx, rx_node node, int* out);
+
+/* The sink `sink` committing `value` instead (a commit, sample sum, keyed accumulate or finish, or a sink whose kind
+   states the commits_value feather; any other sink is a refusal). */
+int rx_with_value(rx_ctx* ctx, rx_node sink, rx_node value, rx_node* out);
+
+/* The node where a matrix is wanted: a Cholesky factor becomes its projection, another factor is refused by name,
+   any other node answers itself. */
+int rx_as_matrix(rx_ctx* ctx, rx_node node, rx_node* out);
+
+/* The terms of an add chain, left to right (the two-call array protocol); any other node is its own one term. A sub at
+   the top alternates the sign of what follows, so only add is flattened. */
+int rx_add_terms(rx_ctx* ctx, rx_node node, rx_node* buf, size_t cap, size_t* n);
+
+/* Refuses, by name, a loop whose body holds a nested loop that leaves early, commits a sink or runs a recorded trip count
+   (neither direction of differentiation can carry it); answers RX_OK otherwise. */
+int rx_refuse_nesting(rx_ctx* ctx, rx_node loop);
+
+/* Whether a loop is an accumulator (*out is 1: every carry's next value is an add chain holding that carry once as a bare
+   term, read nowhere else) or a recurrence (0). Refuses a loop neither direction can carry, by name. */
+int rx_loop_is_accumulator(rx_ctx* ctx, rx_node loop, int* out);
+
+/* The addend a of each carry of an accumulator loop (c = c + a), in carry order (the two-call array protocol); the
+   addends of one carry are summed left to right in the context. A recurrence is a refusal. */
+int rx_loop_addends(rx_ctx* ctx, rx_node loop, rx_node* buf, size_t cap, size_t* n);
+
+/* Whether an accumulate under the contract commits through a companion plane (*out is 0 or 1): the compensated contract and
+   the one a keyed accumulate takes by default. */
+int rx_compensates(rx_ctx* ctx, const char* contract, int* out);
+
+/* The read of the named parameter of the type (dtype, shape, tag; tag NULL = none): cell 0 of a one-cell lookup plane, or,
+   with per_cell, the cell the sample's param_cell plane names. rx_is_param_cell answers 1 for the first form. */
+int rx_param_cell(rx_ctx* ctx, const char* name, const char* dtype, const int64_t* shape, size_t rank,
+                  const char* tag /* NULL */, int per_cell, rx_node* out);
+
+/* The affine form of an integer index expression in the index variable var (NULL: the sample index): how the index moves with
+   the variable. The answer is a list of texts (the names protocol): the one text "none" when no form is claimed, else "form",
+   the coefficient "n/d", the offset "n/d" or "-" (not a compile-time integer), "1" when a bare literal scales it else "0", the
+   symbol ("n_samples" when the launch's sample count scales it) or "-", then the declaration-named constants it is scaled
+   by. A non-integer coefficient means the index depends on the variable only through floor(coefficient * s + offset).
+   quotients: 0 refuses a division. Conservative: "none" claims nothing. */
+int rx_index_form(rx_ctx* ctx, rx_node node, const rx_node* var /* NULL */, int quotients, char* buf, size_t cap,
+                  size_t* len, size_t* count);
+
+/* A number per node of an order (children before parents; the two-call array protocol into *buf): equal numbers mean the
+   nodes are one value, so a value traced twice counts once. Two nodes are one value when their class, kind, type, literal
+   (as the core's key text: nan equals nan, -0.0 is not 0.0, True is not 1), identity state, name and operand numbers are
+   equal; an operand outside the order has no number. The numbers are dense from 0 in order of first appearance and mean
+   something only within one call. */
+int rx_structural_keys(rx_ctx* ctx, const rx_node* order, size_t n, int64_t* buf, size_t cap, size_t* count);
+
+/* Refuses, by name, a compound quantity declaration: a pack outside the manifest's QUANTITY_PACKS, an empty slug, no wire, a
+   wire whose role no leaf kind mints (QUANTITY_ROLE_PAIRS) or two wires of one name. wires_kt is the key text of a tuple of
+   (role, name) pairs, in declaration order, such as (('vec_in', 'x'), ('mat_in', 'm')). Answers RX_OK for a sound one. */
+int rx_quantity_check(rx_ctx* ctx, const char* slug, const char* pack, const char* wires_kt);
+
 #ifdef __cplusplus
 }
 #endif

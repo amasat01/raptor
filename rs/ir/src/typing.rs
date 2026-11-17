@@ -891,7 +891,7 @@ impl Ctx {
     }
 
     /// `node` where a matrix is wanted: a Cholesky factor becomes its `chol_factor` projection, another factor is refused by name.
-    fn as_matrix(&mut self, node: u32) -> Checked<u32> {
+    pub fn as_matrix(&mut self, node: u32) -> Checked<u32> {
         let t = self.tt_of(node);
         match t.tag.as_deref() {
             Some("chol_factor") => self.make(

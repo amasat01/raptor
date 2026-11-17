@@ -482,6 +482,42 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
         Ok(access)
     }
 
+    /// The start value and the update of a loop carry: the loop that holds it names them by the carry's position.
+    fn carry_sources(&self, carry: u32) -> Result<Vec<u32>, Fault> {
+        for lp in (0..self.nodes.len() as u32).filter(|&n| self.is_a(n, "Loop")) {
+            if let Some(at) = self.refs(lp, "carries")?.iter().position(|&c| c == carry) {
+                let start = self.nodes[lp as usize].ops.get(at).copied();
+                let update = self.refs(lp, "nexts")?.get(at).copied();
+                return Ok(start.into_iter().chain(update).collect());
+            }
+        }
+        Err(Fault::Refused(format!(
+            "a loop carry {carry} that no loop holds"
+        )))
+    }
+
+    /// The `(role, name)` slots the selector of the dispatch node `h` reads, sorted.
+    ///
+    /// The rule: a selector's reads are the plane leaves its closure reaches. A loop carry is a value of the loop, not a plane, so it
+    /// contributes the leaves reached through its start value and through its update (transitively, through other carries, each
+    /// node visited once), never a pair named after the carry. A gather's plane is a leaf its operands reach.
+    pub fn selector_reads(&self, h: u32) -> Result<BTreeSet<(String, String)>, Fault> {
+        let (mut seen, mut reads, mut st) =
+            (HashSet::new(), BTreeSet::new(), vec![self.node(h)?.ops[0]]);
+        while let Some(n) = st.pop() {
+            if !seen.insert(n) {
+                continue;
+            }
+            if self.is_a(n, "Leaf") {
+                reads.insert((self.str_field(n, "role")?, self.str_field(n, "name")?));
+            } else if self.is_a(n, "LoopCarry") {
+                st.extend(self.carry_sources(n)?);
+            }
+            st.extend(self.nodes[n as usize].ops.iter().copied());
+        }
+        Ok(reads)
+    }
+
     /// The dispatch listing: for each dispatch node its selector reads, and whether the selector is static (reads no
     /// plane the walk writes).
     fn dispatch_listing(&self, watched: &[u32]) -> Result<(Vec<Val>, Vec<bool>), Fault> {
@@ -500,22 +536,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
         }
         let (mut listing, mut statics) = (vec![], vec![]);
         for (i, &h) in self.dispatch_nodes(watched)?.iter().enumerate() {
-            let (mut seen, mut reads, mut st) = (
-                HashSet::new(),
-                BTreeSet::new(),
-                vec![self.nodes[h as usize].ops[0]],
-            );
-            while let Some(n) = st.pop() {
-                if !seen.insert(n) {
-                    continue;
-                }
-                if self.is_a(n, "Leaf") {
-                    reads.insert((self.str_field(n, "role")?, self.str_field(n, "name")?));
-                } else if self.is_a(n, "LoopCarry") {
-                    reads.insert(("mutable".to_string(), self.str_field(n, "name")?));
-                }
-                st.extend(self.nodes[n as usize].ops.iter().copied());
-            }
+            let reads = self.selector_reads(h)?;
             let stat = !reads.iter().any(|(_, nm)| written.contains(nm));
             statics.push(stat);
             listing.push(Val::Tuple(vec![

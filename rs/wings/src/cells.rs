@@ -6,6 +6,7 @@ use crate::{is_a, list_out, name_of, R};
 use raptor_ir::canon::{declared_slots, Key, Tt};
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
+use raptor_ir::typed::{put_pairs, text_pair, RxPair};
 use raptor_ir::value::{ttype_val, Val};
 use std::ffi::{c_char, c_int};
 
@@ -285,6 +286,39 @@ pub fn companion_slots(ctx: &Ctx, sinks: &[u32]) -> R<Vec<(Key, Tt)>> {
     Ok(out)
 }
 
+/// The summing sample sums of the walk, each as the pair (the sum's plane, its compensation plane `<name>_comp`), in the walk's order.
+pub fn walk_companions(ctx: &Ctx, walk: u32) -> R<Vec<(String, String)>> {
+    let mut pairs = vec![];
+    for node in crate::walk_order(ctx, walk)? {
+        if is_a(ctx, node, "SampleSum") && ctx.str_field(node, "op")? == "sum" {
+            let row = ctx.str_field(node, "name")?;
+            pairs.push((row.clone(), format!("{row}{SAMPLE_SUM_COMP}")));
+        }
+    }
+    Ok(pairs)
+}
+
+/// The summing sample sums of the walk as pairs (the sum's plane, its compensation plane `<name>_comp`), in the walk's order.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_walk_companions(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> std::ffi::c_int {
+    guard(ctx, |c| {
+        let pairs = walk_companions(c, walk)?
+            .iter()
+            .map(|(row, comp)| text_pair(row, Some(comp)))
+            .collect::<Result<Vec<_>, _>>()?;
+        put_pairs(&pairs, buf, cap, n)
+    })
+}
+
 /// The body sinks of a loop.
 fn raptor_ir_refs(ctx: &Ctx, lp: u32) -> R<Vec<u32>> {
     match ctx.field(lp, "body_sinks")? {
@@ -298,12 +332,14 @@ fn raptor_ir_refs(ctx: &Ctx, lp: u32) -> R<Vec<u32>> {
 
 /// The canonical walk of a kernel's sinks over the caller's declared slots, the compensation slot of every summing sample sum, the
 /// finished-count slot when a sink finishes, and the branch-mix slot of every dispatch group that counts its branch mix (a second
-/// pass, as the mix slots are named by the first walk's groups); the fused-steps plane is exempt from the access class.
+/// pass, as the mix slots are named by the first walk's groups); the fused-steps plane and the planes `exempt` names are
+/// exempt from the access class.
 pub fn kernel_walk(
     ctx: &mut Ctx,
     sinks: &[u32],
     declared: &[(Key, Tt)],
     force: Option<&str>,
+    exempt: &[String],
 ) -> R<u32> {
     let mut slots = declared.to_vec();
     slots.extend(companion_slots(ctx, sinks)?);
@@ -318,7 +354,7 @@ pub fn kernel_walk(
     } else {
         vec![]
     };
-    let exempt = [FUSED_STEPS_PLANE.to_string()];
+    let exempt = [&[FUSED_STEPS_PLANE.to_string()], exempt].concat();
     let all = [slots.clone(), finished.clone()].concat();
     let found = ctx.canonical(sinks, &all, force, &exempt)? as u32;
     let mixes: Vec<(Key, Tt)> = strategies(ctx, found)?
@@ -368,7 +404,7 @@ pub unsafe extern "C" fn rw_cells_walk(
         } else {
             Some(name_of(force_access, "force_access")?)
         };
-        unsafe { *out = kernel_walk(c, given, &declared, force)? };
+        unsafe { *out = kernel_walk(c, given, &declared, force, &[])? };
         Ok(())
     })
 }

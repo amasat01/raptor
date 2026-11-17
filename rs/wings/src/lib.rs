@@ -5,6 +5,7 @@
 pub mod blocks;
 pub mod blockteam;
 pub mod boxing;
+pub mod card;
 pub mod cells;
 pub mod chain;
 pub mod construct;

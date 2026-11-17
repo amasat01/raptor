@@ -42,6 +42,14 @@ int rw_walk_strategies(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t*
    group that has no mix slot, which only an automatic group has. The two-call protocol of rx_field_pairs (*n is the count, RX_TRUNC when cap is smaller). */
 int rw_walk_mix_slots(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
 
+/* The summing sample sums of the walk in the walk's order as pairs (the sum's plane, its compensation plane <name>_comp), the two-call protocol of
+   rx_field_pairs. */
+int rw_walk_companions(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
+
+/* The names a dispatch group owns, from the group's name, as the names protocol: the offsets plane and the class plane of a segmented group, its
+   stale mask, and the branch-mix slot of an automatic group, in that order. */
+int rw_group_plane_names(rx_ctx* ctx, const char* group, char* buf, size_t cap, size_t* len, size_t* count);
+
 /* The canonical walk of a kernel's sinks, a walk number like rx_canonical's: over declared_kt (the key text of a tuple of Slot records), the
    compensation slot <name>_comp of every summing sample_sum (refused, by name, when a sink already holds a plane of that role and name),
    the finished-count slot when a sink finishes, and the branch-mix slot <group>_mix of every dispatch group that counts its branch mix; the

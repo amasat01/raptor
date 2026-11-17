@@ -1,0 +1,16 @@
+{
+ "wing": "cuda",
+ "target": "device",
+ "linalg": {"max_dim": 32, "team_max_dim": 4096},
+ "note": "Device weights are priors until a device calibration fits; lane rate, memory rate and chain seconds are read live (0).",
+ "weights": [
+  {"vendor": 0, "family": 0, "model": 0,
+   "arith32": 1.0, "special32": 20.0, "special64": 20.0, "launch_seconds": 5e-6,
+   "split_seconds": 0.05e-9, "sort_seconds": 10e-9, "lane_rate_per_core": 0.0,
+   "memory_rate": 0.0, "cache_ratio": 4.0, "chain_seconds_per_core": 0.0, "vector_width": 1.0}
+ ],
+ "gemm_routes": [
+  {"family": 0, "model": 0, "dtype": "f32", "route": "gemm"},
+  {"family": 0, "model": 0, "dtype": "f64", "route": "gemm"}
+ ]
+}

@@ -3,10 +3,16 @@
 use raptor_ir::record::{Ctx, Fault};
 use raptor_ir::typed::{RxPair, RxPairPart, RxType};
 use raptor_ir::value::{ttype_val, Val};
-use raptor_ir::walkreads::{rx_walk_prior, rx_walk_slot_type, rx_walk_static_selector};
-use raptor_wings::cells::kernel_walk;
+use raptor_ir::walkreads::{
+    rx_walk_access_class, rx_walk_accum_companions, rx_walk_prior, rx_walk_selector_reads,
+    rx_walk_slot_type, rx_walk_static_selector,
+};
+use raptor_wings::cells::{kernel_walk, rw_walk_companions};
 use raptor_wings::declare::declare_kinds;
-use raptor_wings::segment::{rw_walk_mix_slots, rw_walk_strategies, strategies, Strategy};
+use raptor_wings::segment::{
+    auto_dispatch, rw_group_plane_names, rw_walk_mix_slots, rw_walk_strategies, strategies,
+    Strategy,
+};
 use rcore::json::{self, J};
 use std::ffi::{c_char, CStr, CString};
 
@@ -100,6 +106,19 @@ fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
             let d = dispatch(c, (x, y), name.trim_end_matches("_dispatch"));
             vec![sink(c, "Assign", "o", d)]
         }
+        "accum_compensated_and_plain" => {
+            let write = |c: &mut Ctx, name: &str, value: u32, contract: &str| {
+                let fields = format!("(('kind', 'accum_write'), ('name', '{name}'), ('role', 'accum_out'), ('contract', '{contract}'), ('reduced', None))");
+                c.make("AccumWrite", "f64", &[], None, &[value], &fields)
+                    .unwrap()
+            };
+            vec![
+                write(c, "a", x, "compensated"),
+                write(c, "b", y, "auto"),
+                write(c, "a", y, "compensated"),
+                write(c, "c", x, "keyed_auto"),
+            ]
+        }
         "fused_steps_read" => {
             let steps = leaf(c, ("lookup", "table_read"), "fused_steps", "f64");
             vec![{
@@ -137,14 +156,14 @@ fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
 #[test]
 fn the_kernel_walk_is_the_recorded_one() {
     let data = json::parse(include_str!("data/walk.json")).unwrap();
-    assert_eq!(data.arr().len(), 15);
+    assert_eq!(data.arr().len(), 16);
     for case in data.arr() {
         let id = case.get("id").and_then(J::str).unwrap();
         let mut c = Ctx::new().unwrap();
         declare_kinds(&mut c).unwrap();
         let (sinks, declared) = case_sinks(&mut c, id);
         let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
-        let got = kernel_walk(&mut c, &sinks, &declared, None);
+        let got = kernel_walk(&mut c, &sinks, &declared, None, &[]);
         if let Some(want) = case.get("error").and_then(J::str) {
             assert!(
                 matches!(&got, Err(Fault::Refused(m)) if m == want),
@@ -215,6 +234,19 @@ fn part_text(part: &RxPairPart) -> Option<String> {
     }
 }
 
+/// The pairs of texts a pairs-protocol door writes, each part None when absent.
+fn pairs_of(
+    call: impl Fn(*mut RxPair, usize, *mut usize) -> i32,
+) -> Vec<(Option<String>, Option<String>)> {
+    let mut buf: Vec<RxPair> = (0..8).map(|_| empty_pair()).collect();
+    let mut count = 0;
+    assert_eq!(call(buf.as_mut_ptr(), buf.len(), &mut count), 0);
+    buf[..count]
+        .iter()
+        .map(|p| (part_text(&p.first), part_text(&p.second)))
+        .collect()
+}
+
 /// The names a names-protocol door writes.
 fn names_of(call: impl Fn(*mut c_char, usize, *mut usize, *mut usize) -> i32) -> Vec<String> {
     let (mut buf, mut len, mut count) = ([0 as c_char; 512], 0, 0);
@@ -238,7 +270,7 @@ fn the_typed_reads_of_a_walk_are_the_recorded_members() {
         declare_kinds(&mut c).unwrap();
         let (sinks, declared) = case_sinks(&mut c, id);
         let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
-        let w = kernel_walk(&mut c, &sinks, &declared, None).unwrap();
+        let w = kernel_walk(&mut c, &sinks, &declared, None, &[]).unwrap();
         let ctx: *mut Ctx = &mut c;
         for row in case.get("slot_types").unwrap().arr() {
             let (key, ty) = (row.arr()[0].strs(), row.arr()[1].arr());
@@ -296,6 +328,76 @@ fn the_typed_reads_of_a_walk_are_the_recorded_members() {
             // the previous walk bound the mix slot of a group exactly when it had one
             assert_eq!(part_text(&pair.second), binds(&mix).then_some(mix), "{id}");
         }
+        // what the previous walk answered: its companion pairs, the selector reads of each group and its access class
+        let companions = pairs_of(|b, cap, n| unsafe { rw_walk_companions(ctx, w, b, cap, n) });
+        let want: Vec<_> = case
+            .get("companions")
+            .unwrap()
+            .arr()
+            .iter()
+            .map(|r| r.strs())
+            .collect();
+        assert_eq!(
+            companions,
+            want.iter()
+                .map(|r| (Some(r[0].clone()), Some(r[1].clone())))
+                .collect::<Vec<_>>(),
+            "{id}: companions"
+        );
+        let accum = pairs_of(|b, cap, n| unsafe { rx_walk_accum_companions(ctx, w, b, cap, n) });
+        let want: Vec<_> = case
+            .get("accum_companions")
+            .unwrap()
+            .arr()
+            .iter()
+            .map(|r| r.strs())
+            .collect();
+        assert_eq!(
+            accum,
+            want.iter()
+                .map(|r| (Some(r[0].clone()), Some(r[1].clone())))
+                .collect::<Vec<_>>(),
+            "{id}: accumulate companions"
+        );
+        // the segmented form of an automatic group is made of the walk's one automatic group, and of no other kernel
+        let found = auto_dispatch(&c, w).unwrap();
+        let autos = rows
+            .iter()
+            .filter(|r| r.arr()[3].str() == Some("auto"))
+            .count();
+        assert_eq!(
+            found.is_some(),
+            autos == 1 && rows.len() == 1,
+            "{id}: automatic dispatch"
+        );
+        if let Some(split) = found {
+            assert_eq!((split.index, split.branches), (0, 2), "{id}");
+        }
+        let reads = case.get("selector_reads").unwrap().arr();
+        for (i, group) in reads.iter().enumerate() {
+            let got = pairs_of(|b, cap, n| unsafe {
+                rx_walk_selector_reads(ctx, w, i as i64, b, cap, n)
+            });
+            let want: Vec<_> = group.arr().iter().map(|r| r.strs()).collect();
+            assert_eq!(
+                got,
+                want.iter()
+                    .map(|r| (Some(r[0].clone()), Some(r[1].clone())))
+                    .collect::<Vec<_>>(),
+                "{id}: selector reads {i}"
+            );
+        }
+        let (mut text, mut len) = ([0 as c_char; 32], 0);
+        assert_eq!(
+            unsafe { rx_walk_access_class(ctx, w, text.as_mut_ptr(), 32, &mut len) },
+            0
+        );
+        let class = String::from_utf8(text[..len].iter().map(|&b| b as u8).collect()).unwrap();
+        assert_eq!(
+            Some(class.as_str()),
+            case.get("access").unwrap().arr()[0].str(),
+            "{id}: access"
+        );
         for (i, row) in rows.iter().enumerate() {
             let mut flag = 9;
             assert_eq!(
@@ -338,5 +440,25 @@ fn the_wing_names_are_the_recorded_ones() {
     assert_eq!(
         [raptor_wings::cells::FINISHED_PLANE],
         data.get("FINISHED_PLANE").unwrap().strs().as_slice()
+    );
+}
+
+/// The names a dispatch group owns are the previous wing's `offsets_name`, `class_name`, `stale_name` and `mix_name` of its name.
+#[test]
+fn the_plane_names_of_a_group_are_the_recorded_ones() {
+    let mut c = Ctx::new().unwrap();
+    let group = CString::new("dispatch3").unwrap();
+    let ctx: *mut Ctx = &mut c;
+    let names = names_of(|b, cap, len, count| unsafe {
+        rw_group_plane_names(ctx, group.as_ptr(), b, cap, len, count)
+    });
+    assert_eq!(
+        names,
+        [
+            "dispatch3_offsets",
+            "dispatch3_class",
+            "dispatch3_stale",
+            "dispatch3_mix"
+        ]
     );
 }

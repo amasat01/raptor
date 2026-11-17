@@ -168,6 +168,17 @@ int rx_walk_prior(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len,
 /* Whether the selector of the dispatch at index (the order of rx_dispatch_nodes) is static: no sink of the walk writes a plane it reads (*out is 0 or 1). */
 int rx_walk_static_selector(rx_ctx* ctx, rx_walk walk, int64_t index, int* out);
 
+/* The (role, name) slots the selector of the dispatch at index (the order of rx_dispatch_nodes) reads, sorted, as pairs (the two-call protocol of
+   rx_field_pairs); refuses an index the walk lacks. */
+int rx_walk_selector_reads(rx_ctx* ctx, rx_walk walk, int64_t index, rx_pair* buf, size_t cap, size_t* n);
+
+/* The companion planes of the compensated keyed accumulates of the walk as pairs (companion plane <plane>_c, the plane it compensates), in the
+   walk's order, once per companion (the two-call protocol of rx_field_pairs). */
+int rx_walk_accum_companions(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
+
+/* The access class of the walk as text ("sample_local", "cross_sample_read", ...: the text protocol, cap is at least *len + 1). */
+int rx_walk_access_class(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len);
+
 #ifdef __cplusplus
 }
 #endif

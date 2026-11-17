@@ -1,0 +1,12 @@
+{
+ "wing": "cpu",
+ "target": "host",
+ "linalg": {"max_dim": 32, "team_max_dim": 4096},
+ "note": "Host weights fitted on a 4-core Skylake-W Xeon (W-2125); lane rate per core is the all-cores figure over 4, chain seconds per core the all-cores figure times 4.",
+ "weights": [
+  {"vendor": 0, "family": 0, "model": 0,
+   "arith32": 1.495, "special32": 25.2, "special64": 122.0, "launch_seconds": 1.4e-6,
+   "split_seconds": 0.35e-9, "sort_seconds": 13.2e-9, "lane_rate_per_core": 6.125e9,
+   "memory_rate": 52.1e9, "cache_ratio": 5.09, "chain_seconds_per_core": 0.92e-9, "vector_width": 8}
+ ]
+}

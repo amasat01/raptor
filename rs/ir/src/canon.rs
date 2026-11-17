@@ -23,11 +23,16 @@ pub struct WalkRes {
     pub prior: Vec<String>,
     /// For each dispatch of the walk, whether no sink of the walk writes a plane its selector reads.
     pub static_selector: Vec<bool>,
+    /// For each dispatch of the walk, the `(role, name)` slots its selector reads, sorted.
+    pub selector_reads: Vec<Vec<Key>>,
     /// The text of each field of the walk, by name.
     pub fields: Vec<(&'static str, String)>,
     /// The digest of the walk.
     pub digest: String,
 }
+
+/// What the dispatch listing holds: the listing values, the static flag and the selector reads of each dispatch.
+type Listing = (Vec<Val>, Vec<bool>, Vec<Vec<Key>>);
 
 /// A slot key: role and name.
 pub type Key = (String, String);
@@ -167,7 +172,7 @@ fn pair(a: &str, b: &str) -> Val {
     Val::Tuple(vec![s(a), s(b)])
 }
 /// The text constant `k` of the core, or empty.
-fn str_const(k: &str) -> &'static str {
+pub(crate) fn str_const(k: &str) -> &'static str {
     STR_CONSTS.iter().find(|c| c.0 == k).map_or("", |c| c.1)
 }
 
@@ -204,7 +209,7 @@ impl Ctx {
         let spans = quantity_spans(&reached, &ordered, sep)?;
         let watched = self.watched_nodes(&tr);
         let access = self.access_class(&watched, exempt, force)?;
-        let (listing, static_selector) = self.dispatch_listing(&watched)?;
+        let (listing, static_selector, selector_reads) = self.dispatch_listing(&watched)?;
         let prior = self.prior_reads(&tr)?;
         let (fields, digest) = render_fields(
             &ordered,
@@ -225,6 +230,7 @@ impl Ctx {
             },
             prior: prior.into_iter().collect(),
             static_selector,
+            selector_reads,
             positions: objs
                 .iter()
                 .enumerate()
@@ -520,7 +526,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
 
     /// The dispatch listing: for each dispatch node its selector reads, and whether the selector is static (reads no
     /// plane the walk writes).
-    fn dispatch_listing(&self, watched: &[u32]) -> Result<(Vec<Val>, Vec<bool>), Fault> {
+    fn dispatch_listing(&self, watched: &[u32]) -> Result<Listing, Fault> {
         let mut written: HashSet<String> = HashSet::new();
         for &h in watched {
             if self.is_a(h, "Sink") {
@@ -534,11 +540,12 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 }
             }
         }
-        let (mut listing, mut statics) = (vec![], vec![]);
+        let (mut listing, mut statics, mut all_reads) = (vec![], vec![], vec![]);
         for (i, &h) in self.dispatch_nodes(watched)?.iter().enumerate() {
             let reads = self.selector_reads(h)?;
             let stat = !reads.iter().any(|(_, nm)| written.contains(nm));
             statics.push(stat);
+            all_reads.push(reads.iter().cloned().collect());
             listing.push(Val::Tuple(vec![
                 s(&format!("dispatch{i}")),
                 self.field(h, "K")?,
@@ -546,7 +553,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 Val::Bool(stat),
             ]));
         }
-        Ok((listing, statics))
+        Ok((listing, statics, all_reads))
     }
 
     /// The names of the prior reads in the walk.

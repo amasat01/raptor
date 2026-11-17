@@ -43,7 +43,10 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "one_summing_sample_sum",
@@ -100,7 +103,15 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [
+   [
+    "s",
+    "s_comp"
+   ]
+  ],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "max_sample_sum_has_no_companion",
@@ -135,7 +146,10 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "collision",
@@ -207,7 +221,10 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "auto_dispatch",
@@ -282,7 +299,17 @@
     true,
     "auto"
    ]
-  ]
+  ],
+  "companions": [],
+  "selector_reads": [
+   [
+    [
+     "per_sample",
+     "k"
+    ]
+   ]
+  ],
+  "accum_companions": []
  },
  {
   "id": "predicated_dispatch",
@@ -346,7 +373,17 @@
     true,
     "predicated"
    ]
-  ]
+  ],
+  "companions": [],
+  "selector_reads": [
+   [
+    [
+     "per_sample",
+     "k"
+    ]
+   ]
+  ],
+  "accum_companions": []
  },
  {
   "id": "segmented_dispatch",
@@ -410,7 +447,17 @@
     true,
     "segmented"
    ]
-  ]
+  ],
+  "companions": [],
+  "selector_reads": [
+   [
+    [
+     "per_sample",
+     "k"
+    ]
+   ]
+  ],
+  "accum_companions": []
  },
  {
   "id": "switch_dispatch",
@@ -474,7 +521,17 @@
     true,
     "switch"
    ]
-  ]
+  ],
+  "companions": [],
+  "selector_reads": [
+   [
+    [
+     "per_sample",
+     "k"
+    ]
+   ]
+  ],
+  "accum_companions": []
  },
  {
   "id": "fused_steps_read",
@@ -520,7 +577,10 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "declared_slot",
@@ -566,7 +626,10 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "prior_read",
@@ -614,7 +677,10 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "sum_finish_auto",
@@ -733,7 +799,22 @@
     true,
     "auto"
    ]
-  ]
+  ],
+  "companions": [
+   [
+    "s",
+    "s_comp"
+   ]
+  ],
+  "selector_reads": [
+   [
+    [
+     "per_sample",
+     "k"
+    ]
+   ]
+  ],
+  "accum_companions": []
  },
  {
   "id": "finishing_declared",
@@ -801,10 +882,93 @@
     ]
    ]
   ],
-  "dispatches": []
+  "dispatches": [],
+  "companions": [],
+  "selector_reads": [],
+  "accum_companions": []
  },
  {
   "id": "finishing_declared_mistyped",
   "error": "declared slot (role='lookup', name='finished_count') is typed TensorType(shape=(), dtype='uint32', tag=None) but the body binds it as TensorType(shape=(), dtype='f64', tag=None); a slot is keyed on (role, name) ALONE"
+ },
+ {
+  "id": "accum_compensated_and_plain",
+  "digest": "3743c9312226c41e4e4b3f81dc521afac751c08aedf82c9666d74b1ac0272b31",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "accum_out",
+     "a"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "accum_out",
+     "b"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "accum_out",
+     "c"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": [],
+  "companions": [],
+  "accum_companions": [
+   [
+    "a_c",
+    "a"
+   ],
+   [
+    "c_c",
+    "c"
+   ]
+  ],
+  "selector_reads": []
  }
 ]

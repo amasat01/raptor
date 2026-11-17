@@ -498,6 +498,15 @@ pub fn pair_part(v: &Val) -> Result<RxPairPart, Fault> {
     Ok(part)
 }
 
+/// A pair of two texts, the second possibly absent.
+pub fn text_pair(first: &str, second: Option<&str>) -> Result<RxPair, Fault> {
+    let second = second.map_or(Val::None, |t| Val::Str(t.into()));
+    Ok(RxPair {
+        first: pair_part(&Val::Str(first.into()))?,
+        second: pair_part(&second)?,
+    })
+}
+
 /// Copies `pairs` into the caller's buffer by the two-call protocol: `*n` is the count, and the status is RX_TRUNC when `cap` is smaller.
 /// The doors of other crates call it with their caller's pointers, so it stays callable without `unsafe`.
 #[allow(clippy::not_unsafe_ptr_arg_deref)]

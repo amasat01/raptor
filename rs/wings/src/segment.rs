@@ -5,7 +5,7 @@
 use crate::planes::{type_parts, NodeType};
 use crate::{is_a, walk_order, R};
 use raptor_ir::record::{refuse, Ctx, Fault};
-use raptor_ir::typed::{pair_part, put_pairs, RxPair};
+use raptor_ir::typed::{put_pairs, text_pair, RxPair};
 use raptor_ir::value::{ttype_val, Val};
 
 /// The dispatch a kernel is split by.
@@ -100,6 +100,34 @@ pub fn segmented_dispatch(ctx: &Ctx, walk: u32) -> R<Option<SegmentedDispatch>> 
             found.len()
         )),
     }
+}
+
+/// The automatic dispatch of the walk that a segmented form can be made of, or none: the walk's one dispatch group that counts its
+/// branch mix and sits in the walk's own order (not only inside a loop body). A walk with no automatic group, with two of them, or
+/// with a group that splits by branch has none.
+pub fn auto_dispatch(ctx: &Ctx, walk: u32) -> R<Option<SegmentedDispatch>> {
+    let order = walk_order(ctx, walk)?;
+    let nodes = ctx.dispatch_nodes(&order)?;
+    let groups = strategies(ctx, walk)?;
+    let mut autos = groups
+        .iter()
+        .enumerate()
+        .filter(|(_, (_, strategy))| *strategy == Strategy::Auto);
+    let (Some((index, _)), None) = (autos.next(), autos.next()) else {
+        return Ok(None);
+    };
+    let node = nodes[index];
+    let split_group = groups
+        .iter()
+        .any(|(_, strategy)| *strategy == Strategy::Segmented);
+    if split_group || !order.contains(&node) {
+        return Ok(None);
+    }
+    Ok(Some(SegmentedDispatch {
+        node,
+        index,
+        branches: ctx.nodes[node as usize].ops.len() - 1,
+    }))
 }
 
 /// The nodes the split makes, in the caller's context.
@@ -370,12 +398,35 @@ pub unsafe extern "C" fn rw_walk_mix_slots(
     raptor_ir::door::guard(ctx, |c| {
         let mut pairs = vec![];
         for (group, strategy) in strategies(c, walk)? {
-            let mix = (strategy == Strategy::Auto).then(|| Val::Str(mix_name(&group)));
-            pairs.push(RxPair {
-                first: pair_part(&Val::Str(group))?,
-                second: pair_part(&mix.unwrap_or(Val::None))?,
-            });
+            let mix = (strategy == Strategy::Auto).then(|| mix_name(&group));
+            pairs.push(text_pair(&group, mix.as_deref())?);
         }
         put_pairs(&pairs, buf, cap, n)
+    })
+}
+
+/// The names of the slots a dispatch group owns, from its name: the run offsets and the class of a segmented group, its stale mask,
+/// and the branch mix of an automatic one, in that order, as the names protocol.
+///
+/// # Safety
+/// `group` is a NUL-terminated string; `buf` is valid for `cap` bytes and `len` and `count` for one write each.
+#[no_mangle]
+pub unsafe extern "C" fn rw_group_plane_names(
+    ctx: *mut Ctx,
+    group: *const std::ffi::c_char,
+    buf: *mut std::ffi::c_char,
+    cap: usize,
+    len: *mut usize,
+    count: *mut usize,
+) -> std::ffi::c_int {
+    raptor_ir::door::guard(ctx, |_| {
+        let group = crate::name_of(group, "group")?;
+        let names = [
+            offsets_name(group),
+            class_name(group),
+            stale_name(group),
+            mix_name(group),
+        ];
+        raptor_ir::consts::put_names(&names, buf, cap, len, count)
     })
 }

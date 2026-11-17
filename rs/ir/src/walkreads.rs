@@ -1,9 +1,10 @@
 //! Typed reads of a walk a front end asks beyond the arguments: the type of a bound slot, the planes read at launch start, and
-//! whether a dispatch's selector is static. Owns the C doors `rx_walk_slot_type`, `rx_walk_prior` and `rx_walk_static_selector`.
-use crate::consts::put_names;
-use crate::door::{cstr, guard};
+//! whether a dispatch's selector is static. Owns the C doors `rx_walk_slot_type`, `rx_walk_prior`, `rx_walk_static_selector`, `rx_walk_selector_reads`, `rx_walk_access_class` and `rx_walk_accum_companions`.
+use crate::canon::str_const;
+use crate::consts::{compensates, put_names};
+use crate::door::{cstr, guard, put};
 use crate::record::{badarg, refuse, Ctx, Fault};
-use crate::typed::{rx_type_of_parts, RxType};
+use crate::typed::{put_pairs, rx_type_of_parts, text_pair, RxPair, RxType};
 use std::ffi::{c_char, c_int};
 
 /// The type of the slot (`role`, `name`) the walk binds, as the C struct.
@@ -76,5 +77,78 @@ pub unsafe extern "C" fn rx_walk_static_selector(
         };
         unsafe { *out = c_int::from(flag) };
         Ok(())
+    })
+}
+
+/// The `(role, name)` slots the selector of the dispatch at `index` (in the order of `rx_dispatch_nodes`) reads, sorted, as pairs.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_selector_reads(
+    ctx: *mut Ctx,
+    walk: u32,
+    index: i64,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let all = &c.walk(walk)?.selector_reads;
+        let Some(reads) = usize::try_from(index).ok().and_then(|i| all.get(i)) else {
+            return Err(Fault::Refused(format!("the walk has no dispatch {index}")));
+        };
+        let pairs = reads
+            .iter()
+            .map(|(role, name)| text_pair(role, Some(name)))
+            .collect::<Result<Vec<_>, _>>()?;
+        put_pairs(&pairs, buf, cap, n)
+    })
+}
+
+/// The access class of the walk (`sample_local`, `cross_sample_read`, ...), as text.
+///
+/// # Safety
+/// `buf` is valid for `cap` bytes and `len` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_access_class(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut c_char,
+    cap: usize,
+    len: *mut usize,
+) -> c_int {
+    guard(ctx, |c| put(buf, cap, len, &c.walk(walk)?.access))
+}
+
+/// The companion planes of the compensated keyed accumulates of the walk, each as the pair (companion plane `<plane>_c`, the plane it
+/// compensates), in the walk's order, once per companion.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_accum_companions(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let mut pairs: Vec<(String, String)> = vec![];
+        for &node in &c.walk(walk)?.order {
+            if c.is_a(node, "AccumWrite") && compensates(&c.str_field(node, "contract")?) {
+                let plane = c.str_field(node, "name")?;
+                let comp = format!("{plane}{}", str_const("COMPANION_SUFFIX"));
+                if !pairs.iter().any(|(held, _)| *held == comp) {
+                    pairs.push((comp, plane));
+                }
+            }
+        }
+        let pairs = pairs
+            .iter()
+            .map(|(comp, plane)| text_pair(comp, Some(plane)))
+            .collect::<Result<Vec<_>, _>>()?;
+        put_pairs(&pairs, buf, cap, n)
     })
 }

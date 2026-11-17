@@ -12,11 +12,13 @@ use crate::stages::Keyed;
 use crate::team::{
     sample_index, threads_for, Grid, Plane, Step, TeamLimits, TeamSpec, Unit, PLANE_PREFIX,
 };
-use crate::{is_a, R};
+use crate::{is_a, list_out, R};
 use raptor_ir::build::LoopParts;
-use raptor_ir::record::{refuse, Ctx};
+use raptor_ir::door::guard;
+use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
 use std::collections::HashSet;
+use std::ffi::c_int;
 
 /// The log of one target: the slots each lane holds and the lane axes the keyed sum kept.
 #[derive(Debug, Clone, PartialEq)]
@@ -344,4 +346,37 @@ pub fn fold_spec(log: &Log, limits: &TeamLimits) -> TeamSpec {
         out: Some(log.target.clone()),
         reads: vec![],
     }
+}
+
+/// The sinks with each ordered accumulate replaced by the stores of its log slot, one for one in `buf` (the two stores of an
+/// accumulate take its place, so the list can be longer); refuses, with the reason, an accumulate the log cannot hold.
+///
+/// # Safety
+/// `ctx` is a live context from the IR door, or null (then the call refuses); `sinks` is valid for `nsinks` nodes, `buf` for `cap`
+/// nodes and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_logs_ordered(
+    ctx: *mut Ctx,
+    sinks: *const u32,
+    nsinks: usize,
+    buf: *mut u32,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let given = if nsinks == 0 {
+            &[][..]
+        } else if sinks.is_null() {
+            return Err(Fault::BadArg("sinks is NULL".into()));
+        } else {
+            unsafe { std::slice::from_raw_parts(sinks, nsinks) }
+        };
+        for &sink in given {
+            c.node(sink)?;
+        }
+        match ordered(c, given)? {
+            Logged::Done(done, _) => list_out(buf, cap, n, &done),
+            Logged::Refused(why) => refuse(why),
+        }
+    })
 }

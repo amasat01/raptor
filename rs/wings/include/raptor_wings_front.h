@@ -14,6 +14,37 @@ int rw_slotwise_chain(rx_ctx* ctx, rx_node node, rx_node* base, rx_node* buf, si
 /* Whether the node is a vec or splat of zero literals (*out is 0 or 1). */
 int rw_slotwise_is_structural_zero(rx_ctx* ctx, rx_node node, int* out);
 
+/* The roots in slotwise form, one for one in buf: a wide value built from vec/splat becomes a vec of scalar parts with the structural zeros
+   folded (component, sum, add/sub/neg/mul/div, select and dispatch per slot; an add_at chain over a slot-form base stays a chain and is
+   lowered to selects where a static slot is forced). A root may be a value, a sink (rebuilt over its rewritten value) or a loop (never entered);
+   a node with nothing to rewrite comes back as the same node. The wing kinds must be declared (rw_declare_kinds) before a dispatch is pinned to a strategy. */
+int rw_slotwise(rx_ctx* ctx, const rx_node* roots, size_t nroots, rx_node* buf, size_t cap, size_t* n);
+
+/* The sinks with each ordered accumulate replaced by the two log stores of its slot (the list in buf can be longer than the sinks); a site in
+   a loop takes one slot per iteration. Refuses, with the reason, an accumulate the log cannot hold (nested loops, a step other than 1, a
+   value that is not a scalar). The wing kinds must be declared (rw_declare_kinds). */
+int rw_logs_ordered(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, rx_node* buf, size_t cap, size_t* n);
+
+/* The cell sinks that store a reduction over samples to the plane name, in buf: one for a scalar, one per component (planes name_0, name_1, ...)
+   for a vector or matrix, or the keyed accumulates of a reduction over some lane axes. */
+int rw_cells_stored(rx_ctx* ctx, rx_node reduction, const char* name, rx_node* buf, size_t cap, size_t* n);
+
+/* The factors of a keyed-sum payload that is a sum over per-row rank-1 products: u and v, in buf (an outer product, a vector times a
+   scalar, or the product of a transposed matrix with itself or with a vector of its rows); no node for any other payload. */
+int rw_block_factors(rx_ctx* ctx, rx_node payload, rx_node* buf, size_t cap, size_t* n);
+/* How many rows a lane holds of a payload that has factors (1 for an outer product or a vector times a scalar); refuses a payload that has none. */
+int rw_block_factor_rows(rx_ctx* ctx, rx_node payload, int64_t* out);
+/* Whether the ordered contract keeps the payload (a floating scalar or vector whose extents are all at most the limit) as one block (*out is 0 or 1).
+   limit holds no entry (any extent) or one (the largest extent). */
+int rw_block_ordered_case(rx_ctx* ctx, rx_node payload, const char* contract, const int64_t* limit, size_t nlimit, int* out);
+/* Whether the keyed sum of the payload can be one block by its structure alone: ordered_case, or a float payload within the limit that has factors. */
+int rw_block_shaped(rx_ctx* ctx, rx_node payload, const char* contract, const int64_t* limit, size_t nlimit, int* out);
+
+/* Declares in ctx every kind the wings declare (the base and simt manifests, embedded in this library), which the rewrites of this
+   library make nodes of (a box store, for one). Call it once on a context before the first rewrite or before making a node of such a kind; it
+   may be called again, and after a unit has declared the same kinds, with no effect. */
+int rw_declare_kinds(rx_ctx* ctx);
+
 #ifdef __cplusplus
 }
 #endif

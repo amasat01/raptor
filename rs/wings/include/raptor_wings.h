@@ -105,11 +105,6 @@ int rw_lanes_warp_uniform(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, cons
 int rw_lanes_slice_sinks(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, int64_t warp, int64_t slice_min, int64_t team_min, int explicit,
                          rx_node* buf, size_t cap, size_t* count, int* found);
 
-/* Declares in ctx every kind the wings declare (the base and simt manifests, embedded in this library), which the rewrites of this
-   library make nodes of (a box store, for one). Call it once on a context before the first rewrite; it may be called again, and after
-   a unit has declared the same kinds, with no effect. */
-int rw_declare_kinds(rx_ctx* ctx);
-
 #ifdef __cplusplus
 }
 #endif

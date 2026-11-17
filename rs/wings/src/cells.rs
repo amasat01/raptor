@@ -1,9 +1,11 @@
 //! The cells of a reduction over samples: how a reduction is stored to planes (one scalar plane per component of a vector or
 //! matrix, keyed accumulates for a reduction over some lane axes) and how a later launch reads the finished value back.
 use crate::planes::type_parts;
-use crate::R;
+use crate::{list_out, name_of, R};
+use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::{ttype_val, Val};
+use std::ffi::{c_char, c_int};
 
 /// The role constant label of the read of a one-cell parameter plane.
 const PARAM_CELL: &str = "param_cell";
@@ -60,7 +62,7 @@ fn entry_index(ctx: &mut Ctx, key: u32, count: u32, k: usize) -> R<u32> {
 
 /// The cell sinks that store the reduction to the plane `name`: one for a scalar and one per component (planes `name_0`,
 /// `name_1`, ...) for a vector or matrix, or the keyed accumulates of a reduction over some lane axes.
-pub(crate) fn stored(ctx: &mut Ctx, reduction: u32, name: &str) -> R<Vec<u32>> {
+pub fn stored(ctx: &mut Ctx, reduction: u32, name: &str) -> R<Vec<u32>> {
     let value = ctx.nodes[reduction as usize].ops[0];
     let parts = type_parts(ctx, value);
     let scalar = ttype_val(&parts.dtype, &[], None);
@@ -204,4 +206,29 @@ pub(crate) fn cell_read(ctx: &mut Ctx, reduction: u32, cell: &str) -> R<u32> {
         return Ok(reads[0]);
     }
     ctx.make_op("vec", &reads, &Val::None)
+}
+
+/// The cell sinks that store the reduction over samples `reduction` to the plane `name`, into `buf`: one for a scalar, one per
+/// component for a vector or matrix, or the keyed accumulates of a reduction over some lane axes.
+///
+/// # Safety
+/// `ctx` is a live context from the IR door, or null (then the call refuses); `name` is a NUL-terminated string; `buf` is valid for
+/// `cap` nodes and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_cells_stored(
+    ctx: *mut Ctx,
+    reduction: u32,
+    name: *const c_char,
+    buf: *mut u32,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        c.node(reduction)?;
+        if !crate::is_a(c, reduction, "ReduceSamples") {
+            return refuse("stored takes a reduction over samples");
+        }
+        let sinks = stored(c, reduction, name_of(name, "name")?)?;
+        list_out(buf, cap, n, &sinks)
+    })
 }

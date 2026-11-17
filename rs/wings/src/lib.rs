@@ -26,6 +26,7 @@ pub mod split;
 pub mod stages;
 pub mod team;
 pub mod wide;
+pub mod working_set;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
@@ -226,7 +227,7 @@ fn interchanged(c: &Ctx, w: u32, unroll_limit: i64) -> R<Vec<u32>> {
 }
 
 /// Whether the op kind is a linear-algebra factorisation, consumer or projection.
-fn is_linalg_kind(k: &str) -> bool {
+pub(crate) fn is_linalg_kind(k: &str) -> bool {
     [
         "LINALG_FACTORISATIONS",
         "LINALG_CONSUMERS",

@@ -158,9 +158,33 @@ pub unsafe extern "C" fn rx_compensates(
     })
 }
 
+/// The lists the core composes from the manifest's lists: every linear-algebra kind, the cast kind, and every op kind a body can
+/// mint (the order is the one `all_kinds` gives).
+fn composed_names(name: &str) -> Option<Vec<&'static str>> {
+    match name {
+        "LINALG_OPS" => Some(
+            [
+                "LINALG_FACTORISATIONS",
+                "LINALG_CONSUMERS",
+                "LINALG_PROJECTIONS",
+            ]
+            .into_iter()
+            .flat_map(|n| CONSTS.iter().find(|c| c.0 == n).map_or(&[][..], |c| c.1))
+            .copied()
+            .collect(),
+        ),
+        "CAST" => Some(vec!["cast"]),
+        "OP_KINDS" => Some(crate::typing::all_kinds()),
+        _ => None,
+    }
+}
+
 /// The texts of a constant that is a list of strings, or the one text of a constant that is a
 /// string; `None` for any other name or kind (an integer).
 pub fn names(name: &str) -> Option<Vec<&'static str>> {
+    if let Some(composed) = composed_names(name) {
+        return Some(composed);
+    }
     if let Some(c) = CONSTS.iter().find(|c| c.0 == name) {
         return Some(c.1.to_vec());
     }

@@ -1,0 +1,574 @@
+{
+ "cases": [
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#0,)|(('kind', 'exp'), ('literal', None))\nn|Op|f64|()|None|(#1, #0)|(('kind', 'mul'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Op|f64|()|None|(#2, #3)|(('kind', 'add'), ('literal', None))\nn|Assign|f64|()|None|(#4,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\n",
+   "figures": [
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 0,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "plain",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "sinks": [
+    5
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'lu_factor'|(#0,)|(('kind', 'lu'), ('literal', None))\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#1, #2)|(('kind', 'lu_solve'), ('literal', None))\nn|Assign|f64|(3,)|None|(#3,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'x'))\nn|Op|int32|()|None|(#1,)|(('kind', 'lu_info'), ('literal', None))\nn|Assign|int32|()|None|(#5,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'i'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\n",
+   "figures": [
+    {
+     "bytes": 112,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 112,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 112,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 112,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "solve3",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "sinks": [
+    4,
+    6
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'lu_factor'|(#0,)|(('kind', 'lu'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Op|f64|(3, 3)|None|(#2, #3, #4, #5, #6, #7, #8, #9, #10)|(('kind', 'vec'), ('literal', (3, 3)))\nn|Op|f64|(3, 3)|None|(#1, #11)|(('kind', 'lu_solve'), ('literal', None))\nn|Assign|f64|(3, 3)|None|(#12,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'Ainv'))\nn|Op|f64|(3, 3)|'lu_factor'|(#0,)|(('kind', 'lu'), ('literal', None))\nn|Op|f64|()|None|(#14,)|(('kind', 'lu_det'), ('literal', None))\nn|Assign|f64|()|None|(#15,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'd'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\n",
+   "figures": [
+    {
+     "bytes": 160,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 232,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 160,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 160,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "inv_det",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    11,
+    12,
+    13,
+    15,
+    16
+   ],
+   "sinks": [
+    13,
+    16
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(4, 4)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'S'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(4, 4)|'chol_factor'|(#0,)|(('kind', 'chol'), ('literal', None))\nn|Leaf|f64|(4,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(4,)|None|(#1, #2)|(('kind', 'cho_solve'), ('literal', None))\nn|Assign|f64|(4,)|None|(#3,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'x'))\nn|Op|f64|(4, 4)|None|(#1,)|(('kind', 'chol_factor'), ('literal', None))\nn|Assign|f64|(4, 4)|None|(#5,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'L'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\n",
+   "figures": [
+    {
+     "bytes": 292,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 292,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 292,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 292,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "chol4",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "sinks": [
+    4,
+    6
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'S'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'eigh_factor'|(#0,)|(('kind', 'eigh'), ('literal', None))\nn|Op|f64|(3,)|None|(#1,)|(('kind', 'eigh_w'), ('literal', None))\nn|Assign|f64|(3,)|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'w'))\nn|Op|f64|(3, 3)|None|(#1,)|(('kind', 'eigh_v'), ('literal', None))\nn|Assign|f64|(3, 3)|None|(#4,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'V'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\n",
+   "figures": [
+    {
+     "bytes": 268,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 268,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 268,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 268,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "eigh3",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "sinks": [
+    3,
+    5
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(4, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'J'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(4,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'r'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3,)|None|(#0, #1)|(('kind', 'lstsq'), ('literal', None))\nn|Assign|f64|(3,)|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'x'))\nn|Op|f64|(3, 4)|None|(#0,)|(('kind', 'transpose'), ('literal', None))\nn|Op|f64|(3, 3)|None|(#4, #0)|(('kind', 'mm'), ('literal', None))\nn|Leaf|f64|()|None|()|(('kind', 'uniform'), ('role', 'uniform'), ('name', 'mu'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 0.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Op|f64|(3, 3)|None|(#7, #8, #9, #10, #11, #12, #13, #14, #15)|(('kind', 'vec'), ('literal', (3, 3)))\nn|Op|f64|(3, 3)|None|(#6, #16)|(('kind', 'mul'), ('literal', None))\nn|Op|f64|(3, 3)|None|(#5, #17)|(('kind', 'add'), ('literal', None))\nn|Op|f64|(3, 3)|'chol_factor'|(#18,)|(('kind', 'chol'), ('literal', None))\nn|Op|f64|(3, 4)|None|(#0,)|(('kind', 'transpose'), ('literal', None))\nn|Op|f64|(3,)|None|(#20, #1)|(('kind', 'mv'), ('literal', None))\nn|Op|f64|(3,)|None|(#19, #21)|(('kind', 'cho_solve'), ('literal', None))\nn|Op|f64|(3,)|None|(#22,)|(('kind', 'neg'), ('literal', None))\nn|Assign|f64|(3,)|None|(#23,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 's'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\nroot|#18\nroot|#19\nroot|#20\nroot|#21\nroot|#22\nroot|#23\nroot|#24\n",
+   "figures": [
+    {
+     "bytes": 100,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 244,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 196,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 100,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "lstsq43",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    16,
+    17,
+    18,
+    19,
+    21,
+    22,
+    23,
+    24
+   ],
+   "sinks": [
+    3,
+    24
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(4, 4)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(4,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(4,)|None|(#0, #1)|(('kind', 'mv'), ('literal', None))\nn|Assign|f64|(4,)|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\n",
+   "figures": [
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 32,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "mv_small",
+   "order": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "sinks": [
+    3
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(20, 20)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(20,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(20,)|None|(#0, #1)|(('kind', 'mv'), ('literal', None))\nn|Assign|f64|(20,)|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\n",
+   "figures": [
+    {
+     "bytes": 160,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 160,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 160,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "mv_rolled",
+   "order": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "sinks": [
+    3
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(5, 5)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(5, 5)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'B'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(5, 5)|None|(#0, #1)|(('kind', 'mm'), ('literal', None))\nn|Assign|f64|(5, 5)|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'C'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\n",
+   "figures": [
+    {
+     "bytes": 200,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 200,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 200,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "mm_rolled",
+   "order": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "sinks": [
+    3
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(20,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(20,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|()|None|(#0, #1)|(('kind', 'dot'), ('literal', None))\nn|Assign|f64|()|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\n",
+   "figures": [
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 0,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "long_dot",
+   "order": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "sinks": [
+    3
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Op|f64|(4, 4)|None|(#0, #1, #2, #3, #4, #0, #5, #6, #7, #8, #0, #9, #10, #11, #12, #0)|(('kind', 'vec'), ('literal', (4, 4)))\nn|Assign|f64|(4, 4)|None|(#13,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\n",
+   "figures": [
+    {
+     "bytes": 0,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 128,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 0,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "built_at",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    13,
+    14
+   ],
+   "sinks": [
+    14
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Const|f64|()|None|()|(('literal', 4.0),)\nn|Const|f64|()|None|()|(('literal', 5.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Const|f64|()|None|()|(('literal', 4.0),)\nn|Const|f64|()|None|()|(('literal', 5.0),)\nn|Const|f64|()|None|()|(('literal', 1.0),)\nn|Const|f64|()|None|()|(('literal', 2.0),)\nn|Const|f64|()|None|()|(('literal', 3.0),)\nn|Const|f64|()|None|()|(('literal', 4.0),)\nn|Const|f64|()|None|()|(('literal', 5.0),)\nn|Op|f64|(3, 6)|None|(#0, #1, #2, #3, #4, #5, #6, #0, #7, #8, #9, #10, #11, #12, #0, #13, #14, #15)|(('kind', 'vec'), ('literal', (3, 6)))\nn|Assign|f64|(3, 6)|None|(#16,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\nroot|#9\nroot|#10\nroot|#11\nroot|#12\nroot|#13\nroot|#14\nroot|#15\nroot|#16\nroot|#17\n",
+   "figures": [
+    {
+     "bytes": 144,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 144,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 144,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 144,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "built_over",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    16,
+    17
+   ],
+   "sinks": [
+    17
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f64|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f64|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f64|(3, 3)|'lu_factor'|(#1,)|(('kind', 'lu'), ('literal', None))\nn|LoopIndex|i32|()|None|()|(('depth', 0), ('name', '_'), ('bounds', (0, 2)))\nn|LoopCarry|f64|(3,)|None|()|(('depth', 0), ('slot', 0), ('name', 'v'))\nn|Op|f64|(3,)|None|(#2, #4)|(('kind', 'lu_solve'), ('literal', None))\nn|Loop|f64|(3,)|None|(#0, #2)|(('index', #3), ('carries', (#4,)), ('nexts', (#5,)), ('start', 0), ('stop', 3), ('step', 1), ('trip', 3), ('carry_count', 1), ('body_sinks', ()), ('_body_key', None), ('exit_cond', None), ('exit_values', ()), ('count', None), ('count_tail', False), ('dynamic', None), ('_free_end', 2))\nn|LoopValue|f64|(3,)|None|(#6,)|(('kind', 'loop_value'), ('literal', 0))\nn|Assign|f64|(3,)|None|(#7,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'x'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\nroot|#7\nroot|#8\n",
+   "figures": [
+    {
+     "bytes": 88,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 88,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 88,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 88,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "loop_solve",
+   "order": [
+    0,
+    1,
+    2,
+    6,
+    7,
+    8
+   ],
+   "sinks": [
+    8
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f32|(3, 3)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f32|(3, 3)|'lu_factor'|(#0,)|(('kind', 'lu'), ('literal', None))\nn|Leaf|f32|(3,)|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f32|(3,)|None|(#1, #2)|(('kind', 'lu_solve'), ('literal', None))\nn|Assign|f32|(3,)|None|(#3,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'x'))\nn|Op|f32|()|None|(#1,)|(('kind', 'lu_det'), ('literal', None))\nn|Assign|f32|()|None|(#5,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'd'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\nroot|#4\nroot|#5\nroot|#6\n",
+   "figures": [
+    {
+     "bytes": 64,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 64,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 64,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 64,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "solve3_f32",
+   "order": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6
+   ],
+   "sinks": [
+    4,
+    6
+   ]
+  },
+  {
+   "dump": "raptor.ir.dump/1\nn|Leaf|f32|(5, 5)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'A'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Leaf|f32|(5, 5)|None|()|(('kind', 'vocab_read'), ('role', 'mat_in'), ('name', 'B'), ('quantity', None), ('wire_index', 0), ('sorted', False))\nn|Op|f32|(5, 5)|None|(#0, #1)|(('kind', 'mm'), ('literal', None))\nn|Assign|f32|(5, 5)|None|(#2,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'C'))\nroot|#0\nroot|#1\nroot|#2\nroot|#3\n",
+   "figures": [
+    {
+     "bytes": 100,
+     "form": "auto",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 100,
+     "form": "auto",
+     "rolled_fold_min": 4
+    },
+    {
+     "bytes": 100,
+     "form": "rolled",
+     "rolled_fold_min": 16
+    },
+    {
+     "bytes": 0,
+     "form": "static",
+     "rolled_fold_min": 16
+    }
+   ],
+   "name": "mm_rolled_f32",
+   "order": [
+    0,
+    1,
+    2,
+    3
+   ],
+   "sinks": [
+    3
+   ]
+  }
+ ]
+}

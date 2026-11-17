@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, HashSet};
 type Outcome<T> = Result<T, Fault>;
 
 /// Whether `n` exceeds the fold threshold; refused when the facts name no threshold.
-fn exceeds(n: i64, limit: Option<i64>) -> Outcome<bool> {
+pub(crate) fn exceeds(n: i64, limit: Option<i64>) -> Outcome<bool> {
     match limit {
         Some(limit) => Ok(n > limit),
         None => refuse("the facts of this build name no fold threshold (form.rolled_fold_min)"),

@@ -22,6 +22,7 @@ pub mod template;
 pub mod typed;
 pub mod typing;
 pub mod value;
+pub mod walkreads;
 
 pub use class::{Class, Table};
 pub use record::{Ctx, Fault, Node};

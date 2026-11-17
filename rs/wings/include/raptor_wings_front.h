@@ -25,9 +25,27 @@ int rw_slotwise(rx_ctx* ctx, const rx_node* roots, size_t nroots, rx_node* buf, 
    value that is not a scalar). The wing kinds must be declared (rw_declare_kinds). */
 int rw_logs_ordered(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, rx_node* buf, size_t cap, size_t* n);
 
+/* The strategies a dispatch can be pinned to: "switch", then one for each wing kind that refines dispatch (<strategy>_dispatch) in the order of the
+   wing manifests, as the names protocol. */
+int rw_dispatch_strategies(rx_ctx* ctx, char* buf, size_t cap, size_t* len, size_t* count);
+
+/* The strategy word of each dispatch group of the walk in the walk's order ("switch", "predicated", "segmented" or "auto"), as the names protocol;
+   the nodes are rx_dispatch_nodes', the group's name is dispatch<index>. */
+int rw_walk_strategies(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len, size_t* count);
+
+/* The canonical walk of a kernel's sinks, a walk number like rx_canonical's: over declared_kt (the key text of a tuple of Slot records), the
+   compensation slot <name>_comp of every summing sample_sum (refused, by name, when a sink already holds a plane of that role and name),
+   the finished-count slot when a sink finishes, and the branch-mix slot <group>_mix of every dispatch group that counts its branch mix; the
+   fused-steps plane is exempt from the access class. force_access is NULL for none. */
+int rw_cells_walk(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, const char* declared_kt, const char* force_access /* NULL */, rx_walk* out);
+
 /* The cell sinks that store a reduction over samples to the plane name, in buf: one for a scalar, one per component (planes name_0, name_1, ...)
    for a vector or matrix, or the keyed accumulates of a reduction over some lane axes. */
 int rw_cells_stored(rx_ctx* ctx, rx_node reduction, const char* name, rx_node* buf, size_t cap, size_t* n);
+
+/* The sinks with every block-sum write replaced by the per-entry accumulates of its keyed form (an all-lane block is at key 0 of 1), in buf; any
+   other sink stays. The wing kinds must be declared (rw_declare_kinds). */
+int rw_blocks_expand_stores(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, rx_node* buf, size_t cap, size_t* n);
 
 /* The factors of a keyed-sum payload that is a sum over per-row rank-1 products: u and v, in buf (an outer product, a vector times a
    scalar, or the product of a transposed matrix with itself or with a vector of its rows); no node for any other payload. */

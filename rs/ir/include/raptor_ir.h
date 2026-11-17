@@ -73,6 +73,8 @@ int rx_substitute(rx_ctx* ctx, const rx_node* roots, size_t nroots, const rx_nod
 int rx_rebuild(rx_ctx* ctx, rx_node node, const rx_node* operands, size_t nops, rx_node* out);
 
 int rx_dump(rx_ctx* ctx, const rx_node* roots, size_t n, char* buf, size_t cap, size_t* len);
+/* The line of the dump of the roots that each root is (the number `root|#p` of its line), in the order of roots: the number a node has in that dump. */
+int rx_dump_numbers(rx_ctx* ctx, const rx_node* roots, size_t n, int64_t* buf, size_t cap, size_t* count);
 
 int rx_load(rx_ctx* ctx, const char* text, size_t n, rx_node* roots, size_t cap, size_t* nroots);
 

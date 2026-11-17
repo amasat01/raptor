@@ -307,3 +307,63 @@ pub unsafe extern "C" fn rw_block_shaped(
         flag_out(out, flag)
     })
 }
+
+/// The reduction over samples that is the keyed form of a block sum: its key and count (an all-lane block is at key 0 of 1).
+fn keyed_reduction(ctx: &mut Ctx, block: u32) -> R<u32> {
+    let ops = ctx.nodes[block as usize].ops.clone();
+    let given = vec![
+        ("op", Val::Str("sum".into())),
+        ("value", Val::Node(ops[0])),
+        ("key", Val::Node(ops[1])),
+        ("count", Val::Node(ops[2])),
+        ("contract", Val::Str(ctx.str_field(block, "contract")?)),
+        ("kept", ctx.field(block, "kept")?),
+    ];
+    build(ctx, "ReduceSamples", given)
+}
+
+/// The sinks with every block-sum write replaced by the per-entry accumulates of its keyed form; any other sink stays.
+pub fn expand_stores(ctx: &mut Ctx, sinks: &[u32]) -> R<Vec<u32>> {
+    let mut out = vec![];
+    for &sink in sinks {
+        if is_a(ctx, sink, "BlockSumWrite") {
+            let block = ctx.nodes[sink as usize].ops[0];
+            let name = ctx.str_field(sink, "name")?;
+            let reduction = keyed_reduction(ctx, block)?;
+            out.extend(stored(ctx, reduction, &name)?);
+        } else {
+            out.push(sink);
+        }
+    }
+    Ok(out)
+}
+
+/// The sinks with every block-sum write expanded into its accumulates, in `buf`; see `expand_stores`.
+///
+/// # Safety
+/// `ctx` is a live context from the IR door, or null (then the call refuses); `sinks` is valid for `nsinks` nodes, `buf` for `cap`
+/// nodes and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_blocks_expand_stores(
+    ctx: *mut Ctx,
+    sinks: *const u32,
+    nsinks: usize,
+    buf: *mut u32,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let given = if nsinks == 0 {
+            &[][..]
+        } else if sinks.is_null() {
+            return Err(Fault::BadArg("sinks is NULL".into()));
+        } else {
+            unsafe { std::slice::from_raw_parts(sinks, nsinks) }
+        };
+        for &sink in given {
+            c.node(sink)?;
+        }
+        let done = expand_stores(c, given)?;
+        list_out(buf, cap, n, &done)
+    })
+}

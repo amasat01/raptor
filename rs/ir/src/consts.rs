@@ -110,8 +110,10 @@ pub unsafe extern "C" fn rx_const_names(
 }
 
 /// Writes `items` as the names protocol: each text NUL-terminated, back to back in `buf`, `*count` the number of texts and
-/// `*len` the bytes they take with their NULs.
-pub(crate) fn put_names<S: AsRef<str>>(
+/// `*len` the bytes they take with their NULs. The doors of other crates call it with their caller's pointers, so it stays callable
+/// without `unsafe`, as `door::put` does.
+#[allow(clippy::not_unsafe_ptr_arg_deref)]
+pub fn put_names<S: AsRef<str>>(
     items: &[S],
     buf: *mut c_char,
     cap: usize,

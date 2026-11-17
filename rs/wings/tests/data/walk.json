@@ -1,0 +1,738 @@
+[
+ {
+  "id": "no_companion",
+  "digest": "d6dc7a6df456b9f8101b0bd43e5ad65deaa229cd340e0a74e93ee650e167b785",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "one_summing_sample_sum",
+  "digest": "e0cc22ab32fbf6c48fd8ed7576db3b803b485cb94dcd23c02547c5d2417b3350",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "accum_out",
+     "s"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "accum_out",
+     "s_comp"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "max_sample_sum_has_no_companion",
+  "digest": "6d6906be4826c12275ba5b7ce121d327ea473be1ec69f4c16a8df815fabc3395",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "accum_out",
+     "s"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "collision",
+  "error": "sample_sum 's': its compensation plane 's_comp' collides with a plane of the same name"
+ },
+ {
+  "id": "finishing",
+  "digest": "db2124820d844bd7dcc447a7d6d51a9ab2278010c2285663df9e00e63acd6141",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": "done",
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "finished_count"
+    ],
+    [
+     [],
+     "uint32",
+     null
+    ]
+   ],
+   [
+    [
+     "terminated",
+     "done"
+    ],
+    [
+     [],
+     "bool",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "auto_dispatch",
+  "digest": "f54f1b8ef4796ce64ff63fe6c5dce3dba5bf9799241737c7fbaa8d69970c3931",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "k"
+    ],
+    [
+     [],
+     "i32",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "dispatch0_mix"
+    ],
+    [
+     [],
+     "uint32",
+     null
+    ]
+   ]
+  ],
+  "dispatches": [
+   [
+    "dispatch0",
+    2,
+    true,
+    "auto"
+   ]
+  ]
+ },
+ {
+  "id": "predicated_dispatch",
+  "digest": "90b846ab74d614e4e9770dc6029c7e9420aa53086867551cf3cb9c36f3126aec",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "k"
+    ],
+    [
+     [],
+     "i32",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": [
+   [
+    "dispatch0",
+    2,
+    true,
+    "predicated"
+   ]
+  ]
+ },
+ {
+  "id": "segmented_dispatch",
+  "digest": "ed885d7cfeb4674122940a7b7b90acd01ede377efcc45dfa514b6566953d852f",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "k"
+    ],
+    [
+     [],
+     "i32",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": [
+   [
+    "dispatch0",
+    2,
+    true,
+    "segmented"
+   ]
+  ]
+ },
+ {
+  "id": "switch_dispatch",
+  "digest": "63d8ff2616b4351d106d0094577a77ea124c6a41afb24b23aa7ee8e1cd3aaa64",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "k"
+    ],
+    [
+     [],
+     "i32",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": [
+   [
+    "dispatch0",
+    2,
+    true,
+    "switch"
+   ]
+  ]
+ },
+ {
+  "id": "fused_steps_read",
+  "digest": "426a0962739a661dcb4c1067c1740c2f9492a2ad89ab3cd39151eb6233c7f4a9",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "fused_steps"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "declared_slot",
+  "digest": "aef7b375c193244aa6c4eb22c56b077e6a6e65c8aa7e6663e774de99939043d1",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "extra"
+    ],
+    [
+     [],
+     "i32",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "prior_read",
+  "digest": "641423a41869e32e67b9966a84ff2203c05ed918e9150acd90ee4a381a9ca270",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": null,
+  "prior": [
+   "p"
+  ],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "p"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ]
+  ],
+  "dispatches": []
+ },
+ {
+  "id": "sum_finish_auto",
+  "digest": "5c6572c303d64e5347fedacd9e7682dba159d8c6568ace690221877d492dd819",
+  "access": [
+   "sample_local",
+   null
+  ],
+  "finish": "done",
+  "prior": [],
+  "slot_types": [
+   [
+    [
+     "mutable",
+     "o"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "accum_out",
+     "s"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "accum_out",
+     "s_comp"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "k"
+    ],
+    [
+     [],
+     "i32",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "x"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "per_sample",
+     "y"
+    ],
+    [
+     [],
+     "f64",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "dispatch0_mix"
+    ],
+    [
+     [],
+     "uint32",
+     null
+    ]
+   ],
+   [
+    [
+     "lookup",
+     "finished_count"
+    ],
+    [
+     [],
+     "uint32",
+     null
+    ]
+   ],
+   [
+    [
+     "terminated",
+     "done"
+    ],
+    [
+     [],
+     "bool",
+     null
+    ]
+   ]
+  ],
+  "dispatches": [
+   [
+    "dispatch0",
+    2,
+    true,
+    "auto"
+   ]
+  ]
+ }
+]

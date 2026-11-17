@@ -1,7 +1,9 @@
 //! The cells of a reduction over samples: how a reduction is stored to planes (one scalar plane per component of a vector or
 //! matrix, keyed accumulates for a reduction over some lane axes) and how a later launch reads the finished value back.
 use crate::planes::type_parts;
-use crate::{list_out, name_of, R};
+use crate::segment::{strategies, Strategy};
+use crate::{is_a, list_out, name_of, R};
+use raptor_ir::canon::{declared_slots, Key, Tt};
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::{ttype_val, Val};
@@ -230,5 +232,138 @@ pub unsafe extern "C" fn rw_cells_stored(
         }
         let sinks = stored(c, reduction, name_of(name, "name")?)?;
         list_out(buf, cap, n, &sinks)
+    })
+}
+
+/// The reserved `lookup` plane a finishing kernel counts its newly finished samples into: one `uint32` cell.
+pub const FINISHED_PLANE: &str = "finished_count";
+
+/// The reserved `lookup` plane a kernel with an automatic step count reads its trip count from; the access class skips the read.
+pub const FUSED_STEPS_PLANE: &str = "fused_steps";
+
+/// The suffix of the companion plane a summing `sample_sum` keeps beside its target.
+const SAMPLE_SUM_COMP: &str = "_comp";
+
+/// The type of a node as a slot type.
+fn slot_type(ctx: &Ctx, node: u32) -> R<Tt> {
+    let n = ctx.node(node)?;
+    Ok(Tt {
+        dtype: n.dtype.clone(),
+        shape: n.shape.clone(),
+        tag: n.tag.clone(),
+    })
+}
+
+/// The compensation slot of each summing `sample_sum` among the sinks: `<name>_comp`, of the sum's role and type. Refuses when a
+/// sink (or a body sink of a loop) already holds a plane of that role and name.
+pub fn companion_slots(ctx: &Ctx, sinks: &[u32]) -> R<Vec<(Key, Tt)>> {
+    let (mut held, mut stack) = (vec![], sinks.to_vec());
+    while let Some(node) = stack.pop() {
+        if is_a(ctx, node, "Loop") {
+            stack.extend(raptor_ir_refs(ctx, node)?);
+        } else if is_a(ctx, node, "Sink") {
+            held.push((ctx.str_field(node, "role")?, ctx.str_field(node, "name")?));
+        }
+    }
+    let mut out = vec![];
+    for &sink in sinks {
+        if is_a(ctx, sink, "SampleSum") && ctx.str_field(sink, "op")? == "sum" {
+            let key = (
+                ctx.str_field(sink, "role")?,
+                format!("{}{SAMPLE_SUM_COMP}", ctx.str_field(sink, "name")?),
+            );
+            if held.contains(&key) {
+                return refuse(format!(
+                    "sample_sum {}: its compensation plane {} collides with a plane of the same name",
+                    rcore::keytext::py_str(&ctx.str_field(sink, "name")?),
+                    rcore::keytext::py_str(&key.1)
+                ));
+            }
+            out.push((key, slot_type(ctx, sink)?));
+        }
+    }
+    Ok(out)
+}
+
+/// The body sinks of a loop.
+fn raptor_ir_refs(ctx: &Ctx, lp: u32) -> R<Vec<u32>> {
+    match ctx.field(lp, "body_sinks")? {
+        Val::Tuple(v) | Val::List(v) => Ok(v
+            .iter()
+            .filter_map(|x| if let Val::Node(n) = x { Some(*n) } else { None })
+            .collect()),
+        _ => Ok(vec![]),
+    }
+}
+
+/// The canonical walk of a kernel's sinks over the caller's declared slots, the compensation slot of every summing sample sum, the
+/// finished-count slot when a sink finishes, and the branch-mix slot of every dispatch group that counts its branch mix (a second
+/// pass, as the mix slots are named by the first walk's groups); the fused-steps plane is exempt from the access class.
+pub fn kernel_walk(
+    ctx: &mut Ctx,
+    sinks: &[u32],
+    declared: &[(Key, Tt)],
+    force: Option<&str>,
+) -> R<u32> {
+    let mut slots = declared.to_vec();
+    slots.extend(companion_slots(ctx, sinks)?);
+    let uint32 = Tt {
+        dtype: "uint32".into(),
+        shape: vec![],
+        tag: None,
+    };
+    let finishing = sinks.iter().any(|&s| is_a(ctx, s, "Finish"));
+    let finished: Vec<(Key, Tt)> = if finishing {
+        vec![(("lookup".into(), FINISHED_PLANE.into()), uint32.clone())]
+    } else {
+        vec![]
+    };
+    let exempt = [FUSED_STEPS_PLANE.to_string()];
+    let all = [slots.clone(), finished.clone()].concat();
+    let found = ctx.canonical(sinks, &all, force, &exempt)? as u32;
+    let mixes: Vec<(Key, Tt)> = strategies(ctx, found)?
+        .into_iter()
+        .filter(|(_, s)| *s == Strategy::Auto)
+        .map(|(group, _)| (("lookup".into(), format!("{group}_mix")), uint32.clone()))
+        .collect();
+    if mixes.is_empty() {
+        return Ok(found);
+    }
+    let all = [slots, mixes, finished].concat();
+    Ok(ctx.canonical(sinks, &all, force, &exempt)? as u32)
+}
+
+/// The canonical walk of a kernel's sinks as `kernel_walk` makes it, `declared_kt` the key text of the caller's declared slots
+/// (a tuple of Slot records) and `force_access` NULL for none.
+///
+/// # Safety
+/// `ctx` is a live context from the IR door, or null (then the call refuses); `sinks` is valid for `nsinks` nodes, the texts are
+/// NUL-terminated and `out` is valid for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_cells_walk(
+    ctx: *mut Ctx,
+    sinks: *const u32,
+    nsinks: usize,
+    declared_kt: *const c_char,
+    force_access: *const c_char,
+    out: *mut u32,
+) -> c_int {
+    guard(ctx, |c| {
+        if out.is_null() || (sinks.is_null() && nsinks > 0) {
+            return Err(Fault::BadArg("out or sinks is NULL".into()));
+        }
+        let given = if nsinks == 0 {
+            &[][..]
+        } else {
+            unsafe { std::slice::from_raw_parts(sinks, nsinks) }
+        };
+        let declared = declared_slots(Some(name_of(declared_kt, "declared_kt")?))?;
+        let force = if force_access.is_null() {
+            None
+        } else {
+            Some(name_of(force_access, "force_access")?)
+        };
+        unsafe { *out = kernel_walk(c, given, &declared, force)? };
+        Ok(())
     })
 }

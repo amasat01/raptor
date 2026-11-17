@@ -284,3 +284,66 @@ pub fn class_sinks(ctx: &mut Ctx, split: &SegmentedDispatch) -> R<Vec<u32>> {
     let name = class_name(&group_name(split.index));
     Ok(vec![maker.assign(&name, selected, &int)?])
 }
+
+/// The strategy words of the walk's dispatch groups in the walk's order, as the names protocol.
+///
+/// # Safety
+/// `buf` is valid for `cap` bytes; `len` and `count` for one write each.
+#[no_mangle]
+pub unsafe extern "C" fn rw_walk_strategies(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut std::ffi::c_char,
+    cap: usize,
+    len: *mut usize,
+    count: *mut usize,
+) -> std::ffi::c_int {
+    raptor_ir::door::guard(ctx, |c| {
+        let words: Vec<&str> = strategies(c, walk)?
+            .into_iter()
+            .map(|(_, s)| match s {
+                Strategy::Predicated => "predicated",
+                Strategy::Switch => "switch",
+                Strategy::Segmented => "segmented",
+                Strategy::Auto => "auto",
+            })
+            .collect();
+        raptor_ir::consts::put_names(&words, buf, cap, len, count)
+    })
+}
+
+/// The strategies a dispatch can be pinned to: `switch` (the core kind itself) and one for each wing kind that refines `dispatch`
+/// (`<strategy>_dispatch`), in the order the wing manifests declare them.
+pub fn dispatch_strategies() -> Vec<String> {
+    let mut out = vec!["switch".to_string()];
+    for (_, manifest) in crate::declare::MANIFESTS {
+        let Ok(parsed) = rcore::json::parse(manifest) else {
+            continue;
+        };
+        for row in parsed.get("kinds").map_or(&[][..], rcore::json::J::arr) {
+            let refines = row.get("refines").and_then(rcore::json::J::str);
+            let name = row.get("name").and_then(rcore::json::J::str).unwrap_or("");
+            if let (Some("dispatch"), Some(word)) = (refines, name.strip_suffix("_dispatch")) {
+                out.push(word.to_string());
+            }
+        }
+    }
+    out
+}
+
+/// The dispatch strategies, as the names protocol; see `dispatch_strategies`.
+///
+/// # Safety
+/// `buf` is valid for `cap` bytes; `len` and `count` for one write each.
+#[no_mangle]
+pub unsafe extern "C" fn rw_dispatch_strategies(
+    ctx: *mut Ctx,
+    buf: *mut std::ffi::c_char,
+    cap: usize,
+    len: *mut usize,
+    count: *mut usize,
+) -> std::ffi::c_int {
+    raptor_ir::door::guard(ctx, |_| {
+        raptor_ir::consts::put_names(&dispatch_strategies(), buf, cap, len, count)
+    })
+}

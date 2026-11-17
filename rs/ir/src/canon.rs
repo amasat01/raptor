@@ -137,7 +137,7 @@ impl Quantity {
 }
 
 /// The declared slots: a tuple of Slot records.
-fn declared_slots(text: Option<&str>) -> Result<Vec<(Key, Tt)>, Fault> {
+pub fn declared_slots(text: Option<&str>) -> Result<Vec<(Key, Tt)>, Fault> {
     let (Val::Tuple(v) | Val::List(v)) = parse(text.unwrap_or("()")).map_err(Fault::Refused)?
     else {
         return refuse("declared: expected a tuple of Slot records");

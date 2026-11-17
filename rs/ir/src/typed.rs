@@ -35,33 +35,38 @@ fn dtype_code(name: &str) -> Result<c_int, Fault> {
     }
 }
 
+/// A type's parts as the C struct: refuses a rank over `MAX_RANK` or a tag over `TAG_CAP - 1` bytes.
+pub fn rx_type_of_parts(dtype: &str, shape: &[i64], tag: Option<&str>) -> Result<RxType, Fault> {
+    if shape.len() > MAX_RANK {
+        return refuse(format!("rank {} is over {MAX_RANK}", shape.len()));
+    }
+    let tag = tag.unwrap_or("");
+    if tag.len() >= TAG_CAP {
+        return refuse(format!(
+            "tag of {} bytes is over {}",
+            tag.len(),
+            TAG_CAP - 1
+        ));
+    }
+    let mut out = RxType {
+        rank: shape.len() as u32,
+        dims: [0; MAX_RANK],
+        dtype: dtype_code(dtype)?,
+        tag: [0; TAG_CAP],
+    };
+    out.dims[..shape.len()].copy_from_slice(shape);
+    for (slot, byte) in out.tag.iter_mut().zip(tag.bytes()) {
+        *slot = byte as c_char;
+    }
+    Ok(out)
+}
+
 impl Ctx {
     /// The type of `node` as the C struct: refuses a rank over `MAX_RANK` or a tag over `TAG_CAP -
     /// 1` bytes.
     pub fn type_of(&self, node: Node) -> Result<RxType, Fault> {
         let n = self.node(node)?;
-        if n.shape.len() > MAX_RANK {
-            return refuse(format!("rank {} is over {MAX_RANK}", n.shape.len()));
-        }
-        let tag = n.tag.as_deref().unwrap_or("");
-        if tag.len() >= TAG_CAP {
-            return refuse(format!(
-                "tag of {} bytes is over {}",
-                tag.len(),
-                TAG_CAP - 1
-            ));
-        }
-        let mut out = RxType {
-            rank: n.shape.len() as u32,
-            dims: [0; MAX_RANK],
-            dtype: dtype_code(&n.dtype)?,
-            tag: [0; TAG_CAP],
-        };
-        out.dims[..n.shape.len()].copy_from_slice(&n.shape);
-        for (slot, byte) in out.tag.iter_mut().zip(tag.bytes()) {
-            *slot = byte as c_char;
-        }
-        Ok(out)
+        rx_type_of_parts(&n.dtype, &n.shape, n.tag.as_deref())
     }
 
     /// The value of a field that holds something: a field whose value is None is `Fault::Absent`.

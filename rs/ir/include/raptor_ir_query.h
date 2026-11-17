@@ -159,6 +159,15 @@ int rx_rule_template_check(rx_ctx* ctx, const char* name, const rx_node* roots, 
    declaration may refine, or a kind declared in the context (*out is 0 or 1). */
 int rx_kind_reserved(rx_ctx* ctx, const char* name, int* out);
 
+/* The type of the slot (role, name) the walk binds; refuses a slot it does not bind. */
+int rx_walk_slot_type(rx_ctx* ctx, rx_walk walk, const char* role, const char* name, rx_type* out);
+
+/* The names of the planes whose launch-start value the walk reads, sorted (the names protocol of rx_const_names). */
+int rx_walk_prior(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len, size_t* count);
+
+/* Whether the selector of the dispatch at index (the order of rx_dispatch_nodes) is static: no sink of the walk writes a plane it reads (*out is 0 or 1). */
+int rx_walk_static_selector(rx_ctx* ctx, rx_walk walk, int64_t index, int* out);
+
 #ifdef __cplusplus
 }
 #endif

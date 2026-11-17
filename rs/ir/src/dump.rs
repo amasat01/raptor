@@ -51,8 +51,8 @@ fn slice<'a, T>(p: *const T, n: usize, what: &str) -> Result<&'a [T], Fault> {
     Ok(unsafe { std::slice::from_raw_parts(p, n) })
 }
 
-/// The text of the nodes reachable from `roots`, one line per node.
-fn dump(c: &Ctx, roots: &[u32]) -> Result<String, Fault> {
+/// The nodes reachable from `roots` and the line each takes in a dump: the position among the reachable handles in ascending order.
+fn positions(c: &Ctx, roots: &[u32]) -> Result<(Vec<bool>, Vec<u32>), Fault> {
     let mut seen = vec![false; c.nodes.len()];
     let mut stack = vec![];
     for &r in roots {
@@ -75,6 +75,12 @@ fn dump(c: &Ctx, roots: &[u32]) -> Result<String, Fault> {
             k += 1
         }
     }
+    Ok((seen, pos))
+}
+
+/// The text of the nodes reachable from `roots`, one line per node.
+fn dump(c: &Ctx, roots: &[u32]) -> Result<String, Fault> {
+    let (seen, pos) = positions(c, roots)?;
     let mut out = format!("{HEADER}\n");
     let mut at = |h: u32| -> Result<u32, String> { Ok(pos[h as usize]) };
     for h in (0..seen.len()).filter(|&h| seen[h]) {
@@ -315,5 +321,35 @@ pub unsafe extern "C" fn rx_load(
             c.nodes.truncate(before)
         }
         r
+    })
+}
+
+/// The line of the dump of `roots` that each root is, in the order of `roots`: the number a node has in that dump.
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_dump_numbers(
+    ctx: *mut Ctx,
+    roots: *const u32,
+    n: usize,
+    buf: *mut i64,
+    cap: usize,
+    count: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        if count.is_null() {
+            return Err(Fault::BadArg("count is NULL".into()));
+        }
+        let given = slice(roots, n, "roots")?;
+        let (_, pos) = positions(c, given)?;
+        unsafe { *count = given.len() };
+        if cap < given.len() || (buf.is_null() && !given.is_empty()) {
+            return Err(Fault::Truncated);
+        }
+        for (i, &r) in given.iter().enumerate() {
+            unsafe { *buf.add(i) = i64::from(pos[r as usize]) };
+        }
+        Ok(())
     })
 }

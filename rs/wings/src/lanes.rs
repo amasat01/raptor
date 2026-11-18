@@ -833,3 +833,223 @@ pub fn key_run(
 
 pub mod slice;
 pub mod warp;
+
+#[cfg(test)]
+mod tests {
+    //! The axes, the forms and the sorted-key test of the lane algebra, each on a small hand-made kernel over `lane`.
+    //! A split of the lane by `n` is `lane / n` for the slow part and `lane - (lane / n) * n` for the fast part.
+    use super::*;
+
+    /// A context and the node builders the kernels below share.
+    struct Kernel {
+        c: Ctx,
+        lane: u32,
+    }
+
+    impl Kernel {
+        fn new() -> Kernel {
+            let mut c = Ctx::new().unwrap();
+            let lane = c.make("SampleIndex", "i32", &[], None, &[], "()").unwrap();
+            Kernel { c, lane }
+        }
+
+        fn int(&mut self, n: i64) -> u32 {
+            let fields = format!("(('literal', {n}),)");
+            self.c
+                .make("Const", "i32", &[], None, &[], &fields)
+                .unwrap()
+        }
+
+        fn op(&mut self, kind: &str, ops: &[u32]) -> u32 {
+            let fields = format!("(('kind', '{kind}'), ('literal', None))");
+            self.c.make("Op", "i32", &[], None, ops, &fields).unwrap()
+        }
+
+        fn leaf(&mut self, name: &str, sorted: bool) -> u32 {
+            let sorted = if sorted { "True" } else { "False" };
+            let fields = format!(
+                "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', {sorted}))"
+            );
+            self.c.make("Leaf", "i32", &[], None, &[], &fields).unwrap()
+        }
+
+        fn quotient(&mut self, n: i64) -> u32 {
+            let n = self.int(n);
+            self.op("div", &[self.lane, n])
+        }
+
+        /// A sink that stores a read of a plane at `index`.
+        fn read_at(&mut self, index: u32) -> u32 {
+            let plane = self.leaf("c", false);
+            let read = self
+                .c
+                .make("At", "i32", &[], None, &[plane, index], "()")
+                .unwrap();
+            let fields = "(('kind', 'assign'), ('name', 'y'), ('role', 'mutable'))";
+            self.c
+                .make("Assign", "i32", &[], None, &[read], fields)
+                .unwrap()
+        }
+
+        fn eval(&self, sinks: &[u32]) -> Eval<'_> {
+            let axes = axes_of(&self.c, sinks).unwrap();
+            let all = (1u64 << axes.len()) - 1;
+            Eval {
+                c: &self.c,
+                axes,
+                memo: HashMap::new(),
+                all,
+            }
+        }
+
+        /// The (extent, stride) of every axis of the kernel whose sinks are `sinks`.
+        fn axes(&self, sinks: &[u32]) -> Vec<(Option<i128>, i128)> {
+            let axes = axes_of(&self.c, sinks).unwrap();
+            axes.iter().map(|a| (a.extent, a.stride)).collect()
+        }
+
+        /// The form of `index` along each axis of the kernel whose sinks are `sinks`.
+        fn forms(&self, sinks: &[u32], index: u32) -> Vec<Form> {
+            let mut ev = self.eval(sinks);
+            let value = ev.value(index).unwrap();
+            axis_forms(&value, ev.axes.len())
+        }
+    }
+
+    #[test]
+    fn a_kernel_with_no_divisor_has_one_run_time_axis_of_stride_one() {
+        let mut k = Kernel::new();
+        let one = k.int(1);
+        let index = k.op("add", &[k.lane, one]);
+        let sink = k.read_at(index);
+        assert_eq!(k.axes(&[sink]), [(None, 1)]);
+    }
+
+    #[test]
+    fn a_split_by_n_makes_a_run_time_slow_axis_and_a_fast_axis_of_n_lanes() {
+        let mut k = Kernel::new();
+        let slow = k.quotient(256);
+        let sink = k.read_at(slow);
+        assert_eq!(k.axes(&[sink]), [(None, 256), (Some(256), 1)]);
+    }
+
+    #[test]
+    fn a_chain_of_divisors_makes_axes_whose_extents_are_the_ratios_of_neighbouring_strides() {
+        // strides 32, 8, 1: the axis of stride 8 has 32 / 8 = 4 steps and the fastest has 8 / 1 = 8
+        let mut k = Kernel::new();
+        let (a, b) = (k.quotient(32), k.quotient(8));
+        let both = k.op("add", &[a, b]);
+        let sink = k.read_at(both);
+        assert_eq!(k.axes(&[sink]), [(None, 32), (Some(4), 8), (Some(8), 1)]);
+    }
+
+    #[test]
+    fn divisors_that_do_not_divide_each_other_leave_one_flat_axis() {
+        let mut k = Kernel::new();
+        let (a, b) = (k.quotient(4), k.quotient(6));
+        let both = k.op("add", &[a, b]);
+        let sink = k.read_at(both);
+        assert_eq!(k.axes(&[sink]), [(None, 1)]);
+    }
+
+    #[test]
+    fn a_lane_divided_by_a_lone_divisor_is_affine_along_the_slow_axis_and_invariant_along_the_fast_one(
+    ) {
+        let mut k = Kernel::new();
+        let index = k.quotient(4);
+        let sink = k.read_at(index);
+        let one = Some(Frac::int(1));
+        assert_eq!(k.forms(&[sink], index), [(AFFINE, one), (INVARIANT, None)]);
+    }
+
+    #[test]
+    fn a_fraction_of_the_flat_lane_is_a_quotient_with_that_coefficient() {
+        // lane / 4 and lane / 6 do not form a chain, so each is read along the one flat axis with its own fraction
+        let mut k = Kernel::new();
+        let (by_four, by_six) = (k.quotient(4), k.quotient(6));
+        let both = k.op("add", &[by_four, by_six]);
+        let sink = k.read_at(both);
+        assert_eq!(
+            k.forms(&[sink], by_four),
+            [(QUOTIENT, Some(Frac::new(1, 4)))]
+        );
+        assert_eq!(
+            k.forms(&[sink], by_six),
+            [(QUOTIENT, Some(Frac::new(1, 6)))]
+        );
+    }
+
+    #[test]
+    fn a_product_of_lane_terms_is_non_affine() {
+        let mut k = Kernel::new();
+        let square = k.op("mul", &[k.lane, k.lane]);
+        let sink = k.read_at(square);
+        assert_eq!(k.forms(&[sink], square), [(NON_AFFINE, None)]);
+    }
+
+    #[test]
+    fn a_lane_shifted_by_a_constant_is_affine_with_the_lane_coefficient() {
+        let mut k = Kernel::new();
+        let one = k.int(1);
+        let (up, down) = (k.op("add", &[k.lane, one]), k.op("sub", &[k.lane, one]));
+        let sink = k.read_at(up);
+        let coefficient = Some(Frac::int(1));
+        assert_eq!(k.forms(&[sink], up), [(AFFINE, coefficient)]);
+        assert_eq!(k.forms(&[sink], down), [(AFFINE, coefficient)]);
+    }
+
+    #[test]
+    fn an_index_read_from_a_plane_is_data_dependent() {
+        let mut k = Kernel::new();
+        let key = k.leaf("i", false);
+        let sink = k.read_at(key);
+        assert_eq!(k.forms(&[sink], key), [(DATA_DEPENDENT, None)]);
+    }
+
+    /// Whether the key `key` is known to be a sorted plane in the kernel that stores a read at it.
+    fn sorted(k: &mut Kernel, key: u32) -> bool {
+        let sink = k.read_at(key);
+        k.eval(&[sink]).key_origin_sorted(key).unwrap()
+    }
+
+    #[test]
+    fn a_plane_declared_sorted_is_a_sorted_key_and_an_undeclared_one_is_not() {
+        let mut k = Kernel::new();
+        let (declared, undeclared) = (k.leaf("key", true), k.leaf("other", false));
+        assert!(sorted(&mut k, declared));
+        assert!(!sorted(&mut k, undeclared));
+    }
+
+    #[test]
+    fn a_sorted_plane_moved_by_a_constant_is_still_a_sorted_key() {
+        let mut k = Kernel::new();
+        let (plane, three) = (k.leaf("key", true), k.int(3));
+        let (up, down) = (k.op("add", &[plane, three]), k.op("sub", &[plane, three]));
+        assert!(sorted(&mut k, up));
+        assert!(sorted(&mut k, down));
+    }
+
+    #[test]
+    fn a_sorted_plane_scaled_or_reversed_is_not_a_sorted_key() {
+        // a product is opaque plane data and `3 - key` runs the order backwards
+        let mut k = Kernel::new();
+        let (plane, two, three) = (k.leaf("key", true), k.int(2), k.int(3));
+        let doubled = k.op("mul", &[plane, two]);
+        let reversed = k.op("sub", &[three, plane]);
+        assert!(!sorted(&mut k, doubled));
+        assert!(!sorted(&mut k, reversed));
+    }
+
+    #[test]
+    fn a_sorted_plane_plus_a_lane_term_is_not_a_sorted_key() {
+        let mut k = Kernel::new();
+        let plane = k.leaf("key", true);
+        let fast = {
+            let (q, n) = (k.quotient(8192), k.int(8192));
+            let rows = k.op("mul", &[q, n]);
+            k.op("sub", &[k.lane, rows])
+        };
+        let key = k.op("add", &[plane, fast]);
+        assert!(!sorted(&mut k, key));
+    }
+}

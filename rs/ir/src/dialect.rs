@@ -65,7 +65,8 @@ fn has_type(v: &Val, t: &str) -> bool {
 }
 
 impl Ctx {
-    /// Declares the kinds of a manifest into this context. Rows naming a core class are skipped. An equal re-declaration is accepted.
+    /// Declares the kinds of a manifest into this context. Rows naming a core class are skipped. A kind is declared by one wing: an equal
+    /// re-declaration by the same wing is accepted, one by another wing is refused whatever its body.
     pub fn declare_dialect(&mut self, manifest: &str, first_party: &str) -> Result<(), Fault> {
         let m = json::parse(manifest).map_err(|e| Fault::Refused(format!("manifest: {e}")))?;
         let Some(ext) = text(m.get("name")) else {
@@ -121,10 +122,17 @@ impl Ctx {
             spelling,
         };
         if let Some(i) = t.kind(name) {
-            return if t.classes[i].decl.as_ref() == Some(&decl) {
-                Ok(())
-            } else {
-                bad(name, "already declared with a different declaration".into())
+            return match t.classes[i].decl.as_ref() {
+                Some(known) if known.ext != ext => bad(
+                    name,
+                    format!(
+                        "declared by the wings {} and {}; a kind has one declaring wing: rename it in one of them or drop one declaration",
+                        py_str(&known.ext),
+                        py_str(ext)
+                    ),
+                ),
+                Some(known) if *known == decl => Ok(()),
+                _ => bad(name, "already declared with a different declaration".into()),
             };
         }
         let c = build_class(t, decl, base, wire);

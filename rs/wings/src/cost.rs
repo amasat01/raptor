@@ -76,7 +76,6 @@ fn linalg_ops(c: &Ctx, h: u32, kind: &str) -> f64 {
         "lu" => n.powi(3) / 3.0,
         "chol" => n.powi(3) / 6.0,
         "eigh" => sweeps * n * (n - 1.0) / 2.0 * (6.0 * n + 10.0),
-        "lu_det" => n,
         _ if konst("LINALG_CONSUMERS").contains(&kind) => {
             n * n * k
                 / if matches!(kind, "tri_lower" | "tri_upper_t") {
@@ -417,4 +416,151 @@ pub fn dispatch_costs(c: &Ctx, order: &[u32]) -> R<Vec<GroupCost>> {
         .into_iter()
         .map(|group| group_cost(c, group, sink_values.contains(&group)))
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    //! The counts, the critical path and the stores of a branch, each on a small hand-made kernel; every expected vector is
+    //! counted by hand from the rules stated in the type docs above (`work`: arithmetic 32, 64, library call 32, 64, loads,
+    //! gathers; `Path`: the same four classes).
+    use super::*;
+
+    /// A context with the node builders of the tests.
+    struct Graph {
+        c: Ctx,
+    }
+
+    impl Graph {
+        fn new() -> Graph {
+            Graph {
+                c: Ctx::new().unwrap(),
+            }
+        }
+
+        /// A per-sample plane read of the element type.
+        fn plane(&mut self, name: &str, dtype: &str) -> u32 {
+            let fields = format!(
+                "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False))"
+            );
+            self.c.make("Leaf", dtype, &[], None, &[], &fields).unwrap()
+        }
+
+        fn constant(&mut self, literal: &str, dtype: &str) -> u32 {
+            let fields = format!("(('literal', {literal}),)");
+            self.c
+                .make("Const", dtype, &[], None, &[], &fields)
+                .unwrap()
+        }
+
+        fn op(&mut self, kind: &str, dtype: &str, ops: &[u32]) -> u32 {
+            let fields = format!("(('kind', '{kind}'), ('literal', None))");
+            self.c.make("Op", dtype, &[], None, ops, &fields).unwrap()
+        }
+
+        fn counts(&self, nodes: &[u32]) -> Counts {
+            work(&self.c, nodes).unwrap()
+        }
+
+        fn path(&self, root: u32) -> Path {
+            critical_path(&self.c, &[root], &HashSet::new(), false).unwrap()
+        }
+    }
+
+    #[test]
+    fn a_plain_kernel_counts_its_arithmetic_and_loads_and_chains_them_in_sequence() {
+        // y = x * x + 1.0: two 64-bit operations, one plane read, and the add waits for the multiply
+        let mut g = Graph::new();
+        let x = g.plane("x", "f64");
+        let one = g.constant("1.0", "f64");
+        let square = g.op("mul", "f64", &[x, x]);
+        let sum = g.op("add", "f64", &[square, one]);
+        assert_eq!(
+            g.counts(&[x, one, square, sum]),
+            [0.0, 2.0, 0.0, 0.0, 1.0, 0.0]
+        );
+        assert_eq!(g.path(sum), [0.0, 2.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn work_on_32_bit_values_lands_in_the_32_bit_fields() {
+        let mut g = Graph::new();
+        let a = g.plane("a", "f32");
+        let (product, sine) = (g.op("mul", "f32", &[a, a]), g.op("sin", "f32", &[a]));
+        assert_eq!(g.counts(&[a, product]), [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
+        assert_eq!(g.counts(&[a, sine]), [0.0, 0.0, 1.0, 0.0, 1.0, 0.0]);
+    }
+
+    #[test]
+    fn a_library_call_lands_in_the_special_chain_beside_the_arithmetic_path() {
+        // log(x * x + 1.0) * b: the arithmetic path is multiply, add, multiply = 3 and the one library call is on it
+        let mut g = Graph::new();
+        let (x, b) = (g.plane("x", "f64"), g.plane("b", "f64"));
+        let one = g.constant("1.0", "f64");
+        let square = g.op("mul", "f64", &[x, x]);
+        let shifted = g.op("add", "f64", &[square, one]);
+        let log = g.op("log", "f64", &[shifted]);
+        let scaled = g.op("mul", "f64", &[log, b]);
+        assert_eq!(g.path(scaled), [0.0, 3.0, 0.0, 1.0]);
+        assert_eq!(
+            g.counts(&[x, b, one, square, shifted, log, scaled]),
+            [0.0, 3.0, 0.0, 1.0, 2.0, 0.0]
+        );
+    }
+
+    #[test]
+    fn a_gather_waits_for_its_index_and_is_one_step_of_its_own_width() {
+        // table.at(lane + 1): the path is the 32-bit index add, then the read as one step of its own 64-bit width; the plane,
+        // a leaf, adds nothing (the recorded model gives a lone gather branch a 64-bit chain of 1 and one gather)
+        let mut g = Graph::new();
+        let lane =
+            g.c.make("SampleIndex", "i32", &[], None, &[], "()")
+                .unwrap();
+        let (one, table) = (g.constant("1", "i32"), g.plane("table", "f64"));
+        let index = g.op("add", "i32", &[lane, one]);
+        let read =
+            g.c.make("At", "f64", &[], None, &[table, index], "()")
+                .unwrap();
+        assert_eq!(g.path(read), [1.0, 1.0, 0.0, 0.0]);
+        assert_eq!(g.counts(&[table, read]), [0.0, 0.0, 0.0, 0.0, 1.0, 1.0]);
+    }
+
+    /// The branch costs of the one dispatch group of `x * x + 1.0` and `x * x + 2.0`, the group's value kept by a sink or
+    /// added to a constant first.
+    fn shared_branch_stores(kept_directly: bool) -> Vec<Option<f64>> {
+        let mut g = Graph::new();
+        let (k, x) = (g.plane("k", "i32"), g.plane("x", "f64"));
+        let (one, two) = (g.constant("1.0", "f64"), g.constant("2.0", "f64"));
+        let square = g.op("mul", "f64", &[x, x]);
+        let (a, b) = (
+            g.op("add", "f64", &[square, one]),
+            g.op("add", "f64", &[square, two]),
+        );
+        let group =
+            g.c.make("Dispatch", "f64", &[], None, &[k, a, b], "()")
+                .unwrap();
+        let value = if kept_directly {
+            group
+        } else {
+            g.op("add", "f64", &[group, one])
+        };
+        let fields = "(('kind', 'assign'), ('name', 'y'), ('role', 'mutable'))";
+        let sink =
+            g.c.make("Assign", "f64", &[], None, &[value], fields)
+                .unwrap();
+        let mut order = vec![k, x, one, two, square, a, b, group];
+        order.extend((value != group).then_some(value));
+        order.push(sink);
+        let costs = dispatch_costs(&g.c, &order).unwrap();
+        costs[0].branches.iter().map(|b| b.stores).collect()
+    }
+
+    #[test]
+    fn each_branch_of_a_group_a_sink_keeps_stores_the_value_it_hands_over() {
+        assert_eq!(shared_branch_stores(true), [Some(1.0), Some(1.0)]);
+    }
+
+    #[test]
+    fn a_group_no_sink_keeps_directly_states_no_store_count() {
+        assert_eq!(shared_branch_stores(false), [None, None]);
+    }
 }

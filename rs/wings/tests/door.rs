@@ -154,6 +154,7 @@ fn wide_place_wraps_a_stored_value_in_its_plane() {
             1,
             thread_form,
             [2i64, 4, 0, 8, 4096].as_ptr(),
+            5,
             64,
             &rolled,
             c"auto".as_ptr(),

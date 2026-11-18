@@ -63,6 +63,12 @@ int rx_new_loop(rx_ctx* ctx, rx_node index, const rx_node* carries, size_t ncarr
                 const rx_node* count /* NULL */, int count_tail, const char* dynamic /* NULL */,
                 rx_node* out);
 
+/* The loop-invariant boundary values of the body roots, maximal and in deterministic order (two-call array protocol: *n is the
+   count, RX_TRUNC when cap is smaller): the walk from the roots stops at the highest node that does not depend on the nodes in own
+   (the carries and the index). A read under a dispatch or select arm that gathers stays in the body unless it is in gates. */
+int rx_loop_boundary(rx_ctx* ctx, const rx_node* roots, size_t nroots, const rx_node* own, size_t nown,
+                     const rx_node* gates, size_t ngates, rx_node* buf, size_t cap, size_t* n);
+
 /* The roots with every node of the mapping (from[i] becomes to[i], by handle) replaced; an
    unchanged subtree is reused, not copied. */
 int rx_substitute(rx_ctx* ctx, const rx_node* roots, size_t nroots, const rx_node* from,

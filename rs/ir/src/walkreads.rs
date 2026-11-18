@@ -1,10 +1,11 @@
 //! Typed reads of a walk a front end asks beyond the arguments: the type of a bound slot, the planes read at launch start, and
-//! whether a dispatch's selector is static. Owns the C doors `rx_walk_slot_type`, `rx_walk_prior`, `rx_walk_static_selector`, `rx_walk_selector_reads`, `rx_walk_access_class` and `rx_walk_accum_companions`.
+//! whether a dispatch's selector is static. Owns the C doors `rx_walk_slot_type`, `rx_walk_prior`, `rx_walk_static_selector`, `rx_walk_selector_reads`, `rx_walk_access_class`, `rx_walk_accum_companions`, `rx_walk_quantity_wires` and `rx_walk_quantity_slots`.
 use crate::canon::str_const;
 use crate::consts::{compensates, put_names};
 use crate::door::{cstr, guard, put};
 use crate::record::{badarg, refuse, Ctx, Fault};
-use crate::typed::{put_pairs, rx_type_of_parts, text_pair, RxPair, RxType};
+use crate::typed::{pair_part, put_pairs, rx_type_of_parts, text_pair, RxPair, RxType};
+use crate::value::Val;
 use std::ffi::{c_char, c_int};
 
 /// The type of the slot (`role`, `name`) the walk binds, as the C struct.
@@ -149,6 +150,57 @@ pub unsafe extern "C" fn rx_walk_accum_companions(
             .iter()
             .map(|(comp, plane)| text_pair(comp, Some(plane)))
             .collect::<Result<Vec<_>, _>>()?;
+        put_pairs(&pairs, buf, cap, n)
+    })
+}
+
+/// The wires of the quantities the walk reaches, in walk order, one pair (namespace, slot name of the wire) per wire; the rows of
+/// `rx_walk_quantity_slots` follow the same order.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_quantity_wires(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let mut pairs = vec![];
+        for (name, wires, _) in &c.walk(walk)?.quantities {
+            for wire in wires {
+                pairs.push(text_pair(name, Some(wire))?);
+            }
+        }
+        put_pairs(&pairs, buf, cap, n)
+    })
+}
+
+/// The slot numbers of the wires of the quantities the walk reaches, one pair (namespace, slot number) per wire, in the order of
+/// `rx_walk_quantity_wires`.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_quantity_slots(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let mut pairs = vec![];
+        for (name, _, slots) in &c.walk(walk)?.quantities {
+            for &slot in slots {
+                pairs.push(RxPair {
+                    first: pair_part(&Val::Str(name.clone()))?,
+                    second: pair_part(&Val::Int(slot as i128))?,
+                });
+            }
+        }
         put_pairs(&pairs, buf, cap, n)
     })
 }

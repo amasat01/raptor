@@ -259,6 +259,7 @@ pub unsafe extern "C" fn rw_wide_place(
     nsinks: usize,
     thread_form: c_int,
     runtime_min: *const i64,
+    nruntime: usize,
     wide_min: i64,
     rolled_min: *const i64,
     form: *const c_char,
@@ -283,6 +284,11 @@ pub unsafe extern "C" fn rw_wide_place(
         } else {
             unsafe { std::slice::from_raw_parts(sinks, nsinks) }
         };
+        if nruntime != 5 {
+            return Err(Fault::BadArg(
+                "runtime_min holds five numbers: read, slot_read, rotate, write, accum".into(),
+            ));
+        }
         let table = unsafe { std::slice::from_raw_parts(runtime_min, 5) };
         let rolled_min = if rolled_min.is_null() {
             None

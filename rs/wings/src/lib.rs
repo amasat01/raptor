@@ -326,6 +326,24 @@ pub fn gather_mats(c: &Ctx, w: u32) -> R<Vec<String>> {
     Ok(crossed)
 }
 
+/// The matrix input planes the walk reads only through `at`, sorted, as the names protocol; see `raptor_wings_front.h`.
+///
+/// # Safety
+/// `buf` is valid for `cap` bytes and `len` and `count` for one write each.
+#[no_mangle]
+pub unsafe extern "C" fn rw_walk_gather_mats(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut c_char,
+    cap: usize,
+    len: *mut usize,
+    count: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        raptor_ir::consts::put_names(&gather_mats(c, walk)?, buf, cap, len, count)
+    })
+}
+
 /// The accumulates of the walk that keep a companion plane, once per name.
 fn companions(c: &Ctx, w: u32) -> R<Vec<u32>> {
     let mut out: Vec<u32> = vec![];

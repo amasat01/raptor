@@ -620,6 +620,39 @@ pub unsafe extern "C" fn rx_new_loop(
     })
 }
 
+/// The loop-invariant boundary values of a loop body's roots, maximal and in deterministic order.
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_loop_boundary(
+    ctx: *mut Ctx,
+    roots: *const Node,
+    nroots: usize,
+    own: *const Node,
+    nown: usize,
+    gates: *const Node,
+    ngates: usize,
+    buf: *mut Node,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        if n.is_null() {
+            return Err(Fault::BadArg("n is NULL".into()));
+        }
+        let own: HashSet<Node> = slice(own, nown, "own")?.iter().copied().collect();
+        let gates: HashSet<Node> = slice(gates, ngates, "gates")?.iter().copied().collect();
+        let found = c.loop_boundary(slice(roots, nroots, "roots")?, &own, &gates);
+        unsafe { *n = found.len() }
+        if cap < found.len() || (buf.is_null() && !found.is_empty()) {
+            return Err(Fault::Truncated);
+        }
+        unsafe { std::ptr::copy_nonoverlapping(found.as_ptr(), buf, found.len()) }
+        Ok(())
+    })
+}
+
 /// The roots with every node of the mapping (`from[i]` becomes `to[i]`, by handle) replaced.
 ///
 /// # Safety

@@ -18,6 +18,28 @@ pub(crate) fn exceeds(n: i64, limit: Option<i64>) -> Outcome<bool> {
     }
 }
 
+/// Whether `n` exceeds the fold threshold (*out is 0 or 1); refused when `fold_min` is NULL, the facts naming no threshold.
+///
+/// # Safety
+/// `ctx` is a live context from the IR door, or null (then the call refuses); `fold_min` is NULL or valid for one read, `out` for
+/// one write.
+#[no_mangle]
+pub unsafe extern "C" fn rw_fold_exceeds(
+    ctx: *mut Ctx,
+    n: i64,
+    fold_min: *const i64,
+    out: *mut std::ffi::c_int,
+) -> std::ffi::c_int {
+    raptor_ir::door::guard(ctx, |_| {
+        let limit = if fold_min.is_null() {
+            None
+        } else {
+            Some(unsafe { *fold_min })
+        };
+        crate::flag_out(out, exceeds(n, limit)?)
+    })
+}
+
 /// The reductions of a whole vector that read it element by element when the site is rolled.
 const REDUCTIONS: [&str; 3] = ["sum", "dot", "norm"];
 

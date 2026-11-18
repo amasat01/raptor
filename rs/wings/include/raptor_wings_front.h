@@ -75,6 +75,54 @@ int rw_block_ordered_case(rx_ctx* ctx, rx_node payload, const char* contract, co
 /* Whether the keyed sum of the payload can be one block by its structure alone: ordered_case, or a float payload within the limit that has factors. */
 int rw_block_shaped(rx_ctx* ctx, rx_node payload, const char* contract, const int64_t* limit, size_t nlimit, int* out);
 
+/* Whether the node places a value in a plane (*out is 0 or 1). */
+int rw_wide_is_resident(rx_ctx* ctx, rx_node node, int* out);
+/* Whether the node names a scratch plane the runtime made (flat or warp-tiled), not a mutable's own (*out is 0 or 1). */
+int rw_wide_is_tiled(rx_ctx* ctx, rx_node node, int* out);
+/* How a placed plane is laid out. */
+enum { RW_LAYOUT_PLANE_MAJOR = 0, RW_LAYOUT_WARP_TILED = 1 };
+/* One placed plane: the leaf that names it, its layout and width. */
+typedef struct { rx_node plane; int layout; int64_t width; } rw_plane_row;
+/* The placements of the given nodes (loop bodies included), one row per plane, sorted by plane name; *count is the rows needed (RX_TRUNC when cap is too small). */
+int rw_wide_record(rx_ctx* ctx, const rx_node* order, size_t n, rw_plane_row* rows, size_t cap, size_t* count);
+/* Whether the node is spelled as its runtime twin; fold_min is NULL when the facts name no threshold, form is "auto", "rolled" or "static" (*out is 0 or 1). */
+int rw_fold_rolled(rx_ctx* ctx, rx_node node, const int64_t* fold_min /* NULL */, const char* form, int* out);
+/* The key run of one keyed sink of the kernel with the given sinks: found is 0 for none; run_max and block_run are the target's lane numbers. */
+enum { RW_KEY_PROVEN = 1, RW_KEY_SORTED = 2, RW_KEY_TESTED = 3 };
+typedef struct { int found; int form; int64_t width; int block; } rw_key_run;
+int rw_lanes_key_run_in_kernel(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, rx_node sink, int64_t run_max, int64_t block_run, rw_key_run* out);
+/* Whether the node names a plane a placement writes (a mutable's own or a scratch plane) (*out is 0 or 1). */
+int rw_wide_is_scratch(rx_ctx* ctx, rx_node node, int* out);
+/* Whether the node is the launch-start value of a vector mutable (*out is 0 or 1). */
+int rw_wide_is_prior(rx_ctx* ctx, rx_node node, int* out);
+/* How element k of a rank-1 node is read. */
+enum { RW_ELEMENT_NONE = 0, RW_ELEMENT_PROXY = 1, RW_ELEMENT_INPUT = 2, RW_ELEMENT_PARTS = 3, RW_ELEMENT_SPLAT = 4, RW_ELEMENT_ELEMENTWISE = 5 };
+int rw_wide_element_kind(rx_ctx* ctx, rx_node node, int* kind);
+/* Whether a vector is reads of one plane at base + start + k * step: *found is 0 or 1; *base is UINT32_MAX when the index has no runtime part. */
+int rw_wide_gather(rx_ctx* ctx, rx_node node, int* found, rx_node* plane, rx_node* base, int64_t* start, int64_t* step, int* clamped);
+/* The sinks with each wide value that needs a plane placed in one: a `resident` op over the value and a leaf naming the plane, made in ctx;
+   a vector of scaled reads first becomes a scaled run. A kernel the pass leaves alone (thread_form != 0, no sinks, nothing needing a plane)
+   comes back as given and *changed is 0. The target's facts: runtime_min (nruntime = 5) five numbers (read, slot_read, rotate, write, accum): the widest vector
+   kept in registers when accessed at a run-time index in that pattern, wide_min the widest with only compile-time indices that stays there (the table of the build's scalar width),
+   rolled_min and form (as rw_fold_rolled; rolled_min NULL is refused where a threshold is read), taken the plane names to avoid, one per
+   line. buf must hold nsinks nodes (else RX_TRUNC, nothing made). Loops with placed slots are made again by the core's loop constructor. The caller takes the walk again over the result. */
+int rw_wide_place(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, int thread_form, const int64_t* runtime_min,
+                  size_t nruntime, int64_t wide_min, const int64_t* rolled_min /* NULL */, const char* form, const char* taken,
+                  rx_node* buf, size_t cap, size_t* count, int* changed);
+/* For each of the nodes whether it is proven equal over every aligned run of *warp consecutive lanes in the kernel with the given
+   sinks (flags[i] is 0 or 1; warp is NULL when the target names no run width, so only what needs no run is proven). Proven: a
+   constant, a uniform or nsamples value, a loop index, a read at a proven index, an op (not a random one) of proven operands, and
+   floor(y / d) or y * (1 / d) of a lane form y when d is a multiple of the warp and a run differs only in y's fastest axis, with
+   coefficient 1. Unknown is 0. flags must hold nnodes ints. */
+int rw_lanes_warp_uniform(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, const int64_t* warp /* NULL */, const rx_node* nodes, size_t nnodes,
+                          int* flags);
+/* Whether n exceeds the fold threshold (*out is 0 or 1); refused when fold_min is NULL, the facts naming no threshold. The rule is the
+   library's: a caller never restates it. */
+int rw_fold_exceeds(rx_ctx* ctx, int64_t n, const int64_t* fold_min /* NULL */, int* out);
+/* The matrix input planes the walk reads only through a gather, sorted, as the names protocol: their column count is the caller's, not
+   the lane count. */
+int rw_walk_gather_mats(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len, size_t* count);
+
 /* Declares in ctx every kind the wings declare (the base and simt manifests, embedded in this library), which the rewrites of this
    library make nodes of (a box store, for one). Call it once on a context before the first rewrite or before making a node of such a kind; it
    may be called again, and after a unit has declared the same kinds, with no effect. */

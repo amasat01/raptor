@@ -212,6 +212,7 @@ fn placed_sinks_in_a_context_with_only_the_wings_kinds() {
             1,
             0,
             runtime.as_ptr(),
+            runtime.len(),
             64,
             &rolled,
             c"auto".as_ptr(),

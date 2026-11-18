@@ -25,11 +25,19 @@ pub struct WalkRes {
     pub static_selector: Vec<bool>,
     /// For each dispatch of the walk, the `(role, name)` slots its selector reads, sorted.
     pub selector_reads: Vec<Vec<Key>>,
+    /// The quantities the walk reaches, in walk order: namespace, the slot name of each wire and the slot number of each wire.
+    pub quantities: Vec<QuantityRow>,
     /// The text of each field of the walk, by name.
     pub fields: Vec<(&'static str, String)>,
     /// The digest of the walk.
     pub digest: String,
 }
+
+/// One reached quantity of a walk: its namespace, the slot names of its wires and their slot numbers, in declaration order.
+pub type QuantityRow = (String, Vec<String>, Vec<usize>);
+
+/// The spans of the reached quantities as text, and the reached quantities as rows.
+type Spans = (Vec<(String, String)>, Vec<QuantityRow>);
 
 /// What the dispatch listing holds: the listing values, the static flag and the selector reads of each dispatch.
 type Listing = (Vec<Val>, Vec<bool>, Vec<Vec<Key>>);
@@ -206,7 +214,7 @@ impl Ctx {
         let reached = self.reached_quantities(&tr, sep)?;
         let layout = place_slots(&reached, declared_sinks, &bound.held, sep)?;
         let ordered = order_slots(&layout)?;
-        let spans = quantity_spans(&reached, &ordered, sep)?;
+        let (spans, quantities) = quantity_spans(&reached, &ordered, sep)?;
         let watched = self.watched_nodes(&tr);
         let access = self.access_class(&watched, exempt, force)?;
         let (listing, static_selector, selector_reads) = self.dispatch_listing(&watched)?;
@@ -231,6 +239,7 @@ impl Ctx {
             prior: prior.into_iter().collect(),
             static_selector,
             selector_reads,
+            quantities,
             positions: objs
                 .iter()
                 .enumerate()
@@ -735,7 +744,7 @@ fn quantity_spans(
     reached: &[(String, Quantity)],
     ordered: &[(Key, Tt)],
     sep: &str,
-) -> Result<Vec<(String, String)>, Fault> {
+) -> Result<Spans, Fault> {
     let slot_of: HashMap<&Key, usize> = ordered
         .iter()
         .enumerate()
@@ -743,6 +752,7 @@ fn quantity_spans(
         .collect();
     // the spans: one consecutive, declaration-ordered run per role
     let mut spans: Vec<(String, String)> = vec![];
+    let mut rows: Vec<QuantityRow> = vec![];
     for (prefix, q) in reached {
         let expanded = q.expand(sep);
         let (mut idx, mut per): (Vec<i128>, Vec<(String, Vec<i128>)>) = (vec![], vec![]);
@@ -776,14 +786,19 @@ fn quantity_spans(
                 ),
                 (
                     "slots".into(),
-                    Val::Tuple(idx.into_iter().map(Val::Int).collect()),
+                    Val::Tuple(idx.iter().map(|&i| Val::Int(i)).collect()),
                 ),
             ],
         );
+        rows.push((
+            prefix.clone(),
+            expanded.iter().map(|(k, _)| k.1.clone()).collect(),
+            idx.iter().map(|&i| i as usize).collect(),
+        ));
         spans.push((prefix.to_string(), text_val(&span)));
     }
     spans.sort();
-    Ok(spans)
+    Ok((spans, rows))
 }
 
 /// The digest tail and the walk's fields as text, and the digest.

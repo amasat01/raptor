@@ -1876,6 +1876,7 @@ fn check_placed(
                 given.len(),
                 facts.thread_form as i32,
                 facts.runtime_min.as_ptr(),
+                facts.runtime_min.len(),
                 facts.wide_min,
                 facts
                     .rolled_min

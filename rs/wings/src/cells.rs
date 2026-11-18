@@ -242,8 +242,15 @@ pub const FINISHED_PLANE: &str = "finished_count";
 /// The reserved `lookup` plane a kernel with an automatic step count reads its trip count from; the access class skips the read.
 pub const FUSED_STEPS_PLANE: &str = "fused_steps";
 
-/// The suffix of the companion plane a summing `sample_sum` keeps beside its target.
-const SAMPLE_SUM_COMP: &str = "_comp";
+/// The suffix of the companion plane a summing `sample_sum` keeps beside its target, from the manifest constant a front end reads
+/// too (`SAMPLE_SUM_COMP_SUFFIX`; not `COMPANION_SUFFIX`, which names the companion of a keyed accumulate).
+fn sample_sum_comp() -> R<&'static str> {
+    rcore::STR_CONSTS
+        .iter()
+        .find(|c| c.0 == "SAMPLE_SUM_COMP_SUFFIX")
+        .map(|c| c.1)
+        .map_or_else(|| refuse("the manifest has no SAMPLE_SUM_COMP_SUFFIX"), Ok)
+}
 
 /// The type of a node as a slot type.
 fn slot_type(ctx: &Ctx, node: u32) -> R<Tt> {
@@ -271,7 +278,7 @@ pub fn companion_slots(ctx: &Ctx, sinks: &[u32]) -> R<Vec<(Key, Tt)>> {
         if is_a(ctx, sink, "SampleSum") && ctx.str_field(sink, "op")? == "sum" {
             let key = (
                 ctx.str_field(sink, "role")?,
-                format!("{}{SAMPLE_SUM_COMP}", ctx.str_field(sink, "name")?),
+                format!("{}{}", ctx.str_field(sink, "name")?, sample_sum_comp()?),
             );
             if held.contains(&key) {
                 return refuse(format!(
@@ -292,7 +299,7 @@ pub fn walk_companions(ctx: &Ctx, walk: u32) -> R<Vec<(String, String)>> {
     for node in crate::walk_order(ctx, walk)? {
         if is_a(ctx, node, "SampleSum") && ctx.str_field(node, "op")? == "sum" {
             let row = ctx.str_field(node, "name")?;
-            pairs.push((row.clone(), format!("{row}{SAMPLE_SUM_COMP}")));
+            pairs.push((row.clone(), format!("{row}{}", sample_sum_comp()?)));
         }
     }
     Ok(pairs)

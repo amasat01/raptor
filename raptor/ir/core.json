@@ -85,6 +85,7 @@
   "PER_SAMPLE_ROLES": ["per_sample", "vec_in", "mat_in", "terminated", "mutable", "out"],
   "ACCESS_CLASSES": ["sample_local", "cross_sample_read", "cross_sample_write", "mapreduce"],
   "COMPANION_SUFFIX": "_c",
+  "SAMPLE_SUM_COMP_SUFFIX": "_comp",
   "ADJOINT_PREFIX": "bar",
   "ROLE_ORDER": [
    "mutable",

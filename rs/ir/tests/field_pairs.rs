@@ -1,6 +1,6 @@
 //! Tuple fields of pairs and of bounds. Oracle: the values of `ReduceSamples.kept` and `LoopIndex.bounds` the previous package held
 //! for the same nodes (recorded below): `(('net', None),)`, `((None, 4), ('a', None))`, `(('a', 4), ('b', 8))`, `()`, `(0, 3)`, `None`.
-use raptor_ir::door::{RX_ABSENT, RX_OK};
+use raptor_ir::door::{rx_last_error, RX_ABSENT, RX_OK, RX_REFUSED};
 use raptor_ir::record::Ctx;
 use raptor_ir::typed::{rx_field_ints, rx_field_pairs, RxPair};
 use std::ffi::{c_char, CStr, CString};
@@ -89,4 +89,23 @@ fn the_bounds_of_a_loop_index_read_as_integers_or_absent() {
     };
     assert_eq!(bounds("(0, 3)"), (RX_OK, vec![0, 3]));
     assert_eq!(bounds("None").0, RX_ABSENT);
+}
+
+/// A tuple of bare names is not a tuple of pairs: the pairs read refuses it by name and does not read the names as labels.
+#[test]
+fn a_field_of_bare_names_is_refused_by_the_pairs_read() {
+    let mut c = Ctx::new().unwrap();
+    let fields = "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+    let x = c.make("Leaf", "f64", &[], None, &[], fields).unwrap();
+    let params = "(('op', 'sum'), ('value', #0), ('kept', ('key', 'bin')))";
+    let node = c.new_node("ReduceSamples", params, &[x]).unwrap();
+    let ctx: *mut Ctx = &mut c;
+    let name = CString::new("kept").unwrap();
+    let mut n = 0;
+    let status =
+        unsafe { rx_field_pairs(ctx, node, name.as_ptr(), std::ptr::null_mut(), 0, &mut n) };
+    assert_eq!(status, RX_REFUSED);
+    // SAFETY: `rx_last_error` answers the context's NUL-terminated message, valid until the next call.
+    let why = unsafe { CStr::from_ptr(rx_last_error(ctx)) }.to_string_lossy();
+    assert!(why.contains("not a pair"), "{why}");
 }

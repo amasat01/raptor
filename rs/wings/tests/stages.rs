@@ -162,3 +162,81 @@ fn a_block_sum_is_written_per_entry_under_the_thread_form() {
     assert_eq!(team, None);
     rx_ctx_free(c);
 }
+
+/// A team-form solve in the body of a loop is a launch of its own, so the split refuses it by name (it once indexed the depths
+/// with a sink that is not in the flat order).
+#[test]
+fn a_team_op_inside_a_loop_is_refused_by_name() {
+    let c = fresh();
+    let leaf = |role: &str, name: &str, shape: &[i64]| {
+        let fields = format!(
+            "((\"kind\", \"vocab_read\"), (\"role\", \"{role}\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
+        );
+        make(c, "Leaf", "f64", shape, &[], &fields)
+    };
+    let (a, b) = (leaf("mat_in", "A", &[40, 40]), leaf("vec_in", "b", &[40]));
+    let index = make(
+        c,
+        "LoopIndex",
+        "int32",
+        &[],
+        &[],
+        "((\"depth\", 0), (\"name\", \"_\"), (\"bounds\", (0, 3)))",
+    );
+    let carry = make(
+        c,
+        "LoopCarry",
+        "f64",
+        &[40],
+        &[],
+        "((\"depth\", 0), (\"slot\", 0), (\"name\", \"s\"))",
+    );
+    let factor = make(
+        c,
+        "Op",
+        "f64",
+        &[40, 40],
+        &[a],
+        "((\"kind\", \"chol\"), (\"literal\", None))",
+    );
+    let next = make(
+        c,
+        "Op",
+        "f64",
+        &[40],
+        &[factor, carry],
+        "((\"kind\", \"cho_solve\"), (\"literal\", None))",
+    );
+    let store = make(
+        c,
+        "Assign",
+        "f64",
+        &[40],
+        &[next],
+        "((\"kind\", \"assign\"), (\"role\", \"mutable\"), (\"name\", \"y\"))",
+    );
+    let parts = raptor_ir::build::LoopParts {
+        index,
+        carries: &[carry],
+        inits: &[b],
+        nexts: &[next],
+        range: (0, 3, 1),
+        body_sinks: &[store],
+        exit_cond: None,
+        exit_values: &[],
+        count: None,
+        count_tail: false,
+        dynamic: None,
+    };
+    let looped = unsafe { &mut *c }.build_loop(&parts).unwrap();
+    let found = stages(unsafe { &mut *c }, &[looped], &facts()).unwrap();
+    let Stages::Refused(why) = found else {
+        panic!("not refused: {found:?}")
+    };
+    assert!(
+        why.contains("op \"cho_solve\" at n=40 is worked by a team of threads")
+            && why.contains("cannot sit inside a loop of the body"),
+        "{why}"
+    );
+    rx_ctx_free(c);
+}

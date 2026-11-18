@@ -23,18 +23,6 @@ int rw_dispatch_switch_form(rx_ctx* ctx, rx_node node, int* out);
 int rw_ir_param_plane(rx_ctx* ctx, rx_walk walk, const char* name, int* out);
 /* The accumulates of the walk that keep a companion correction plane, in walk order, once per name (the caller names the plane). */
 int rw_ir_companions(rx_ctx* ctx, rx_walk walk, rx_node* buf, size_t cap, size_t* n);
-/* The target of a compensated sink: found is 0 when sink_id is not "compensated" (the name is then
-    empty), else the target's name is
-   written to name_buf (text protocol: *len, cap) and own_column is 0 or 1. returned_slot is NULL
-   unless the kernel returns a typed
-   value; output_names holds the declared output names, one per line (empty for none). The name is
-   written before *out is set, so
-   a RX_TRUNC answer leaves *out untouched: call again with a larger buffer. */
-typedef struct { int found; int own_column; } rw_compensated_target;
-int rw_split_compensated_target(rx_ctx* ctx, const char* sink_id, const char* compensation, const char* returned_slot,
-                                const char* output_names, const rx_node* sinks, size_t nsinks,
-                                rw_compensated_target* out, char* name_buf, size_t cap,
-                                size_t* len);
 /* Whether one trip of the loop is safe to run and discard for a stopped lane (no computed-index read, switch, raw block or integer division) (*out is 0 or 1). */
 int rw_loops_speculative_step(rx_ctx* ctx, rx_node loop, int* out);
 

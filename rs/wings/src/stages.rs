@@ -235,6 +235,14 @@ fn own_cells(ctx: &Ctx, sinks: &[u32]) -> R<HashMap<(u32, String), String>> {
     Ok(found)
 }
 
+/// The stage a sink or cut was given, refused by name when it was given none.
+fn stage_at(stage_of: &HashMap<u32, usize>, node: u32) -> R<usize> {
+    match stage_of.get(&node) {
+        Some(stage) => Ok(*stage),
+        None => refuse(format!("node {node} was given no stage")),
+    }
+}
+
 /// The stage each sink lands in, moved later when a later stage reads the plane the sink writes.
 fn settle(
     ctx: &Ctx,
@@ -247,14 +255,20 @@ fn settle(
         true => ctx.nodes[sink as usize].ops[0],
         false => sink,
     };
-    let mut stage_of: HashMap<u32, usize> =
-        sinks.iter().map(|&s| (s, depth[&held(s)] + 1)).collect();
+    let depth_of = |node: u32| match depth.get(&node) {
+        Some(d) => Ok(*d),
+        None => refuse(format!("node {node} has no stage depth")),
+    };
+    let mut stage_of: HashMap<u32, usize> = HashMap::new();
+    for &sink in sinks {
+        stage_of.insert(sink, depth_of(held(sink))? + 1);
+    }
     let mut readers: Vec<(u32, HashSet<String>)> = vec![];
     for &sink in sinks {
         readers.push((sink, reads(ctx, &[sink])?));
     }
     for &(cut, made) in cuts {
-        stage_of.insert(cut, depth[&cut]);
+        stage_of.insert(cut, depth_of(cut)?);
         if made {
             let operands = ctx.nodes[cut as usize].ops.clone();
             readers.push((cut, reads(ctx, &operands)?));
@@ -265,14 +279,14 @@ fn settle(
         for (owner, names) in &readers {
             for name in names {
                 let entry = last.entry(name).or_insert(0);
-                *entry = (*entry).max(stage_of[owner]);
+                *entry = (*entry).max(stage_at(&stage_of, *owner)?);
             }
         }
         let mut moved = vec![];
         for &sink in sinks {
             let name = ctx.str_field(sink, "name").unwrap_or_default();
             let later = last.get(name.as_str()).copied().unwrap_or(0);
-            if !is_a(ctx, sink, "SampleSum") && later > stage_of[&sink] {
+            if !is_a(ctx, sink, "SampleSum") && later > stage_at(&stage_of, sink)? {
                 moved.push((sink, later));
             }
         }
@@ -323,6 +337,9 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
         if reduces(ctx, node) {
             cuts.push(node);
         }
+    }
+    if let Some(why) = team::team_in_loop(ctx, &order, &facts.team)? {
+        return Ok(Stages::Refused(why));
     }
     let groups = team::groups(ctx, &order, &facts.team)?;
     if cuts.is_empty() && groups.is_empty() && scattered.is_empty() && logs.is_empty() {

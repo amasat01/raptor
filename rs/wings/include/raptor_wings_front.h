@@ -123,6 +123,19 @@ int rw_fold_exceeds(rx_ctx* ctx, int64_t n, const int64_t* fold_min /* NULL */, 
    the lane count. */
 int rw_walk_gather_mats(rx_ctx* ctx, rx_walk walk, char* buf, size_t cap, size_t* len, size_t* count);
 
+/* The target of a compensated sink: found is 0 when sink_id is not "compensated" (the name is then
+    empty), else the target's name is
+   written to name_buf (text protocol: *len, cap) and own_column is 0 or 1. returned_slot is NULL
+   unless the kernel returns a typed
+   value; output_names holds the declared output names, one per line (empty for none). The name is
+   written before *out is set, so
+   a RX_TRUNC answer leaves *out untouched: call again with a larger buffer. */
+typedef struct { int found; int own_column; } rw_compensated_target;
+int rw_split_compensated_target(rx_ctx* ctx, const char* sink_id, const char* compensation, const char* returned_slot /* NULL */,
+                                const char* output_names, const rx_node* sinks, size_t nsinks,
+                                rw_compensated_target* out, char* name_buf, size_t cap,
+                                size_t* len);
+
 /* Declares in ctx every kind the wings declare (the base and simt manifests, embedded in this library), which the rewrites of this
    library make nodes of (a box store, for one). Call it once on a context before the first rewrite or before making a node of such a kind; it
    may be called again, and after a unit has declared the same kinds, with no effect. */

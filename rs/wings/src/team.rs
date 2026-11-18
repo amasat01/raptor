@@ -240,6 +240,31 @@ fn is_team(ctx: &Ctx, node: u32, limits: &TeamLimits) -> R<bool> {
     Ok(limits.form == LinalgForm::Team || n > limits.max_dim)
 }
 
+/// The refusal text for a team-form op inside a loop of the body, or None when no such op sits in a loop: a team works in a launch of
+/// its own, which cannot be one per iteration.
+pub(crate) fn team_in_loop(ctx: &Ctx, order: &[u32], limits: &TeamLimits) -> R<Option<String>> {
+    for &node in order {
+        if !is_a(ctx, node, "Loop") {
+            continue;
+        }
+        let mut loops = vec![node];
+        while let Some(lp) = loops.pop() {
+            for inner in ctx.body_nodes(lp)? {
+                if is_a(ctx, inner, "Loop") {
+                    loops.push(inner);
+                } else if is_linalg(ctx, inner) && is_team(ctx, inner, limits)? {
+                    return Ok(Some(format!(
+                        "op {:?} at n={} is worked by a team of threads, which is a launch of its own and cannot sit inside a loop of the body; iterate by replaying the plan (one launch per iteration)",
+                        kind(ctx, inner)?,
+                        dimension(ctx, inner)
+                    )));
+                }
+            }
+        }
+    }
+    Ok(None)
+}
+
 /// The groups of team-form linear algebra among the nodes (children first): one per factorisation, its members in the order they
 /// appear.
 pub fn groups(ctx: &Ctx, order: &[u32], limits: &TeamLimits) -> R<Vec<Group>> {

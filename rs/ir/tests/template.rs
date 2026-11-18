@@ -1,7 +1,8 @@
 //! The checks a derivative template passes (closure of the graph, reserved kind names) and the guarantee that substituting into a
 //! loop gives it an index and carries of its own. Oracle: tests/data/template_cases.json, recorded by running the previous
 //! Python check of the same templates on the same hand-built graphs.
-use raptor_ir::build::LoopParts;
+use raptor_ir::build::{rx_rebuild, LoopParts};
+use raptor_ir::door::{rx_last_code, rx_last_error, RX_REFUSED};
 use raptor_ir::record::{Ctx, Fault};
 use raptor_ir::value::Val;
 use rcore::json::{self, J};
@@ -203,4 +204,51 @@ fn substituting_into_a_loop_gives_fresh_index_and_carries() {
     for made in [first, second] {
         c.rule_template_check("p", &[made], &allowed()).unwrap();
     }
+}
+
+/// The refusal text and code the door leaves for the last call.
+fn last_refusal(c: &Ctx) -> (String, String) {
+    let text = |p: *const std::ffi::c_char| {
+        // SAFETY: both reads answer the context's own NUL-terminated strings, valid until the next call.
+        unsafe { std::ffi::CStr::from_ptr(p) }
+            .to_string_lossy()
+            .into_owned()
+    };
+    // SAFETY: `c` is a live context.
+    unsafe { (text(rx_last_error(c)), text(rx_last_code(c))) }
+}
+
+#[test]
+fn rewriting_a_derived_loop_is_refused_with_a_code_and_a_neighbouring_refusal_has_none() {
+    let mut c = Ctx::new().unwrap();
+    let free = leaf(&mut c, "in0");
+    let (_, _, derived) = counting_loop(&mut c, free, true);
+    let operands = c.node(derived).unwrap().ops.clone();
+    let mut out = 0;
+    // SAFETY: the context is live and the operand list and `out` outlive the calls.
+    let status =
+        unsafe { rx_rebuild(&mut c, derived, operands.as_ptr(), operands.len(), &mut out) };
+    assert_eq!(status, RX_REFUSED);
+    assert_eq!(
+        last_refusal(&c),
+        (
+            "a loop that commits once per iteration (a derived loop) cannot be rewritten by substitution".into(),
+            "derived_loop_rewrite".into()
+        )
+    );
+    // a refusal of the same call that is not this one carries no code, and the earlier code does not outlive its call
+    // SAFETY: as above.
+    let status = unsafe {
+        rx_rebuild(
+            &mut c,
+            u32::MAX,
+            operands.as_ptr(),
+            operands.len(),
+            &mut out,
+        )
+    };
+    assert_eq!(status, RX_REFUSED);
+    let (text, code) = last_refusal(&c);
+    assert!(text.contains("is not in this context"), "{text}");
+    assert_eq!(code, "");
 }

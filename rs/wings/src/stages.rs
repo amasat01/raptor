@@ -60,7 +60,7 @@ pub struct Stage {
 }
 
 /// What the split reads besides the IR: the build's routing of keyed sums and the limits of a team.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct StageFacts {
     /// Whether keyed accumulates take the ordered stages.
     pub routed: bool,
@@ -341,7 +341,7 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
     if let Some(why) = team::team_in_loop(ctx, &order, &facts.team)? {
         return Ok(Stages::Refused(why));
     }
-    let groups = team::groups(ctx, &order, &facts.team)?;
+    let groups = team::groups(ctx, &order, sinks, &facts.team)?;
     if cuts.is_empty() && groups.is_empty() && scattered.is_empty() && logs.is_empty() {
         return Ok(Stages::Whole);
     }

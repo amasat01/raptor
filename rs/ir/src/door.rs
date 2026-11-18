@@ -31,6 +31,7 @@ pub fn guard(ctx: *mut Ctx, f: impl FnOnce(&mut Ctx) -> Result<(), Fault>) -> c_
         return RX_BADARG;
     }
     let c = unsafe { &mut *ctx };
+    c.code = Default::default();
     match catch_unwind(AssertUnwindSafe(|| f(c))) {
         Ok(Ok(())) => RX_OK,
         Ok(Err(Fault::Refused(m))) => {
@@ -139,6 +140,18 @@ pub unsafe extern "C" fn rx_last_error(ctx: *const Ctx) -> *const c_char {
         return c"".as_ptr();
     }
     unsafe { &*ctx }.err.as_ptr()
+}
+
+/// The code of the last refusal, or an empty string when that refusal has none (every refusal but the ones the header lists).
+///
+/// # Safety
+/// Every pointer must be valid for the length given beside it, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_last_code(ctx: *const Ctx) -> *const c_char {
+    if ctx.is_null() {
+        return c"".as_ptr();
+    }
+    unsafe { &*ctx }.code.as_ptr()
 }
 
 /// A door function over raw pointers.

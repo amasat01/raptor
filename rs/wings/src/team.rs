@@ -11,7 +11,10 @@ use crate::stages::Keyed;
 use crate::{is_a, R};
 use raptor_ir::record::{refuse, Ctx};
 use raptor_ir::value::{ttype_val, Val};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
+/// The threads of a warp: the team size of a stage that holds only warp steps.
+const WARP_THREADS: i64 = 32;
 
 /// The prefix of a scratch plane made for team stages.
 pub const PLANE_PREFIX: &str = "tm";
@@ -42,8 +45,22 @@ const PROJECTIONS: [&str; 8] = [
 /// The kinds of the QR least-squares family, which exists only as a team stage.
 const QR_OPS: [&str; 4] = ["qr", "qr_solve", "qr_gram_solve", "qr_info"];
 
+/// A factorisation the device works with one warp per lane instead of a team: its kind, order, the scalar type name it is stated for
+/// and the outputs read (`v` for the vectors; none for the values only).
+#[derive(Debug, Clone, PartialEq)]
+pub struct WarpEntry {
+    /// The factorisation's kind (`eigh`).
+    pub kind: String,
+    /// The matrix order.
+    pub n: i64,
+    /// The scalar type name, `float32` or `float64`.
+    pub scalar: String,
+    /// The outputs read besides the info word: `v` or nothing.
+    pub outputs: Vec<String>,
+}
+
 /// The numbers a team plan reads: the build's settings and the target's limits.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct TeamLimits {
     /// How the build holds the linear algebra of a lane.
     pub form: LinalgForm,
@@ -59,6 +76,10 @@ pub struct TeamLimits {
     pub team_threads_large: i64,
     /// The team size the caller forces, or 0 for the default.
     pub forced: i64,
+    /// The factorisations a warp takes per lane in this build (kind, order, outputs read), already narrowed by the caller to the
+    /// scalar type of the build, to a build whose every target is a device, and, for a double row, to a device whose FP64 rate is
+    /// high; empty for any other build.
+    pub warp_eigh: Vec<WarpEntry>,
 }
 
 /// What one lane's slice of a scratch plane stands for.
@@ -179,6 +200,8 @@ pub struct Group {
     pub member_planes: HashMap<u32, Plane>,
     /// The plane each member's right-hand side is stored in and solved in place.
     pub rhs_planes: HashMap<u32, Plane>,
+    /// Whether one warp per lane works the factorisation (eigenvalues of an order-32 matrix) in place of a team.
+    pub warp: bool,
 }
 
 impl Group {
@@ -265,12 +288,79 @@ pub(crate) fn team_in_loop(ctx: &Ctx, order: &[u32], limits: &TeamLimits) -> R<O
     Ok(None)
 }
 
+/// The factorisations that take the warp form: a build with a warp row for the factorisation's kind, order and the outputs read
+/// (the vectors of an `eigh` make the row's outputs `v`), under `linalg_form` auto, whose stage can be a launch of its own: not in a
+/// loop body, and not reachable only through an arm of a dispatch (only the selector of a dispatch is followed).
+fn warp_factors(ctx: &Ctx, order: &[u32], sinks: &[u32], limits: &TeamLimits) -> R<HashSet<u32>> {
+    if limits.form != LinalgForm::Auto || limits.warp_eigh.is_empty() {
+        return Ok(HashSet::new());
+    }
+    let mut vectors: HashSet<u32> = HashSet::new();
+    let mut found: Vec<u32> = vec![];
+    for &node in order {
+        if !is_a(ctx, node, "Op") {
+            continue;
+        }
+        let name = kind(ctx, node)?;
+        if name == "eigh_v" {
+            vectors.insert(ctx.nodes[node as usize].ops[0]);
+        } else if FACTORISATIONS.contains(&name.as_str()) {
+            found.push(node);
+        }
+    }
+    found.retain(|&node| {
+        let name = kind(ctx, node).unwrap_or_default();
+        let outputs: Vec<&str> = if vectors.contains(&node) {
+            vec!["v"]
+        } else {
+            vec![]
+        };
+        let n = dimension(ctx, node);
+        limits.warp_eigh.iter().any(|row| {
+            row.kind == name
+                && row.n == n
+                && row
+                    .outputs
+                    .iter()
+                    .map(String::as_str)
+                    .eq(outputs.iter().copied())
+        })
+    });
+    if found.is_empty() {
+        return Ok(HashSet::new());
+    }
+    let mut inner: HashSet<u32> = HashSet::new();
+    for &node in order {
+        if is_a(ctx, node, "Loop") {
+            inner.extend(ctx.body_nodes(node)?);
+        }
+    }
+    let mut seen: HashSet<u32> = HashSet::new();
+    let mut stack = sinks.to_vec();
+    while let Some(node) = stack.pop() {
+        if !seen.insert(node) {
+            continue;
+        }
+        let ops = &ctx.nodes[node as usize].ops;
+        stack.extend(if is_a(ctx, node, "Dispatch") {
+            &ops[..1]
+        } else {
+            &ops[..]
+        });
+    }
+    Ok(found
+        .into_iter()
+        .filter(|node| seen.contains(node) && !inner.contains(node))
+        .collect())
+}
+
 /// The groups of team-form linear algebra among the nodes (children first): one per factorisation, its members in the order they
 /// appear.
-pub fn groups(ctx: &Ctx, order: &[u32], limits: &TeamLimits) -> R<Vec<Group>> {
+pub fn groups(ctx: &Ctx, order: &[u32], sinks: &[u32], limits: &TeamLimits) -> R<Vec<Group>> {
+    let warp = warp_factors(ctx, order, sinks, limits)?;
     let mut found: Vec<Group> = vec![];
     for &node in order {
-        if !is_linalg(ctx, node) || !is_team(ctx, node, limits)? {
+        if !is_linalg(ctx, node) {
             continue;
         }
         let kind = kind(ctx, node)?;
@@ -279,6 +369,9 @@ pub fn groups(ctx: &Ctx, order: &[u32], limits: &TeamLimits) -> R<Vec<Group>> {
         } else {
             ctx.nodes[node as usize].ops[0]
         };
+        if !is_team(ctx, node, limits)? && !warp.contains(&factor) {
+            continue;
+        }
         if !(is_a(ctx, factor, "Op") && FACTORISATIONS.contains(&self::kind(ctx, factor)?.as_str()))
         {
             return refuse(format!(
@@ -311,6 +404,7 @@ pub fn groups(ctx: &Ctx, order: &[u32], limits: &TeamLimits) -> R<Vec<Group>> {
                     planes: vec![],
                     member_planes: HashMap::new(),
                     rhs_planes: HashMap::new(),
+                    warp: warp.contains(&factor),
                 });
                 found.len() - 1
             }
@@ -393,8 +487,11 @@ fn name_planes(ctx: &Ctx, group: &mut Group) -> R<()> {
     add_plane(group, "info", "info", "int32", 1);
     if factor_kind == "eigh" {
         add_plane(group, "w", "w", "real", n);
-        add_plane(group, "v", "v", "real", n * n);
-        add_plane(group, "work", "work", "real", n * n + 4);
+        // a warp works the values in its own scratch and has neither vectors nor a work plane
+        if !group.warp {
+            add_plane(group, "v", "v", "real", n * n);
+            add_plane(group, "work", "work", "real", n * n + 4);
+        }
     }
     if factor_kind == "qr" {
         let mut widest = n;
@@ -555,18 +652,25 @@ fn step_list(
     }
     let mut roles = base.clone();
     if factor_kind == "eigh" {
-        roles.extend([name("w"), name("v"), name("work")]);
+        roles.push(name("w"));
+        if !group.warp {
+            roles.extend([name("v"), name("work")]);
+        }
     }
     if factor_kind == "qr" {
         base.extend([name("tau"), name("work")]);
         roles.extend([name("tau"), name("work")]);
     }
     if first {
-        let op = FACTORISATIONS
-            .iter()
-            .find(|k| **k == factor_kind)
-            .copied()
-            .unwrap_or("lu");
+        let op = if group.warp {
+            "eigh_warp"
+        } else {
+            FACTORISATIONS
+                .iter()
+                .find(|k| **k == factor_kind)
+                .copied()
+                .unwrap_or("lu")
+        };
         out.push(Step {
             op,
             n,
@@ -671,8 +775,14 @@ pub fn spec_of(
         }
         steps.extend(calls);
     }
+    // a warp per lane is a team of exactly one warp
+    let warp_only = steps.iter().all(|s: &Step| s.op == "eigh_warp");
     let spec = TeamSpec {
-        threads: threads_for(size, limits),
+        threads: if warp_only && !steps.is_empty() {
+            WARP_THREADS
+        } else {
+            threads_for(size, limits)
+        },
         steps,
         planes,
         grid: Grid::Lanes,

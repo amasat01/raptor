@@ -343,6 +343,8 @@ impl Ctx {
     /// Rebuilds the loop `lp` over new operands, keeping its fields; the body digest cache entry is dropped.
     fn rebuild_loop(&mut self, lp: Node, operands: &[Node]) -> Fallible<Node> {
         if !self.refs(lp, "body_sinks")?.is_empty() {
+            // a code is a promise to callers, who recognise this refusal by it; the text is not one
+            self.set_code("derived_loop_rewrite");
             return refuse(
                 "a loop that commits once per iteration (a derived loop) \
                  cannot be rewritten by substitution",

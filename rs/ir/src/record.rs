@@ -51,6 +51,8 @@ pub struct Ctx {
     pub nodes: Vec<Node>,
     /// The text of the last refusal.
     pub err: CString,
+    /// The code of the last refusal when it has one, else empty. A code is a promise to callers, who may match on it; the text is not.
+    pub code: CString,
     /// The walks computed so far.
     pub walks: Vec<crate::canon::WalkRes>,
     /// The structural digest of each loop's body, by loop handle. It is correct to keep: records are only appended, so
@@ -69,11 +71,16 @@ impl Ctx {
             table: Table::core()?,
             nodes: vec![],
             err: CString::default(),
+            code: CString::default(),
             walks: vec![],
             body_cache: Default::default(),
             progs: crate::ctor::Progs::compile()?,
             tables: std::sync::Arc::new(crate::rules::ManifestTables::load()?),
         })
+    }
+    /// Stores `code` as the code of the refusal about to be returned; it holds until the next call through the door begins.
+    pub fn set_code(&mut self, code: &str) {
+        self.code = CString::new(code).unwrap_or_default()
     }
     /// Stores `m` as the last refusal text.
     pub fn set_err(&mut self, m: &str) {

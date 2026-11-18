@@ -23,6 +23,10 @@ void rx_ctx_free(rx_ctx* ctx);
 
 const char* rx_last_error(const rx_ctx* ctx);
 
+/* The code of the last refusal, "" when it has none. A code is a promise to callers, who may match on it; the text is not. The
+   codes: "derived_loop_rewrite" (rx_rebuild of a loop that commits once per iteration). */
+const char* rx_last_code(const rx_ctx* ctx);
+
 /* Declares the node classes of a dialect manifest (JSON) in this context. */
 int rx_declare_dialect(rx_ctx* ctx, const char* manifest_json, size_t n, const char* first_party_kt);
 

@@ -19,6 +19,7 @@ fn facts() -> StageFacts {
         team_threads: 128,
         team_threads_large: 256,
         forced: 0,
+        warp_threads: None,
         warp_eigh: vec![],
     };
     StageFacts {

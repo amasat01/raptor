@@ -18,6 +18,7 @@ fn facts() -> StageFacts {
         team_threads: 128,
         team_threads_large: 256,
         forced: 0,
+        warp_threads: None,
         warp_eigh: vec![],
     };
     StageFacts {
@@ -257,6 +258,7 @@ fn warp_facts(form: LinalgForm, rows: Vec<WarpEntry>) -> StageFacts {
     let mut facts = facts();
     facts.team.form = form;
     facts.team.warp_eigh = rows;
+    facts.team.warp_threads = Some(32);
     facts
 }
 

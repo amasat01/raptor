@@ -13,9 +13,6 @@ use raptor_ir::record::{refuse, Ctx};
 use raptor_ir::value::{ttype_val, Val};
 use std::collections::{HashMap, HashSet};
 
-/// The threads of a warp: the team size of a stage that holds only warp steps.
-const WARP_THREADS: i64 = 32;
-
 /// The prefix of a scratch plane made for team stages.
 pub const PLANE_PREFIX: &str = "tm";
 
@@ -76,6 +73,8 @@ pub struct TeamLimits {
     pub team_threads_large: i64,
     /// The team size the caller forces, or 0 for the default.
     pub forced: i64,
+    /// The lanes of a warp, the team size of a stage that holds only warp steps; none for a target without warps.
+    pub warp_threads: Option<i64>,
     /// The factorisations a warp takes per lane in this build (kind, order, outputs read), already narrowed by the caller to the
     /// scalar type of the build, to a build whose every target is a device, and, for a double row, to a device whose FP64 rate is
     /// high; empty for any other build.
@@ -778,10 +777,9 @@ pub fn spec_of(
     // a warp per lane is a team of exactly one warp
     let warp_only = steps.iter().all(|s: &Step| s.op == "eigh_warp");
     let spec = TeamSpec {
-        threads: if warp_only && !steps.is_empty() {
-            WARP_THREADS
-        } else {
-            threads_for(size, limits)
+        threads: match limits.warp_threads {
+            Some(warp) if warp_only && !steps.is_empty() => warp,
+            _ => threads_for(size, limits),
         },
         steps,
         planes,

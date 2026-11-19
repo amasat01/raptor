@@ -35,6 +35,14 @@ fn c(name: &str) -> &'static [&'static str] {
 fn inn(name: &str, k: &str) -> bool {
     c(name).contains(&k)
 }
+/// Whether `dtype` is an integer dtype: an integer plane's (`int32`, `uint32`) or an index's (`i32`, `i64`).
+pub fn is_integer_dtype(dtype: &str) -> bool {
+    inn("INT_PLANE_DTYPES", dtype) || dtype == "i32" || dtype == "i64"
+}
+/// Whether `dtype` is a floating dtype.
+pub fn is_real_dtype(dtype: &str) -> bool {
+    dtype == "f64" || dtype == "f32"
+}
 /// The value paired with `k` in the core pair list `name`.
 fn pairs(name: &str, k: &str) -> Option<&'static str> {
     c(name).chunks(2).find(|p| p[0] == k).map(|p| p[1])
@@ -455,7 +463,7 @@ fn matrix_shaped(kind: &str, ts: &[TT]) -> Checked<TT> {
 
 /// Whether `d` is a floating dtype.
 fn floats(d: &str) -> bool {
-    d == "f64" || d == "f32"
+    is_real_dtype(d)
 }
 /// The tag a factorisation kind gives its result ("" when it gives none).
 fn tag_of_kind(kind: &str) -> &'static str {
@@ -726,9 +734,7 @@ fn cast_type(ts: &[TT], lit: &Val) -> Checked<TT> {
 fn check_integer_use(kind: &str, ts: &[TT], int_op: bool) -> Checked<()> {
     if int_op {
         for t in ts {
-            if !t.shape.is_empty()
-                || !(inn("INT_PLANE_DTYPES", &t.dtype) || t.dtype == "i32" || t.dtype == "i64")
-            {
+            if !t.shape.is_empty() || !is_integer_dtype(&t.dtype) {
                 return err(format!("[integer operator operands] op {} is an integer operator and takes rank-0 integer operands, got {}; for floats use a floor or remainder op, or convert the operands to integers", keytext::py_str(kind), r(t)));
             }
         }

@@ -7,6 +7,7 @@ use crate::consts::put_names;
 use crate::door::{cstr, guard, slice};
 use crate::loops::give;
 use crate::record::{badarg, refuse, Ctx, Fault};
+use crate::typing::{is_integer_dtype, is_real_dtype};
 use crate::value::{ttype_val, Val as Lit};
 use rcore::json::{self, J};
 use std::ffi::{c_char, c_int};
@@ -957,10 +958,20 @@ impl Ctx {
         Interp::new(self, &[]).entrywise(kind, nodes)
     }
 
-    /// A structural zero of `dtype` and `shape`: a rank-0 constant, else a splat of it.
+    /// A structural zero of `dtype` and `shape`: a rank-0 constant, else a splat of it. The literal is the dtype's own: real for a
+    /// floating dtype, integer for an integer one, false for `bool`; any other dtype has no zero and is refused by name.
     pub fn zero_of(&mut self, dtype: &str, shape: &[i64]) -> Res<u32> {
+        let zero = if is_real_dtype(dtype) {
+            Lit::Float(0.0)
+        } else if is_integer_dtype(dtype) {
+            Lit::Int(0)
+        } else if dtype == "bool" {
+            Lit::Bool(false)
+        } else {
+            return bad(&format!("zero_of: dtype {dtype:?} has no zero"));
+        };
         let mut it = Interp::new(self, &[]);
-        let z = it.konst(Lit::Float(0.0), dtype)?;
+        let z = it.konst(zero, dtype)?;
         if shape.is_empty() {
             Ok(z)
         } else {

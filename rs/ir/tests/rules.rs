@@ -289,3 +289,31 @@ fn the_c_doors_answer_as_the_rust_calls_do() {
     assert_eq!(got, 1);
     unsafe { rx_ctx_free(ctx) };
 }
+
+/// The literal of the zero of each dtype, as the field text states it.
+fn zero_literal(ctx: &mut Ctx, dtype: &str) -> Result<Val, Fault> {
+    let zero = ctx.zero_of(dtype, &[])?;
+    assert_eq!(ctx.node(zero).unwrap().dtype, dtype);
+    ctx.field(zero, "literal")
+}
+
+#[test]
+fn a_zero_states_the_literal_of_its_own_dtype_and_a_dtype_without_one_is_refused() {
+    let mut ctx = Ctx::new().unwrap();
+    assert_eq!(zero_literal(&mut ctx, "f64").unwrap(), Val::Float(0.0));
+    assert_eq!(zero_literal(&mut ctx, "f32").unwrap(), Val::Float(0.0));
+    // the integer names the IR states: an index's (`i32`, `i64`) and an integer plane's (`int32`, `uint32`)
+    for integer in ["i32", "i64", "int32", "uint32"] {
+        assert_eq!(
+            zero_literal(&mut ctx, integer).unwrap(),
+            Val::Int(0),
+            "{integer}"
+        );
+    }
+    assert_eq!(zero_literal(&mut ctx, "bool").unwrap(), Val::Bool(false));
+    let refused = ctx.zero_of("c128", &[]).unwrap_err();
+    assert!(fault_text(&refused).contains("dtype \"c128\" has no zero"));
+    // a splat of the zero keeps the dtype
+    let splat = ctx.zero_of("f32", &[3]).unwrap();
+    assert_eq!(ctx.node(splat).unwrap().dtype, "f32");
+}

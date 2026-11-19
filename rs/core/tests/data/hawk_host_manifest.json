@@ -1,0 +1,20 @@
+{
+  "schema_version": 3,
+  "pattern": "pure",
+  "aether_abi": "aether-abi/2",
+  "exec_targets": [
+    "host"
+  ],
+  "exec_access": "sample_local",
+  "plugins": [
+    {
+      "id": "axpb",
+      "order": 0,
+      "enabled": true,
+      "artifact": "axpb.so",
+      "sidecar": "axpb.json",
+      "format": "host",
+      "library": "units.so"
+    }
+  ]
+}

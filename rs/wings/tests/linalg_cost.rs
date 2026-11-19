@@ -2,7 +2,7 @@
 //! bytes of per-lane storage each kind holds.
 //!
 //! Formulas (the library's own): `lu` n^3/3, `chol` n^3/6, `eigh` S(n) n(n-1)/2 (6n+10) with S the sweep count, a solve n^2 k,
-//! a triangular half n^2 k / 2; the reads of a factor (determinant, status, fields) cost nothing. Bytes, for an element of `w` bytes: `lu` n^2 w + 4n + 4, `chol` n^2 w + 4,
+//! a triangular half n^2 k / 2; the determinant of an LU factor n multiplies; the other reads of a factor (status, fields) cost nothing. Bytes, for an element of `w` bytes: `lu` n^2 w + 4n + 4, `chol` n^2 w + 4,
 //! `eigh` (2n^2 + n) w + 4, a solve its result.
 use raptor_ir::record::Ctx;
 use raptor_wings::cost::fp64_ops;
@@ -125,7 +125,6 @@ fn the_field_reads_of_a_factorisation_are_free_in_the_cost_model() {
         g.factor("eigh", "f64", n),
     );
     let free = [
-        g.op("lu_det", "f64", &[], &[lu]),
         g.op("lu_info", "i32", &[], &[lu]),
         g.op("chol_info", "i32", &[], &[chol]),
         g.op("chol_factor", "f64", &[n, n], &[chol]),
@@ -136,6 +135,17 @@ fn the_field_reads_of_a_factorisation_are_free_in_the_cost_model() {
     for node in free {
         assert_eq!(g.ops_of(&[node]), 0);
     }
+}
+
+#[test]
+fn the_determinant_of_an_lu_factor_costs_n_multiplies() {
+    // the old figure: 6 for a 6 by 6 factor, in the class of its width; a 32-bit determinant counts no 64-bit work
+    let mut g = Graph::new();
+    let (wide, narrow) = (g.factor("lu", "f64", 6), g.factor("lu", "f32", 6));
+    let det = g.op("lu_det", "f64", &[], &[wide]);
+    let det32 = g.op("lu_det", "f32", &[], &[narrow]);
+    assert_eq!(g.ops_of(&[det]), 6);
+    assert_eq!(g.ops_of(&[det32]), 0);
 }
 
 #[test]

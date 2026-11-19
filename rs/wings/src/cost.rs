@@ -76,6 +76,8 @@ fn linalg_ops(c: &Ctx, h: u32, kind: &str) -> f64 {
         "lu" => n.powi(3) / 3.0,
         "chol" => n.powi(3) / 6.0,
         "eigh" => sweeps * n * (n - 1.0) / 2.0 * (6.0 * n + 10.0),
+        // the product of the n pivots of an LU factor: n multiplies
+        "lu_det" => n,
         _ if konst("LINALG_CONSUMERS").contains(&kind) => {
             n * n * k
                 / if matches!(kind, "tri_lower" | "tri_upper_t") {
@@ -162,8 +164,9 @@ pub(crate) fn op_slot(c: &Ctx, h: u32) -> R<Option<(usize, f64)>> {
     let node = &c.nodes[h as usize];
     let widens =
         kind == "cast" && node.dtype == "i32" && c.nodes[node.ops[0] as usize].dtype == "int32";
-    let free =
-        FREE.contains(&kind.as_str()) || konst("LINALG_PROJECTIONS").contains(&kind.as_str());
+    // a projection reads a field of a factor for nothing, except the determinant, which multiplies the pivots
+    let free = FREE.contains(&kind.as_str())
+        || (konst("LINALG_PROJECTIONS").contains(&kind.as_str()) && kind != "lu_det");
     if !all_kinds().contains(&kind.as_str()) || free || widens {
         return Ok(None);
     }

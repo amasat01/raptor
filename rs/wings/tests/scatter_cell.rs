@@ -74,3 +74,36 @@ fn the_key_of_a_two_index_accumulate_is_the_storage_cell() {
 fn the_key_of_a_one_index_accumulate_is_the_index() {
     assert_eq!(key_of("(('bin', 9),)", &["row"], &[("row", 7)]), 7);
 }
+
+/// The ordered add of a vector `value` at index `row` into a plane with the axis `bin`, as the lowering logs it.
+fn logged_vector_add(shape: &[i64]) -> (Ctx, Vec<u32>, Vec<(String, i64)>) {
+    let mut c = Ctx::new().unwrap();
+    assert_eq!(unsafe { rw_declare_kinds(&mut c) }, 0);
+    let fields = "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'v'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+    let value = c.make("Leaf", "f64", shape, None, &[], fields).unwrap();
+    let index = read(&mut c, "row");
+    let fields = "(('kind', 'update'), ('name', 'acc'), ('role', 'plane_out'), ('op', 'add'), ('summation', 'plain'), ('order', 'lane'), ('reduced', None), ('axes', (('bin', 9),)))";
+    let sink = c
+        .make("Update", "f64", shape, None, &[value, index], fields)
+        .unwrap();
+    let (stores, slots) = logged(&mut c, &[sink], (false, 32)).unwrap().unwrap();
+    (c, stores, slots)
+}
+
+#[test]
+fn an_ordered_vector_add_is_logged_one_slot_per_component() {
+    let (c, stores, slots) = logged_vector_add(&[3]);
+    assert_eq!(slots, [("acc".to_string(), 3)]);
+    let values = &names("acc")[1];
+    let logs = stores
+        .iter()
+        .filter(|&&s| c.str_field(s, "name").is_ok_and(|n| n == *values))
+        .count();
+    assert_eq!(logs, 3, "one logged term per component");
+}
+
+#[test]
+fn an_ordered_matrix_add_is_logged_one_slot_per_entry() {
+    let (_, _, slots) = logged_vector_add(&[2, 2]);
+    assert_eq!(slots, [("acc".to_string(), 4)]);
+}

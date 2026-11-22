@@ -129,3 +129,47 @@ fn the_forward_rules_carry_the_index_list() {
         assert_eq!(shape_of(&ctx, out[0]).1, vec![tv, i, j, te], "{kind}");
     }
 }
+
+/// The keyed add of `value` at `indices` into a plane with the one axis `bin` of nine cells, or the refusal text.
+fn keyed_add(ctx: &mut Ctx, value: u32, indices: &[u32]) -> Result<u32, String> {
+    use raptor_ir::value::Val;
+    let class = ctx.table.find("Update").unwrap();
+    let axes = Val::Tuple(vec![Val::Tuple(vec![Val::Str("bin".into()), Val::Int(9)])]);
+    let given = [
+        ("name", Val::Str("acc".into())),
+        ("value", Val::Node(value)),
+        (
+            "indices",
+            Val::Tuple(indices.iter().map(|&i| Val::Node(i)).collect()),
+        ),
+        ("op", Val::Str("add".into())),
+        ("axes", axes),
+    ];
+    let given: Vec<(String, Val)> = given.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+    ctx.new_from(class, &given).map_err(|f| match f {
+        Fault::Refused(m) | Fault::BadArg(m) => m,
+        _ => "other fault".into(),
+    })
+}
+
+#[test]
+fn a_keyed_add_of_a_vector_or_matrix_is_one_update_typed_as_its_value() {
+    let mut ctx = Ctx::new().unwrap();
+    let key = leaf(&mut ctx, "key", "i32", &[]);
+    for shape in [vec![3], vec![2, 2]] {
+        let value = leaf(&mut ctx, "v", "f64", &shape);
+        let update = keyed_add(&mut ctx, value, &[key]).unwrap();
+        assert_eq!(shape_of(&ctx, update), (shape, vec![value, key]));
+    }
+}
+
+#[test]
+fn a_keyed_add_of_a_value_needs_one_index_per_declared_axis() {
+    let mut ctx = Ctx::new().unwrap();
+    let (value, key) = (
+        leaf(&mut ctx, "v", "f64", &[3]),
+        leaf(&mut ctx, "key", "i32", &[]),
+    );
+    let err = keyed_add(&mut ctx, value, &[key, key]).unwrap_err();
+    assert!(err.contains("1 axes") && err.contains("got 2"), "{err}");
+}

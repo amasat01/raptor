@@ -612,11 +612,14 @@ fn with_companions(ctx: &mut Ctx, stores: Vec<u32>) -> R<Vec<u32>> {
                 vec![("literal", Val::Float(0.0)), ("ttype", tt.clone())],
             )?;
             let name = format!("{}_c", ctx.str_field(sink, "name")?);
-            let index = ctx.nodes[sink as usize].ops[1];
+            let indices = ctx.nodes[sink as usize].ops[1..]
+                .iter()
+                .map(|&at| Val::Node(at))
+                .collect();
             let given = vec![
                 ("name", Val::Str(name)),
                 ("value", Val::Node(zero)),
-                ("indices", Val::Tuple(vec![Val::Node(index)])),
+                ("indices", Val::Tuple(indices)),
                 ("axes", ctx.field(sink, "axes")?),
                 ("edge", ctx.field(sink, "edge")?),
                 ("ttype", tt),

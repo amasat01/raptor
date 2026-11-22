@@ -33,7 +33,7 @@ pub(crate) fn int_like(ctx: &mut Ctx, value: i64, like: u32) -> R<u32> {
 }
 
 /// The row-major component indices of a value of the shape: a number for a vector, one index per axis for a value of rank two or more.
-fn components(shape: &[i64]) -> Vec<Val> {
+pub(crate) fn components(shape: &[i64]) -> Vec<Val> {
     match shape {
         [] => vec![],
         [n] => (0..*n).map(|r| Val::Int(i128::from(r))).collect(),

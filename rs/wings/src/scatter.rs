@@ -4,12 +4,13 @@
 //! its own partial sum of each key, and one block per cell adds the cell's partial sums in chunk order. No atomics and no sort: the
 //! same bits on every launch.
 use crate::blocks::{block_shaped, ordered_case};
-use crate::cells::build;
+use crate::cells::{build, components, int_like};
 use crate::logs::cell_of;
+use crate::planes::type_parts;
 use crate::stages::is_ordered_sink;
 use crate::team::{sample_index, Grid, Plane, Step, TeamSpec, Unit, PLANE_PREFIX};
 use crate::{is_a, is_routable_add, is_update_of, R};
-use raptor_ir::record::Ctx;
+use raptor_ir::record::{refuse, Ctx};
 use raptor_ir::value::{ttype_val, Val};
 
 /// The log slots each scatter target holds per lane, in the order the targets are first added to.
@@ -96,6 +97,87 @@ fn route(ctx: &mut Ctx, sink: u32, max_dim: i64) -> R<Routed> {
     build(ctx, "BlockSumWrite", given).map(Routed::Block)
 }
 
+/// The labels of the leading axes a value-shaped keyed add gives its plane, one per dimension of the value (`component` for a
+/// vector, `row` and `col` for a matrix), each made distinct from the plane's declared labels by trailing underscores.
+fn payload_axes(declared: &[Val], shape: &[i64]) -> Vec<Val> {
+    let mut taken: Vec<String> = declared
+        .iter()
+        .filter_map(|axis| match axis {
+            Val::Tuple(pair) => match pair.first() {
+                Some(Val::Str(label)) => Some(label.clone()),
+                _ => None,
+            },
+            _ => None,
+        })
+        .collect();
+    let stems: &[&str] = if shape.len() == 1 {
+        &["component"]
+    } else {
+        &["row", "col"]
+    };
+    let mut axes = vec![];
+    for (stem, extent) in stems.iter().zip(shape) {
+        let mut label = (*stem).to_string();
+        while taken.contains(&label) {
+            label.push('_');
+        }
+        taken.push(label.clone());
+        axes.push(Val::Tuple(vec![
+            Val::Str(label),
+            Val::Int(i128::from(*extent)),
+        ]));
+    }
+    axes
+}
+
+/// One scalar add per component of the value-shaped keyed add `sink`, at the component's coordinates followed by the key's, into
+/// the plane whose axes are the value's then the sink's. The log and the block stages of the ordered lowering hold scalar terms, so
+/// a value in lane order is summed component by component, each component in lane order.
+fn split_value(ctx: &mut Ctx, sink: u32) -> R<Vec<u32>> {
+    if ctx.field(sink, "reduced")? != Val::None {
+        return refuse("a value-shaped keyed add in lane order that sums over lanes is not built");
+    }
+    let parts = type_parts(ctx, sink);
+    let scalar = ttype_val(&parts.dtype, &[], None);
+    let (value, indices) = {
+        let ops = &ctx.nodes[sink as usize].ops;
+        (ops[0], ops[1..].to_vec())
+    };
+    let Val::Tuple(declared) = ctx.field(sink, "axes")? else {
+        return refuse("a keyed add has no axes");
+    };
+    let mut axes = payload_axes(&declared, &parts.shape);
+    axes.extend(declared);
+    let mut out = vec![];
+    for entry in components(&parts.shape) {
+        let at = match &entry {
+            Val::Tuple(each) => each.clone(),
+            one => vec![one.clone()],
+        };
+        let mut coordinates = vec![];
+        for k in &at {
+            let Val::Int(k) = k else {
+                return refuse("a component coordinate is a whole number");
+            };
+            coordinates.push(Val::Node(int_like(ctx, *k as i64, indices[0])?));
+        }
+        coordinates.extend(indices.iter().map(|&at| Val::Node(at)));
+        let part = ctx.make_op("component", &[value], &entry)?;
+        let mut given = vec![
+            ("name", ctx.field(sink, "name")?),
+            ("value", Val::Node(part)),
+            ("indices", Val::Tuple(coordinates)),
+            ("ttype", scalar.clone()),
+            ("axes", Val::Tuple(axes.clone())),
+        ];
+        for field in ["op", "summation", "order", "edge"] {
+            given.push((field, ctx.field(sink, field)?));
+        }
+        out.push(build(ctx, "Update", given)?);
+    }
+    Ok(out)
+}
+
 /// The sinks with each ordered accumulate replaced by the stores of its key and value into its log slots, and the slots each target
 /// holds per lane, in the order the targets are first added to, or none when a payload's block stages are not planned. When the
 /// build routes accumulates to the ordered stages the accumulator carries its own compensation, so no residual plane is kept, and
@@ -107,6 +189,15 @@ pub fn logged(
 ) -> R<Option<(Vec<u32>, Slots)>> {
     let mut kept = vec![];
     let mut residual = vec![];
+    let mut scalar_sinks = vec![];
+    for &sink in sinks {
+        if is_ordered_sink(ctx, sink, routed)? && !ctx.nodes[sink as usize].shape.is_empty() {
+            scalar_sinks.extend(split_value(ctx, sink)?);
+        } else {
+            scalar_sinks.push(sink);
+        }
+    }
+    let sinks = &scalar_sinks[..];
     for &sink in sinks {
         let own = ctx.compensates(sink)?;
         if routed && own {

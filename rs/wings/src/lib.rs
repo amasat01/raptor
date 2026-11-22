@@ -21,6 +21,7 @@ pub mod place;
 pub mod plan;
 pub mod planes;
 pub mod rewrite;
+pub mod sample;
 pub mod scatter;
 pub mod segment;
 pub mod slots;

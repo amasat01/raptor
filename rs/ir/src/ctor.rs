@@ -135,6 +135,7 @@ const BUILTINS: &[&str] = &[
     "first_not_instance",
     "carry_fault",
     "index_fault",
+    "sample_fault",
     "axis_fault",
     "axes_fault",
     "store_index_fault",
@@ -986,9 +987,8 @@ impl Ev<'_> {
         let v = a.iter().map(|x| self.eval(x, env)).collect::<R<Vec<_>>>()?;
         match n {
             "width_of" | "first_ne_ttype" | "first_mismatch" | "first_not_instance"
-            | "carry_fault" | "index_fault" | "axis_fault" | "store_index_fault" => {
-                self.call_over_nodes(n, &v)
-            }
+            | "carry_fault" | "index_fault" | "sample_fault" | "axis_fault"
+            | "store_index_fault" => self.call_over_nodes(n, &v),
             _ => self.call_plain(n, &v),
         }
     }
@@ -1127,6 +1127,14 @@ impl Ev<'_> {
                 self.index_fault(plane, &indices)?
                     .map_or(Val::None, Val::Str)
             }
+            "sample_fault" => {
+                let (plane, coordinates) = (
+                    node_list(&Val::Tuple(vec![v[0].clone()]))?[0],
+                    node_list(&v[1])?,
+                );
+                self.sample_fault(plane, &coordinates, &v[2])?
+                    .map_or(Val::None, Val::Str)
+            }
             "store_index_fault" => {
                 let Val::Str(name) = &v[0] else {
                     return Err("store_index_fault: a plane name".into());
@@ -1187,6 +1195,44 @@ impl Ev<'_> {
             Some((label, _)) if !label.is_empty() => format!("axis {label:?}"),
             _ => format!("axis {position}"),
         }
+    }
+
+    /// Why `coordinates` cannot sample `plane` with `filter`: one to three of them, one per axis of the plane, each a rank-0 real, and a real table for a linear sample.
+    fn sample_fault(&self, plane: u32, coordinates: &[u32], filter: &Val) -> R<Option<String>> {
+        let axes = self.plane_axes(plane)?;
+        let Val::Str(name) = self.c.field(plane, "name").map_err(|e| format!("{e:?}"))? else {
+            return Err("a plane leaf has no name".into());
+        };
+        if !(1..=3).contains(&coordinates.len()) {
+            return Ok(Some(format!(
+                "a sample takes one to three coordinates, got {}",
+                coordinates.len()
+            )));
+        }
+        if coordinates.len() != axes.len() {
+            return Ok(Some(format!(
+                "plane {name:?} has {} axes, so a sample takes one coordinate per axis, got {}",
+                axes.len(),
+                coordinates.len()
+            )));
+        }
+        let value = &self.c.nodes[plane as usize].dtype;
+        if *filter == Val::Str("linear".into()) && !(value == "f32" || value == "f64") {
+            return Ok(Some(format!(
+                "plane {name:?} holds {value}: a linear sample weighs values, so it takes a real table (use filter 'nearest')"
+            )));
+        }
+        Ok(coordinates.iter().enumerate().find_map(|(k, &h)| {
+            let node = &self.c.nodes[h as usize];
+            (!node.shape.is_empty() || !(node.dtype == "f32" || node.dtype == "f64")).then(|| {
+                format!(
+                    "plane {name:?} {}: the coordinate must be a rank-0 real (f32 or f64), got {} of shape {:?}",
+                    Self::axis_name(&axes, k),
+                    node.dtype,
+                    node.shape
+                )
+            })
+        }))
     }
 
     /// Why `indices` do not address `plane`: the count against the plane's axes, then each index being a rank-0 integer.

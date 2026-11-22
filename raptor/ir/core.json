@@ -43,6 +43,15 @@
    "zero",
    "unchecked"
   ],
+  "SAMPLE_FILTERS": [
+   "nearest",
+   "linear"
+  ],
+  "SAMPLE_EDGES": [
+   "clamp",
+   "wrap",
+   "zero"
+  ],
   "AT_ROLES": [
    "lookup",
    "wide_in",
@@ -1128,6 +1137,100 @@
     ]
    ],
    "wire": "at"
+  },
+  {
+   "name": "sample",
+   "class": "Sample",
+   "family": "expr",
+   "refines": "op",
+   "operands": {
+    "min": 2,
+    "max": 4
+   },
+   "slots": [
+    "filter",
+    "edge",
+    "hardware"
+   ],
+   "params": "plane: Leaf, coordinates: Sequence[Node], ttype: TensorType, filter: str = 'linear', edge: str = 'clamp', hardware: bool = False",
+   "assigns": [
+    "kind",
+    "literal",
+    "filter",
+    "edge",
+    "hardware"
+   ],
+   "dedup": [
+    "tup",
+    "r:literal",
+    "f:filter",
+    "f:edge",
+    "f:hardware"
+   ],
+   "state": [
+    "+Op",
+    "filter",
+    "edge",
+    "hardware"
+   ],
+   "from": [
+    "op:0",
+    "ops:1",
+    "ttype",
+    "@filter",
+    "@edge",
+    "@hardware"
+   ],
+   "watch": "all",
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "not (isinstance(plane, Leaf) and plane.role in AT_ROLES)",
+      "sample(): the sampled plane must be a leaf in one of the roles {AT_ROLES}, got {plane!r}"
+     ],
+     [
+      "check",
+      "filter not in SAMPLE_FILTERS",
+      "sample(): the filter {filter!r} of {plane.name!r} is not one of {SAMPLE_FILTERS}"
+     ],
+     [
+      "check",
+      "edge not in SAMPLE_EDGES",
+      "sample(): the edge rule {edge!r} of {plane.name!r} is not one of {SAMPLE_EDGES} (a sample is always edge-ruled)"
+     ],
+     [
+      "check",
+      "hardware",
+      "sample(): a hardware fetch is not written yet"
+     ],
+     [
+      "check",
+      "sample_fault(plane, coordinates, filter) is not None",
+      "sample(): {sample_fault(plane, coordinates, filter)}"
+     ],
+     [
+      "node",
+      "ttype",
+      "cat((plane,), coordinates)"
+     ]
+    ],
+    "out": [
+     "'sample'",
+     "None",
+     "filter",
+     "edge",
+     "hardware"
+    ]
+   },
+   "props": [
+    [
+     "plane",
+     "op",
+     "0"
+    ]
+   ],
+   "wire": "sample"
   },
   {
    "name": "primitive",

@@ -75,6 +75,11 @@ int rw_block_ordered_case(rx_ctx* ctx, rx_node payload, const char* contract, co
 /* Whether the keyed sum of the payload can be one block by its structure alone: ordered_case, or a float payload within the limit that has factors. */
 int rw_block_shaped(rx_ctx* ctx, rx_node payload, const char* contract, const int64_t* limit, size_t nlimit, int* out);
 
+/* The Sample node written as At reads of its plane, in *out, the node that takes its place: nearest reads at floor(x + 0.5) on each axis, linear
+   reads at floor(x) and the next whole index and weighs the 2, 4 or 8 corners by the products of (1 - w) and w; the edge rule is the At rule of each read.
+   Refuses a node that is not a Sample. */
+int rw_sample_expand(rx_ctx* ctx, rx_node node, rx_node* out);
+
 /* Whether the node places a value in a plane (*out is 0 or 1). */
 int rw_wide_is_resident(rx_ctx* ctx, rx_node node, int* out);
 /* Whether the node names a scratch plane the runtime made (flat or warp-tiled), not a mutable's own (*out is 0 or 1). */

@@ -422,3 +422,7 @@ core.json const UPDATE_CONFLICTS # update
 core.json const UPDATE_SUMMATIONS # update
 core.json const UPDATE_ORDERS # update
 raptor.ir Update # update
+core.json class Sample # sample
+core.json kind sample # sample
+core.json const SAMPLE_FILTERS # sample
+core.json const SAMPLE_EDGES # sample

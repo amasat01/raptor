@@ -25,7 +25,7 @@ This section covers what changes from 0.7.3. The manifest schema and the certifi
 
 ### Added
 
-- **The `Update` element admits `min`, `max`, `and`, `xor`, `exchange` and `compare_exchange`**, a store under `conflict = any`, and a returned old value for `exchange`, `compare_exchange` and `add`. A `compare_exchange` takes its expected value as the operand after the new one. Typing refuses by name an and, or or xor on a plane that is not an integer, a min or max on a type without an order, a returned old value on any other operation, a conflict rule on a non-store, and a compare-exchange whose expected value has another type. A plane written by min, max, and, xor or an exchange is not zeroed before the run: the caller's value is part of the result.
+- **The `Update` element admits `min`, `max`, `and`, `xor`, `exchange` and `compare_exchange`**, a store under `conflict = any`, and a returned old value for `exchange`, `compare_exchange` and `add`. A `compare_exchange` takes its expected value as the operand after the new one. Typing refuses by name an and, or or xor on a plane that is not an integer, a min or max on a type without an order, a returned old value on any other operation, a conflict rule on a non-store, and a compare-exchange whose expected value has another type. A plane written by min, max, and, xor or an exchange is not zeroed before the run: the caller's value is part of the result. The door answers the zeroing rule for a sink node (`rx_zeroes_plane`), so the writers no longer restate it.
 - The install page has a Best practices section: pin every family package at one release, and check what is installed.
 
 ## 0.7.3 (2026-11-05)

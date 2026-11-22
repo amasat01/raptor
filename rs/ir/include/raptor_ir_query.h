@@ -47,6 +47,10 @@ int rx_same_index(rx_ctx* ctx, rx_node a, rx_node b, int* out);
    refines it. */
 int rx_is_a(rx_ctx* ctx, rx_node node, const char* name, int* out);
 
+/* Whether the runtime zeroes the written plane a sink node commits to before the run (out is 0 or 1): the one rule the walk's
+   per-slot zeroed fact is built from. A node that is not a sink on a written plane answers 0. */
+int rx_zeroes_plane(rx_ctx* ctx, rx_node node, int* out);
+
 /* The dispatch nodes of a walk, top-level first, then those inside loop bodies: the nodes its
    `dispatches` listing names, in its order. */
 int rx_dispatch_nodes(rx_ctx* ctx, rx_walk walk, rx_node* buf, size_t cap, size_t* n);

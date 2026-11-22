@@ -112,3 +112,24 @@ fn the_planes_a_store_writes_are_listed_before_the_planes_it_zeroes() {
         .collect();
     assert_eq!(written, ["y_kept", "z_kept", "a_sum", "b_sum"]);
 }
+
+/// Oracle: the rule written by hand (add and or zero their plane, the others keep it), asked of the sink node itself: the one
+/// query the writers use to spell a written plane's name.
+#[test]
+fn the_node_query_answers_the_zeroing_rule() {
+    let c = rx_ctx_new();
+    let x = mk(
+        c,
+        "Leaf",
+        None,
+        &[],
+        "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))",
+    );
+    for (op, want) in [("store", 0), ("add", 1), ("min", 0), ("exchange", 0)] {
+        let fields = format!("(('name', 'p'), ('op', '{op}'), ('reduced', None))");
+        let sink = mk(c, "Update", None, &[x], &fields);
+        let mut out = -1;
+        assert_eq!(rx_zeroes_plane(c, sink, &mut out), RX_OK);
+        assert_eq!(out, want, "{op}");
+    }
+}

@@ -379,7 +379,7 @@ impl Ctx {
     /// Whether the node, a sink on a `plane_out` plane, is a write the runtime zeroes the plane for: an add or an or (their
     /// fold starts from zero), a sample sum or an ordered accumulate. The other updates fold into or replace the value the
     /// caller gave the plane, so it is kept.
-    fn zeroes_plane(&self, node: u32, role: &str) -> Result<bool, Fault> {
+    pub fn zeroes_plane(&self, node: u32, role: &str) -> Result<bool, Fault> {
         if role != "plane_out" {
             return Ok(false);
         }

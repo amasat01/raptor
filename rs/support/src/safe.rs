@@ -412,6 +412,11 @@ pub fn rx_is_a(ctx: *mut Ctx, node: Node, name: *const c_char, out: *mut c_int) 
     unsafe { raptor_ir::query::rx_is_a(ctx, node, name, out) }
 }
 
+/// `raptor_ir::query::rx_zeroes_plane` as a safe function.
+pub fn rx_zeroes_plane(ctx: *mut Ctx, node: Node, out: *mut c_int) -> c_int {
+    unsafe { raptor_ir::query::rx_zeroes_plane(ctx, node, out) }
+}
+
 /// `raptor_ir::query::rx_dispatch_nodes` as a safe function.
 pub fn rx_dispatch_nodes(
     ctx: *mut Ctx,

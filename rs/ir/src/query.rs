@@ -186,6 +186,18 @@ pub unsafe extern "C" fn rx_is_a(
     })
 }
 
+/// Whether the runtime zeroes the written plane the sink `node` commits to before the run.
+///
+/// # Safety
+/// `out` must be valid for one write, as the header states.
+#[no_mangle]
+pub unsafe extern "C" fn rx_zeroes_plane(ctx: *mut Ctx, node: Node, out: *mut c_int) -> c_int {
+    guard(ctx, |c| {
+        c.node(node)?;
+        flag(out, c.zeroes_plane(node, "plane_out")?)
+    })
+}
+
 /// The dispatch nodes of a walk, the top-level ones first, then those inside lowered loop bodies:
 /// the nodes the walk's `dispatches` listing names, in its order.
 ///

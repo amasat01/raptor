@@ -128,11 +128,9 @@ def _make(cls, ttype, operands, **fields):
     ttype, operands, fields = _core.kind_check(cls, ttype, tuple(operands), fields, core_role)
     obj = object.__new__(cls)
     if cls.decl_root == "sink":
-        Sink.__init__(obj, d.wire, fields.get("role", core_role), fields["name"], operands[0], operands[1] if len(operands) > 1 else None, ttype)
-        if len(operands) > 2:        # a declared sink may state operands beyond the value and the index (the key of an ordered accumulate)
-            object.__setattr__(obj, "operands", tuple(operands))     # still inside the builder: the node is not yet visible
+        Sink.__init__(obj, d.wire, fields.get("role", core_role), fields["name"], operands[0], tuple(operands[1:]), ttype)
     elif cls.decl_root == "at":
-        At.__init__(obj, operands[0], operands[1], ttype)
+        At.__init__(obj, operands[0], tuple(operands[1:]), ttype)
         object.__setattr__(obj, "kind", d.wire)   # still inside the builder: the declared wire replaces At's, before the node escapes
     else:
         Node.__init__(obj, ttype, operands)

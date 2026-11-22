@@ -18,6 +18,9 @@ pub struct WalkRes {
     /// The written-plane slots the runtime zeroes before the run: a sink on the plane accumulates, sums samples or is an
     /// ordered accumulate; a plane only plain stores write is left as the caller gave it.
     pub zeroed: HashSet<Key>,
+    /// The counting planes the walk's slots state, each as `(count plane, the appended plane it counts)`, in the caller's
+    /// order: the runtime makes the count with the run and hands it back beside its plane.
+    pub counts: Vec<(String, String)>,
     /// The access class of the walk.
     pub access: String,
     /// The name of the finish statement among the sinks, when there is one.
@@ -171,10 +174,13 @@ pub struct Declared {
     pub slots: Vec<(Key, Tt)>,
     /// The written planes among them that the runtime zeroes before the run.
     pub zeroed: HashSet<Key>,
+    /// The counting planes a record states (`counts='<plane>'`), each as `(count plane, the plane it counts)`.
+    pub counts: Vec<(String, String)>,
 }
 
 /// The declared slots: a tuple of Slot records. A record may state `zeroed=True` for a written plane no sink of the walk writes
-/// by accumulating (a companion plane the runtime folds).
+/// by accumulating (a companion plane the runtime folds), and `counts='<plane>'` for a one-element plane that counts the
+/// appends into `<plane>`.
 pub fn declared_slots(text: Option<&str>) -> Result<Declared, Fault> {
     let (Val::Tuple(v) | Val::List(v)) = parse(text.unwrap_or("()")).map_err(Fault::Refused)?
     else {
@@ -196,6 +202,9 @@ pub fn declared_slots(text: Option<&str>) -> Result<Declared, Fault> {
             if matches!(get("zeroed"), Some(Val::Bool(true))) {
                 declared.zeroed.insert(key.clone());
             }
+            if let Some(Val::Str(of)) = get("counts") {
+                declared.counts.push((key.1.clone(), of.clone()));
+            }
             declared.slots.push((key, Tt::of(t)?));
         }
     }
@@ -209,6 +218,24 @@ fn s(t: &str) -> Val {
 /// A pair of texts as a tuple value.
 fn pair(a: &str, b: &str) -> Val {
     Val::Tuple(vec![s(a), s(b)])
+}
+/// Refuses a count that names a plane the walk does not bind, or whose own plane is not a written one.
+fn check_counts(counts: &[(String, String)], slots: &[(Key, Tt)]) -> Result<(), Fault> {
+    let bound = |name: &str| slots.iter().find(|(key, _)| key.1 == name);
+    for (count, of) in counts {
+        let (Some((counted, _)), Some(_)) = (bound(count), bound(of)) else {
+            return refuse(format!(
+                "counts: {count:?} counts {of:?}, and the walk binds both planes or neither"
+            ));
+        };
+        if counted.0 != "plane_out" {
+            return refuse(format!(
+                "counts: {count:?} is a count, which the runtime writes: a written plane, not {:?}",
+                counted.0
+            ));
+        }
+    }
+    Ok(())
 }
 /// The text constant `k` of the core, or empty.
 pub(crate) fn str_const(k: &str) -> &'static str {
@@ -250,6 +277,7 @@ impl Ctx {
         let reached = self.reached_quantities(&tr, sep)?;
         let layout = place_slots(&reached, declared_sinks, &bound, sep)?;
         let ordered = order_slots(&layout)?;
+        check_counts(&declared.counts, &ordered)?;
         let (spans, quantities) = quantity_spans(&reached, &ordered, &layout.zeroed, sep)?;
         let watched = self.watched_nodes(&tr);
         let access = self.access_class(&watched, exempt, force)?;
@@ -278,6 +306,7 @@ impl Ctx {
         self.walks.push(WalkRes {
             leaves: ordered,
             zeroed: layout.zeroed,
+            counts: declared.counts.clone(),
             access: access.to_string(),
             finish: match finish {
                 Val::Str(name) => Some(name),
@@ -1046,6 +1075,7 @@ pub unsafe extern "C" fn rx_canonical_like(
         let kept = Declared {
             slots: held.leaves.clone(),
             zeroed: held.zeroed.clone(),
+            counts: held.counts.clone(),
         };
         let w = c.canonical(slice(sinks, n, "sinks")?, &kept, None, &[])?;
         unsafe { *out = w as u32 }

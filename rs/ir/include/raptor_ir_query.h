@@ -182,6 +182,9 @@ int rx_walk_selector_reads(rx_ctx* ctx, rx_walk walk, int64_t index, rx_pair* bu
 /* The companion planes of the compensated keyed accumulates of the walk as pairs (companion plane <plane>_c, the plane it compensates), in the
    walk's order, once per companion (the two-call protocol of rx_field_pairs). */
 int rx_walk_accum_companions(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
+/* The counting planes of the walk as pairs (count plane, the plane it counts), in the order the caller declared them: a Slot record's
+   counts member states which plane a one-element count belongs to (the two-call protocol of rx_field_pairs). */
+int rx_walk_counts(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
 /* The wires of the quantities the walk reaches, in the walk's order, one pair (namespace, slot name of the wire) per wire in declaration
    order, the pairs of a quantity together; the two-call protocol of rx_field_pairs. */
 int rx_walk_quantity_wires(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);

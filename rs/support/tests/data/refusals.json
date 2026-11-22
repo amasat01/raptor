@@ -6,7 +6,7 @@
    "shape": [],
    "tag": null,
    "ops": [],
-   "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))",
+   "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))",
    "name": "x"
   },
   {
@@ -264,7 +264,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'bogus'), ('role', 'vec_in'), ('name', 'l'), ('quantity', None), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'bogus'), ('role', 'plane_in'), ('name', 'l'), ('quantity', None), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },
@@ -275,9 +275,9 @@
    "check": "role not in LEAF_ROLES",
    "today": {
     "exc": "RaptorError",
-    "msg": "leaf 'l': unknown leaf role 'bogus', expected one of ('vec_in', 'mat_in', 'wide_in', 'per_sample', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')"
+    "msg": "leaf 'l': unknown leaf role 'bogus', expected one of ('plane_in', 'wide_in', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')"
    },
-   "raw": "leaf 'l': unknown leaf role 'bogus', expected one of ('vec_in', 'mat_in', 'wide_in', 'per_sample', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')",
+   "raw": "leaf 'l': unknown leaf role 'bogus', expected one of ('plane_in', 'wide_in', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')",
    "expect": "a",
    "bad": {
     "class": "Leaf",
@@ -367,9 +367,9 @@
    "check": "not (isinstance(plane, Leaf) and plane.role in AT_ROLES)",
    "today": {
     "exc": "RaptorError",
-    "msg": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'per_sample', 'vec_in', 'mat_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>"
+    "msg": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'plane_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>"
    },
-   "raw": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'per_sample', 'vec_in', 'mat_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>",
+   "raw": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'plane_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>",
    "expect": "b",
    "bad": {
     "class": "At",
@@ -1129,7 +1129,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None),), pack='bogus')), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='plane_in', shape=(), dtype='f64', tag=None),), pack='bogus')), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },
@@ -1150,7 +1150,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None),), pack='auto')), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'l'), ('quantity', Quantity(slug='', name=None, wires=(Wire(name='a', role='plane_in', shape=(), dtype='f64', tag=None),), pack='auto')), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },
@@ -1171,7 +1171,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(), pack='auto')), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(), pack='auto')), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },
@@ -1192,7 +1192,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(1,), pack='auto')), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(1,), pack='auto')), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },
@@ -1203,9 +1203,9 @@
    "check": "",
    "today": {
     "exc": "RaptorError",
-    "msg": "Quantity 'q': wire 'a' has role 'bogus', which no leaf kind mints; declared read roles are ['lookup', 'mat_in', 'nsamples', 'per_sample', 'terminated', 'uniform', 'vec_in', 'wide_in']"
+    "msg": "Quantity 'q': wire 'a' has role 'bogus', which no leaf kind mints; declared read roles are ['lookup', 'nsamples', 'plane_in', 'terminated', 'uniform', 'wide_in']"
    },
-   "raw": "Quantity 'q': wire 'a' has role 'bogus', which no leaf kind mints; declared read roles are ['lookup', 'mat_in', 'nsamples', 'per_sample', 'terminated', 'uniform', 'vec_in', 'wide_in']",
+   "raw": "Quantity 'q': wire 'a' has role 'bogus', which no leaf kind mints; declared read roles are ['lookup', 'nsamples', 'plane_in', 'terminated', 'uniform', 'wide_in']",
    "expect": "a",
    "bad": {
     "class": "Leaf",
@@ -1213,7 +1213,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='bogus', shape=(), dtype='f64', tag=None),), pack='auto')), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='bogus', shape=(), dtype='f64', tag=None),), pack='auto')), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },
@@ -1234,7 +1234,7 @@
     "shape": [],
     "tag": null,
     "ops": [],
-    "fields": "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None), Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None)), pack='auto')), ('wire_index', 0), ('sorted', False))"
+    "fields": "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'l'), ('quantity', Quantity(slug='q', name=None, wires=(Wire(name='a', role='plane_in', shape=(), dtype='f64', tag=None), Wire(name='a', role='plane_in', shape=(), dtype='f64', tag=None)), pack='auto')), ('wire_index', 0), ('sorted', False))"
    },
    "standing": null
   },

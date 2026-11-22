@@ -243,15 +243,21 @@ impl Maker<'_> {
             }
             let kept = self.select(mine, value, zero, &ty)?;
             let tt = ttype_val(&ty.dtype, &ty.shape, ty.tag.as_deref());
-            let index = self.ctx.nodes[sink as usize]
-                .ops
-                .get(1)
-                .map_or(Val::None, |&i| Val::Node(i));
+            let indices = Val::Tuple(
+                self.ctx.nodes[sink as usize]
+                    .ops
+                    .iter()
+                    .skip(1)
+                    .map(|&i| Val::Node(i))
+                    .collect(),
+            );
             let contract = self.ctx.str_field(sink, "contract")?;
             let given = vec![
                 ("name", Val::Str(name)),
                 ("value", Val::Node(kept)),
-                ("index", index),
+                ("indices", indices),
+                ("axes", self.ctx.field(sink, "axes")?),
+                ("edge", self.ctx.field(sink, "edge")?),
                 ("ttype", tt),
                 ("contract", Val::Str(contract)),
             ];

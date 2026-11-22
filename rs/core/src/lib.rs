@@ -142,6 +142,26 @@ fn repr_ints(v: &[i64], out: &mut String) {
     out.push(')');
 }
 
+/// The role of a plane read per sample, whatever the rank of its value.
+pub const PLANE_IN: &str = "plane_in";
+
+/// The place of a slot in the canonical order of `order` (the manifest's role order): the run it belongs to and, inside it, the
+/// rank class. A role listed twice is split by the rank of its value: the first run holds the planes with a value of rank one or
+/// more, ordered by rank, the second the scalars; a role listed once is one run. `None` when the role is not in the order.
+pub fn order_place(order: &[&str], role: &str, rank: usize) -> Option<(usize, usize)> {
+    let mut at = order
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| **r == role)
+        .map(|(i, _)| i);
+    let first = at.next()?;
+    Some(match (rank, at.next()) {
+        (0, Some(second)) => (second, 0),
+        (rank, Some(_)) => (first, rank),
+        (_, None) => (first, 0),
+    })
+}
+
 /// Appends the key text of one record; operands are written as their positions in the walk order `pos`.
 fn key_of(r: &Rec, pos: &[u32], out: &mut String) {
     if r.leaf {
@@ -149,6 +169,10 @@ fn key_of(r: &Rec, pos: &[u32], out: &mut String) {
         repr_str(&r.role, out);
         out.push_str(", ");
         repr_str(&r.name, out);
+        if r.role == PLANE_IN {
+            out.push_str(", ");
+            repr_ints(&r.shape, out);
+        }
         out.push(')');
         return;
     }

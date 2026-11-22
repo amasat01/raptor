@@ -198,6 +198,15 @@ pub(crate) fn kind_of(ctx: &Ctx, node: u32) -> Outcome<Option<String>> {
     }
 }
 
+/// Whether an element access (`component_at`, `set_component_at`, `add_at`) names its element by ONE index, its value
+/// having rank one. The recognisers that understand only that form call this, so a deeper value is passed through.
+pub(crate) fn one_index(ctx: &Ctx, node: u32) -> bool {
+    ctx.nodes[node as usize]
+        .ops
+        .first()
+        .is_some_and(|&value| ctx.nodes[value as usize].shape.len() == 1)
+}
+
 /// The elements of a rank-1 value, 0 for any other.
 pub(crate) fn width(ctx: &Ctx, node: u32) -> i64 {
     let shape = &ctx.nodes[node as usize].shape;

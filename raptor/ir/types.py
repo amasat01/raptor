@@ -35,7 +35,7 @@ INT_PLANE_DTYPES = ("int32", "uint32")
 #: The roles whose plane is addressed at the current sample index by
 #: construction: every leaf role here is read ``plane[i]``, so these are
 #: the only roles whose plane's trailing extent is n_samples.
-PER_SAMPLE_ROLES = ("per_sample", "vec_in", "mat_in", "terminated", "mutable", "out")
+PER_SAMPLE_ROLES = ("plane_in", "terminated", "mutable", "out")
 
 from .. import _core
 from . import _gen

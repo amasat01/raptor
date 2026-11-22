@@ -44,8 +44,8 @@ struct G {
 /// x -> exp -> assign o; and a compensated accumulate into plane acc.
 fn graph() -> G {
     let c = rx_ctx_new();
-    let x = make(c, "Leaf", "f64", &[], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"per_sample\"), (\"name\", \"x\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
-    let a = make(c, "Leaf", "f64", &[2, 2], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"mat_in\"), (\"name\", \"A\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
+    let x = make(c, "Leaf", "f64", &[], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"x\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
+    let a = make(c, "Leaf", "f64", &[2, 2], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"A\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
     let exp = make(
         c,
         "Op",
@@ -127,7 +127,7 @@ fn node_questions() {
 fn wide_place_wraps_a_stored_value_in_its_plane() {
     let c = rx_ctx_new();
     let leaf = |name: &str| {
-        make(c, "Leaf", "f64", &[100], &[], &format!("((\"kind\", \"vocab_read\"), (\"role\", \"vec_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"))
+        make(c, "Leaf", "f64", &[100], &[], &format!("((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"))
     };
     let (a, b) = (leaf("a"), leaf("b"));
     let sum = make(
@@ -254,7 +254,7 @@ fn op(c: *mut Ctx, kind: &str, shape: &[i64], ops: &[u32]) -> u32 {
 #[test]
 fn slotwise_chain_lists_its_links_in_order() {
     let c = rx_ctx_new();
-    let base = make(c, "Leaf", "f64", &[2], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"vec_in\"), (\"name\", \"v\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
+    let base = make(c, "Leaf", "f64", &[2], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"v\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
     let (i0, v0, i1, v1) = (
         constant(c, "0"),
         constant(c, "1.5"),
@@ -318,7 +318,7 @@ fn class_of(c: *mut Ctx, node: u32) -> String {
 fn slice_sinks_holds_a_wide_value_across_the_warp() {
     let c = rx_ctx_new();
     assert_eq!(unsafe { raptor_wings::declare::rw_declare_kinds(c) }, 0);
-    let x = make(c, "Leaf", "f64", &[128], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"vec_in\"), (\"name\", \"x\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
+    let x = make(c, "Leaf", "f64", &[128], &[], "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"x\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))");
     let op = |kind: &str, shape: &[i64], ops: &[u32]| {
         make(
             c,

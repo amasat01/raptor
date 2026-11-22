@@ -85,7 +85,7 @@ pub fn count(c: *mut Ctx) -> usize {
     unsafe { &*c }.nodes.len()
 }
 
-pub const LEAF: &str = "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{}'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+pub const LEAF: &str = "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{}'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
 pub const ADD: &str = "(('kind', 'add'), ('literal', None))";
 pub fn leaf(c: *mut Ctx, n: &str) -> u32 {
     mk(c, "Leaf", None, &[], &LEAF.replace("{}", n))

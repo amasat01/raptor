@@ -47,7 +47,7 @@ impl Ctx {
         let index = if per_cell {
             let cell = constant("CELL_PLANE")?;
             let params = format!(
-                "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', {}), ('ttype', {index_type}))",
+                "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', {}), ('ttype', {index_type}))",
                 rcore::keytext::py_str(cell)
             );
             self.new_node("Leaf", &params, &[])?
@@ -56,7 +56,9 @@ impl Ctx {
             let params = format!("(('value', 0), ('label', {label}), ('ttype', {index_type}))");
             self.new_node("RoleConst", &params, &[])?
         };
-        let params = format!("(('plane', #0), ('index', #1), ('ttype', {ttype}))");
+        let params = format!(
+            "(('plane', #0), ('indices', (#1,)), ('edge', 'unchecked'), ('ttype', {ttype}))"
+        );
         self.new_node("At", &params, &[plane, index])
     }
 }

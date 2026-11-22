@@ -68,7 +68,10 @@ enum Outcome {
     Raised(bool, String),
 }
 
-/// Replays one recorded unit in a fresh context and compares the results with the recorded ones.
+/// Replays one recorded unit and compares the results with the recorded ones. The record takes the current role names first; a
+/// unit whose digest then differs (or whose nodes are refused when made) is replayed once more as a recording made before the
+/// planes carried axes: migrated to the current form, with the digest keys leaving out the fields that recording predates. It is
+/// equal when it matches in either form.
 fn replay(
     rec: &J,
     counts: &mut [f64; 3],
@@ -76,10 +79,40 @@ fn replay(
     rt: &mut [usize; 2],
     vals: &mut Vals,
 ) -> Outcome {
+    let mut named = rec.clone();
+    raptor_support::migrate::migrate_roles(&mut named);
+    let current = replay_in_form(&named, counts, roundtrip, rt, vals, false);
+    let retry = match &current {
+        Outcome::Mismatch(m) => m.contains("digest"),
+        Outcome::MakeRefused(_) | Outcome::Raised(true, _) => true,
+        _ => false,
+    };
+    if !retry {
+        return current;
+    }
+    let mut old = rec.clone();
+    if raptor_support::migrate::migrate(&mut old).is_err() {
+        return current;
+    }
+    match replay_in_form(&old, counts, roundtrip, rt, vals, true) {
+        Outcome::Mismatch(_) | Outcome::MakeRefused(_) | Outcome::Raised(..) => current,
+        other => other,
+    }
+}
+
+/// Replays one recorded unit in a fresh context, with the digest keys of the form `before_axes` names.
+fn replay_in_form(
+    rec: &J,
+    counts: &mut [f64; 3],
+    roundtrip: bool,
+    rt: &mut [usize; 2],
+    vals: &mut Vals,
+    before_axes: bool,
+) -> Outcome {
     let inp = rec.get("inputs").unwrap();
     let ms = manifests(inp);
     let t0 = Instant::now();
-    let c = rx_ctx_new();
+    let c = replay_ctx(before_axes);
     counts[0] += t0.elapsed().as_secs_f64();
     let mut c2 = std::ptr::null_mut();
     let out = (|| {
@@ -150,6 +183,24 @@ fn replay(
                     .unwrap_or("")
                     .to_string(),
             );
+            // `REPLAY_COMPUTED` names a file that receives the computed key lines and digest of each walk that differs, for
+            // the proof tool that re-records them (`tests/tools/rerecord_walks.py`)
+            if let Ok(file) = std::env::var("REPLAY_COMPUTED") {
+                use std::io::Write;
+                let record = format!(
+                    "{{\"key\": {}, \"preimage\": {}, \"digest\": {}}}\n",
+                    rcore::keytext::py_str(rec.get("key").and_then(J::str).unwrap_or(""))
+                        .replace('\'', "\""),
+                    json_text(&got),
+                    json_text(&dg)
+                );
+                let mut out = std::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open(file)
+                    .expect("computed file");
+                out.write_all(record.as_bytes()).expect("write");
+            }
             let (g, wl): (Vec<&str>, Vec<&str>) = (got.lines().collect(), want.lines().collect());
             let i = (0..g.len().max(wl.len()))
                 .find(|&i| g.get(i) != wl.get(i))
@@ -190,7 +241,7 @@ fn replay(
             {
                 return Outcome::Mismatch(format!("roundtrip: dump: {}", err(c)));
             }
-            c2 = rx_ctx_new();
+            c2 = replay_ctx(before_axes);
             if let Err(e) = declare(c2, &ms) {
                 return Outcome::Mismatch(format!("roundtrip: {e}"));
             }
@@ -341,7 +392,11 @@ fn main() {
                 sst.secs += t.elapsed().as_secs_f64()
             }
             if do_loops {
-                loops_walk(&rec, &loops_oracle, &mut lst)
+                // the loop oracle is of the recordings made before the planes carried axes
+                let mut old = rec.clone();
+                if raptor_support::migrate::migrate(&mut old).is_ok() {
+                    loops_walk(&old, &loops_oracle, &mut lst)
+                }
             }
             if do_typed {
                 let t = Instant::now();
@@ -1300,4 +1355,20 @@ fn positions_walk(rec: &J, oracle: &J, st: &mut SStats) {
         Some(())
     })();
     rx_ctx_free(c);
+}
+
+/// `text` as a JSON string literal.
+fn json_text(text: &str) -> String {
+    let mut out = String::from("\"");
+    for ch in text.chars() {
+        match ch {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
 }

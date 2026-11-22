@@ -11,14 +11,6 @@
   "kernel": "hawk_flat",
   "params": [],
   "params_schema": 2,
-  "per_sample": [
-    "x"
-  ],
-  "vector_inputs": [
-    "v"
-  ],
-  "matrix_inputs": [],
-  "mat_shapes": {},
   "mutables": [
     {
       "name": "out",
@@ -31,9 +23,6 @@
     "out": 1,
     "v": 3,
     "x": 1
-  },
-  "vec_widths": {
-    "v": 3
   },
   "arg_shapes": {
     "out": 1,
@@ -56,11 +45,11 @@
       "out"
     ],
     [
-      "vec_in",
+      "plane_in",
       "v"
     ],
     [
-      "per_sample",
+      "plane_in",
       "x"
     ]
   ],

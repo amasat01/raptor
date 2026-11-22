@@ -37,13 +37,13 @@ def leaf(name, ttype):
     """A traced value over a fresh plane read of type ``ttype``."""
     if ttype.dtype == "bool":
         return hawk.Value(Leaf("terminated", "terminated", name, ttype))
-    role = {0: "per_sample", 1: "vec_in", 2: "mat_in"}[len(ttype.shape)]
+    role = {0: "plane_in", 1: "plane_in", 2: "plane_in"}[len(ttype.shape)]
     return hawk.Value(Leaf("vocab_read", role, name, ttype))
 
 
 def selector():
     """The integer a dispatch group chooses by."""
-    return Leaf("vocab_read", "per_sample", "k", I32)
+    return Leaf("vocab_read", "plane_in", "k", I32)
 
 
 def group(branches, ttype, sel=None):

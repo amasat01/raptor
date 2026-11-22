@@ -13,25 +13,13 @@ the CPU path) implement the schema-v1 *binding* surface completely and
 correctly, but they do not parse every field the producer emits and the Python
 loader reads. Concretely, C++ never reads:
 
-* ``vec_widths`` — the per-name vector width. The C++ registries **never
-  read it**, and the underlying binding primitive is not width-limited to
-  begin with: ``GRefMirror`` is documented as width-**independent**
-  (``gref_abi.h``: "the struct is width-independent... width only changes in
-  in-kernel indexing"), and ``bind_vector`` takes a raw device pointer plus a
-  sample count — no width parameter at all. Buffer sizing is therefore
-  entirely the **embedding host's contract**, invisible to the registry. A
-  mis-sized binding (e.g. handing a width-4 buffer to a kernel compiled
-  expecting width-3) is a **silent out-of-bounds device read** — nothing in
-  ``sidecar.h`` / ``manifest.h`` / the registry can catch it, because the one
-  piece of information that would (``vec_widths``) is never consulted. The
-  shipped demos (``plugin/plugin_host.cpp``,
-  ``plugin/graph_inject/inject_demo.cu``) happen to allocate width-3
-  ``(3, N)`` buffers, but that is a property of the demo code, not a limit of
-  the registry or the ABI. A width-generic embedding must size its own
-  buffers correctly; the registry will not warn it if it gets this wrong.
+* ``slot_shapes`` — the value shape of each slot. The C++ registries **never read it**: ``GRefMirror`` is documented as
+  width-**independent**, and ``bind_vector`` takes a raw device pointer plus a sample count. Buffer sizing is therefore entirely the
+  **embedding host's contract**; a mis-sized binding is a **silent out-of-bounds device read** that nothing in the registry can
+  catch, because the one piece of information that would (``slot_shapes``) is never consulted.
 * ``accumulate`` / ``sink`` — the vector-pattern accumulate-sink metadata.
   Both are Python-only; the C++ vector registry always accumulates.
-* the base convenience arrays ``vector_inputs`` / ``params`` / ``per_sample`` —
+* the base convenience array ``params`` —
   C++ derives everything it needs to bind purely from ``arg_spec`` (role +
   name, in order), which is a strict superset of the same information keyed by
   role. This is not a functional gap: ``sidecar.h``'s own header comment
@@ -40,7 +28,7 @@ loader reads. Concretely, C++ never reads:
 
 In short: the C++ registries bind purely from ``arg_spec`` plus raw pointers
 and trust the embedding host for buffer sizing (a silent-corruption hazard,
-not a missing capability — see the ``vec_widths`` note above), and their
+not a missing capability — see the ``slot_shapes`` note above), and their
 binding surface is ``double``-typed only (a separate, genuine capability
 limit — see :ref:`cpp-f32-deferred` below). Treat them as the reference
 implementation of the binding *protocol*, not as something that validates

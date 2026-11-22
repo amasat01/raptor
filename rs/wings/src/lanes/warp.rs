@@ -115,7 +115,11 @@ impl Proof<'_> {
                 "uniform" | "nsamples"
             )
         } else if is_a(ctx, node, "At") {
-            self.uniform(self.eval.raw_index(node))?
+            let mut all = true;
+            for index in self.eval.index_nodes(node) {
+                all &= self.uniform(index)?;
+            }
+            all
         } else if let Some(kind) = self.eval.kind(node) {
             self.uniform_op(node, &kind)?
         } else {

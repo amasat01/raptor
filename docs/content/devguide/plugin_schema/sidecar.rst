@@ -51,15 +51,9 @@ below:
        fixes this one name for every producer, hand-written kernels
        included, so the artifact file name, not the symbol, tells kernels
        apart.
-   * - ``vector_inputs``
-     - array[string]
-     - Named vector inputs, in binding order.
    * - ``params``
      - array[string]
      - Named uniform scalar parameters.
-   * - ``per_sample``
-     - array[string]
-     - Named per-sample scalar inputs.
    * - ``arg_spec``
      - array[[role, name]]
      - The ordered ``[role, name]`` binding list — **role first** (see
@@ -84,9 +78,6 @@ Variant additions
      - string
      - The accumulate-sink contract name (e.g. ``"outVec-scratch"``) — a
        per-kernel deterministic-reduce scratch slot, not the final total.
-   * - ``vec_widths``
-     - object{string→int}
-     - Per-name vector width (component count) for host ``(W, N)`` allocation.
    * - ``buffers``
      - array
      - Declared read-only lookup buffers (may be empty; see below).
@@ -104,21 +95,11 @@ Variant additions
      - array[object]
      - The writable per-sample state that *is* the pure output. Each element is
        ``{name, dtype ("float"|"int"|"vector"|"matrix"), width, default
-       (number|null)}``, plus ``shape: [R, C]`` **only** when ``dtype ==
-       "matrix"``.
-   * - ``vec_widths``
-     - object{string→int}
-     - Per-name vector width (includes vector Mutables).
+       (number|null)}``, plus ``shape`` **only** when ``dtype`` is
+       ``"matrix"`` (``[R, C]``) or ``"tensor"`` (a value of rank three or more).
    * - ``buffers``
      - array
      - Declared read-only lookup buffers (may be empty).
-   * - ``matrix_inputs``
-     - array[string]
-     - **Only when the kernel has matrix inputs**: the ``mat_in`` binding order.
-   * - ``mat_shapes``
-     - object{string→[R, C]}
-     - **Only when the kernel has matrix inputs**: the ``(R, C)`` shape per
-       matrix-input name.
 
 Each ``buffers`` element is
 ``{name: string, kind: "lookup", dtype: "float", shape: array[int], count: int}``,

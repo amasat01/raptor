@@ -20,7 +20,7 @@ fn part(p: &raptor_ir::typed::RxPairPart) -> Shown {
 /// The pairs the door answers for the field `kept` of a reduction holding `kept`.
 fn kept_pairs(kept: &str) -> Vec<(Shown, Shown)> {
     let mut c = Ctx::new().unwrap();
-    let fields = "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+    let fields = "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
     let x = c.make("Leaf", "f64", &[], None, &[], fields).unwrap();
     let k = c
         .make("Leaf", "i32", &[], None, &[], &fields.replace("'x'", "'k'"))
@@ -95,7 +95,7 @@ fn the_bounds_of_a_loop_index_read_as_integers_or_absent() {
 #[test]
 fn a_field_of_bare_names_is_refused_by_the_pairs_read() {
     let mut c = Ctx::new().unwrap();
-    let fields = "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+    let fields = "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
     let x = c.make("Leaf", "f64", &[], None, &[], fields).unwrap();
     let params = "(('op', 'sum'), ('value', #0), ('kept', ('key', 'bin')))";
     let node = c.new_node("ReduceSamples", params, &[x]).unwrap();

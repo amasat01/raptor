@@ -12,12 +12,6 @@
   "kernel": "sq",
   "params": [],
   "params_schema": 2,
-  "per_sample": [
-    "x"
-  ],
-  "vector_inputs": [],
-  "matrix_inputs": [],
-  "mat_shapes": {},
   "mutables": [
     {
       "name": "y",
@@ -30,7 +24,6 @@
     "y": 1,
     "x": 1
   },
-  "vec_widths": {},
   "arg_shapes": {
     "y": 1,
     "x": 1,
@@ -52,7 +45,7 @@
       "y"
     ],
     [
-      "per_sample",
+      "plane_in",
       "x"
     ],
     [

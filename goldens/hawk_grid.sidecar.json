@@ -11,12 +11,6 @@
   "kernel": "hawk_grid",
   "params": [],
   "params_schema": 2,
-  "per_sample": [
-    "x"
-  ],
-  "vector_inputs": [],
-  "matrix_inputs": [],
-  "mat_shapes": {},
   "mutables": [
     {
       "name": "out",
@@ -29,7 +23,6 @@
     "out": 1,
     "x": 1
   },
-  "vec_widths": {},
   "arg_shapes": {
     "out": 1,
     "x": 1
@@ -49,7 +42,7 @@
       "out"
     ],
     [
-      "per_sample",
+      "plane_in",
       "x"
     ]
   ],

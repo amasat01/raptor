@@ -255,7 +255,7 @@ pub(crate) fn plane_leaf(ctx: &mut Ctx, original: u32, name: &str, scratch: bool
     };
     let fields = format!(
         "((\"kind\", \"vocab_read\"), (\"name\", {name:?}), (\"quantity\", None), \
-         (\"role\", {role:?}), (\"sorted\", False), (\"wire_index\", 0))"
+         (\"role\", {role:?}), (\"sorted\", False), (\"wire_index\", 0), (\"axes\", ()))"
     );
     ctx.make("Leaf", &dtype, &shape, tag.as_deref(), &[], &fields)
 }

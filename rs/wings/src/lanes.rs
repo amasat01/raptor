@@ -188,17 +188,13 @@ impl<'a> Eval<'a> {
             None
         }
     }
-    /// The index of a read, before its clamp.
-    fn raw_index(&self, at: u32) -> u32 {
-        self.peel(self.ops(at)[1])
+    /// The index operands of a read before any explicit clamp, one per axis of the plane.
+    fn index_nodes(&self, at: u32) -> Vec<u32> {
+        crate::raw_indices(self.c, at)
     }
     /// The node without a clamp around it.
     fn peel(&self, h: u32) -> u32 {
-        if self.kind(h).as_deref() == Some("clamp_index") {
-            self.ops(h)[0]
-        } else {
-            h
-        }
+        crate::unclamped(self.c, h)
     }
     /// The element type name of the node.
     fn dtype(&self, h: u32) -> &str {
@@ -226,7 +222,7 @@ impl<'a> Eval<'a> {
     /// The nodes whose values the node's value is made from.
     fn children(&self, n: u32) -> Vec<u32> {
         if self.is_a(n, "At") {
-            vec![self.raw_index(n)]
+            self.index_nodes(n)
         } else if self.is_a(n, "LoopIndex") || self.is_a(n, "LoopCarry") || self.is_a(n, "Leaf") {
             vec![]
         } else {
@@ -285,8 +281,11 @@ impl<'a> Eval<'a> {
             });
         }
         if self.is_a(n, "At") {
-            let idx = &self.memo[&self.raw_index(n)];
-            return Ok(mk(Default::default(), None, 0, true, idx.varies()));
+            let varies = self
+                .index_nodes(n)
+                .iter()
+                .fold(0, |bits, i| bits | self.memo[i].varies());
+            return Ok(mk(Default::default(), None, 0, true, varies));
         }
         if let Some(k) = self.kind(n) {
             if k == "clamp_index" {
@@ -501,7 +500,9 @@ impl<'a> Eval<'a> {
             }
         };
         if self.is_a(s, "Leaf") {
-            return Ok(self.c.str_field(s, "role")? == "per_sample" && ok(self.dtype(s)));
+            return Ok(self.c.str_field(s, "role")? == "plane_in"
+                && self.c.nodes[s as usize].shape.is_empty()
+                && ok(self.dtype(s)));
         }
         if !self.is_a(s, "At") {
             return Ok(false);
@@ -510,8 +511,12 @@ impl<'a> Eval<'a> {
         if !(ok(self.dtype(plane)) && self.c.str_field(plane, "role")? == "lookup") {
             return Ok(false);
         }
-        let ri = self.raw_index(s);
-        Ok(!self.value(ri)?.data)
+        for index in self.index_nodes(s) {
+            if self.value(index)?.data {
+                return Ok(false);
+            }
+        }
+        Ok(true)
     }
 
     /// The additive terms of an index: data-free values with their signs, clamp slots, index-plane reads, and a count of the rest.
@@ -748,12 +753,17 @@ pub(crate) fn box_candidate(c: &Ctx, sinks: &[u32]) -> R<Option<BoxCandidate>> {
         if !c.table.is_a(c.nodes[node as usize].class, "At") {
             continue;
         }
-        let forms = axis_forms(&ev.value(ev.raw_index(node))?, n);
+        // A read is invariant along a lane axis when every one of its index operands is.
+        let mut held = vec![true; n];
+        for &index in &c.nodes[node as usize].ops[1..] {
+            for (axis, form) in axis_forms(&ev.value(ev.peel(index))?, n).iter().enumerate() {
+                held[axis] &= form.0 == INVARIANT;
+            }
+        }
         let plane = ev.ops(node)[0];
         let name = c
             .str_field(plane, "name")
             .unwrap_or_else(|_| format!("#{plane}"));
-        let held: Vec<bool> = forms.iter().map(|f| f.0 == INVARIANT).collect();
         match planes.iter_mut().find(|p| p.0 == name) {
             Some(known) => known.1.iter_mut().zip(held).for_each(|(a, b)| *a &= b),
             None => planes.push((name, held)),
@@ -767,7 +777,8 @@ pub(crate) fn box_candidate(c: &Ctx, sinks: &[u32]) -> R<Option<BoxCandidate>> {
     }))
 }
 
-/// The key run of one keyed sink of the kernel whose sinks are `sinks`; None for an own-column sink or a key with no run.
+/// The key run of one keyed sink of the kernel whose sinks are `sinks`; None for an own-column sink, a sink with several
+/// indices or a key with no run.
 pub fn key_run(
     c: &Ctx,
     sinks: &[u32],
@@ -776,7 +787,16 @@ pub fn key_run(
     block_run: i128,
 ) -> R<Option<KeyRun>> {
     c.node(sink)?;
-    let key = match c.field(sink, "index") {
+    // The run reasoning is about one flat key. A sum over some lane axes states it on its `reduced` edge; a store with several
+    // indices and no such edge has none.
+    let flat = match c.field(sink, "reduced") {
+        Ok(Val::Node(sum)) => c.field(sum, "key").ok(),
+        _ => None,
+    };
+    if flat.is_none() && c.nodes[sink as usize].ops.len() > 2 {
+        return Ok(None);
+    }
+    let key = match flat.map_or_else(|| c.field(sink, "index"), Ok) {
         Ok(Val::Node(k)) => k,
         Ok(Val::None) => return Ok(None),
         Ok(_) => return refuse("a sink's index is not a node"),
@@ -868,7 +888,7 @@ mod tests {
         fn leaf(&mut self, name: &str, sorted: bool) -> u32 {
             let sorted = if sorted { "True" } else { "False" };
             let fields = format!(
-                "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', {sorted}))"
+                "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', {sorted}), ('axes', ()))"
             );
             self.c.make("Leaf", "i32", &[], None, &[], &fields).unwrap()
         }

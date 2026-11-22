@@ -2,7 +2,9 @@
 //! Rebuilds each recorded unit in a fresh context through the C door, asks the wings every question the recorded render asked
 //! (the functions this crate implements), and compares the answers with the recorded ones.
 use raptor_ir::record::Ctx;
-use raptor_support::corpus::{declare, err, make_nodes, manifests, tagged_str, text_out, val};
+use raptor_support::corpus::{
+    declare, err, make_nodes, manifests, replay_ctx, tagged_str, text_out, val,
+};
 use raptor_support::corpus::{walk_options, with_analysis_nodes, Vals};
 use raptor_support::safe::*;
 // SAFETY (every `unsafe` call of an `rw_*` export below): `c` is a live context made in this tool, and
@@ -2195,10 +2197,14 @@ fn main() {
         lines += 1;
         let text = String::from_utf8_lossy(&raw);
         // the recorded calls are read again, one at a time, where they are answered; only the closure calls the warp check needs stay
-        let Ok(rec) = json::parse_keeping(&text, "analyses", &warp_uniform_call) else {
+        let Ok(mut rec) = json::parse_keeping(&text, "analyses", &warp_uniform_call) else {
             bad += 1;
             continue;
         };
+        if raptor_support::migrate::migrate(&mut rec).is_err() {
+            bad += 1;
+            continue;
+        }
         if target
             .as_deref()
             .is_some_and(|t| rec.get("target").and_then(J::str) != Some(t))
@@ -2228,7 +2234,7 @@ fn main() {
         }
         units += 1;
         let table = with_analysis_nodes(rec.get("inputs").unwrap(), &rec);
-        let c = rx_ctx_new();
+        let c = replay_ctx(true);
         let merged = a.iter().any(|x| x == "--own-kinds-merge");
         let own = merged || a.iter().any(|x| x == "--own-kinds");
         let mut declared = manifests(&table);

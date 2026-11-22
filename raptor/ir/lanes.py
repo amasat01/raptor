@@ -403,7 +403,8 @@ def _index_plane_read(node: Node, ev: "Eval") -> bool:
     stored = _stored(node)
     dtypes = ("i32", "i64") if stored is node else ("int32",)
     if isinstance(stored, Leaf):
-        return stored.role == "per_sample" and stored.ttype.dtype in dtypes
+        return (stored.role == "plane_in" and not stored.ttype.shape
+                and stored.ttype.dtype in dtypes)
     return (isinstance(stored, At) and stored.plane.ttype.dtype in dtypes
             and stored.plane.role == "lookup" and not ev.value(stored.raw_index).data)
 

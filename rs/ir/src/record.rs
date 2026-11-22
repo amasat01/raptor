@@ -62,6 +62,14 @@ pub struct Ctx {
     pub progs: crate::ctor::Progs,
     /// The manifest's rule tables and refinable kinds, read when the context is made.
     pub tables: std::sync::Arc<crate::rules::ManifestTables>,
+    /// Rewrites the key line of each node before a walk digest or a loop body hash takes it in. Only the replay tools set it,
+    /// to compare a walk with a digest recorded before a field was added to a node: the rewrite removes that field.
+    #[cfg(feature = "replay-key-form")]
+    pub key_form: Option<fn(&str) -> String>,
+    /// Names the role of a slot the way a digest recorded before the read planes shared one role took it, from the role and the
+    /// rank of the value. Only the replay tools set it, together with `key_form`.
+    #[cfg(feature = "replay-key-form")]
+    pub role_form: Option<fn(&str, usize) -> String>,
 }
 
 impl Ctx {
@@ -76,7 +84,38 @@ impl Ctx {
             body_cache: Default::default(),
             progs: crate::ctor::Progs::compile()?,
             tables: std::sync::Arc::new(crate::rules::ManifestTables::load()?),
+            #[cfg(feature = "replay-key-form")]
+            key_form: None,
+            #[cfg(feature = "replay-key-form")]
+            role_form: None,
         })
+    }
+    /// A node key as the digests take it: rewritten by `key_form` when a replay tool set one. The rewrite reads a numbered line
+    /// (`<number>|<key>`); a key without a number is numbered for it and unnumbered after.
+    #[cfg(feature = "replay-key-form")]
+    pub(crate) fn keyed(&self, key: &str) -> String {
+        match self.key_form {
+            None => key.to_string(),
+            Some(form) => form(&format!("0|{key}"))
+                .split_once('|')
+                .map_or(key.to_string(), |(_, rest)| rest.to_string()),
+        }
+    }
+    /// The role of a slot of a value of rank `rank` as the digests take it: rewritten by `role_form` when a replay tool set one.
+    #[cfg(feature = "replay-key-form")]
+    pub(crate) fn digest_role(&self, role: &str, rank: usize) -> String {
+        self.role_form
+            .map_or_else(|| role.to_string(), |form| form(role, rank))
+    }
+    /// The role of a slot as the digests take it: as it is.
+    #[cfg(not(feature = "replay-key-form"))]
+    pub(crate) fn digest_role(&self, role: &str, _rank: usize) -> String {
+        role.to_string()
+    }
+    /// A numbered key line as the digests take it.
+    #[cfg(feature = "replay-key-form")]
+    pub(crate) fn keyed_line(&self, line: &str) -> String {
+        self.key_form.map_or(line.to_string(), |form| form(line))
     }
     /// Stores `code` as the code of the refusal about to be returned; it holds until the next call through the door begins.
     pub fn set_code(&mut self, code: &str) {
@@ -141,6 +180,11 @@ impl Ctx {
             let i = class.slots.iter().position(|s| s == k).unwrap();
             if vals[i].is_none() {
                 vals[i] = Some(d.clone())
+            }
+        }
+        for (i, slot) in class.slots.iter().enumerate() {
+            if vals[i].is_none() {
+                vals[i] = crate::ctor::slot_default(self, ci, slot);
             }
         }
         for (k, f) in &class.fixed {

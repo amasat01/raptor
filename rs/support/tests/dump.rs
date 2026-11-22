@@ -5,7 +5,7 @@ use raptor_support::safe::*;
 use rcore::keytext::py_str;
 
 fn leaf_line(n: &str) -> String {
-    format!("n|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{n}'), ('quantity', None), ('wire_index', 0), ('sorted', False))\n")
+    format!("n|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{n}'), ('quantity', None), ('wire_index', 0), ('sorted', False), ('axes', ()))\n")
 }
 
 #[test]
@@ -13,7 +13,7 @@ fn probe_expression_text() {
     let c = rx_ctx_new();
     let h = expression(c);
     let want = format!("raptor.ir.dump/1\n{}{}n|Op|f64|()|None|(#0, #1)|(('kind', 'add'), ('literal', None))\nn|Const|f64|()|None|()|(('literal', 2.0),)\n\
-                        n|Op|f64|()|None|(#2, #3)|(('kind', 'add'), ('literal', None))\nn|Assign|f64|()|None|(#4,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'))\nroot|#5\n",
+                        n|Op|f64|()|None|(#2, #3)|(('kind', 'add'), ('literal', None))\nn|Assign|f64|()|None|(#4,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'y'), ('axes', ()))\nroot|#5\n",
                        leaf_line("a"), leaf_line("b"));
     assert_eq!(dump(c, &[h[5]]), want);
     rx_ctx_free(c);
@@ -77,7 +77,7 @@ fn round_trips() {
     let (t, _) = round(c, &[v]);
     assert!(t.contains("5e-324") && t.contains("12345678901234567890"));
     // a nested record
-    let q = "Quantity(slug='q', name=None, wires=(Wire(name='a', role='vec_in', shape=(), dtype='f64', tag=None),), pack='auto')";
+    let q = "Quantity(slug='q', name=None, wires=(Wire(name='a', role='plane_in', shape=(), dtype='f64', tag=None),), pack='auto')";
     let l = mk(
         c,
         "Leaf",

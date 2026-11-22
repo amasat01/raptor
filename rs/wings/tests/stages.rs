@@ -65,7 +65,7 @@ fn make(c: *mut Ctx, class: &str, dtype: &str, shape: &[i64], ops: &[u32], field
 /// A per-sample read of the plane `name`.
 fn read(c: *mut Ctx, name: &str) -> u32 {
     let fields = format!(
-        "((\"kind\", \"vocab_read\"), (\"role\", \"per_sample\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
+        "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
     );
     make(c, "Leaf", "f64", &[], &[], &fields)
 }
@@ -176,7 +176,10 @@ fn a_team_op_inside_a_loop_is_refused_by_name() {
         );
         make(c, "Leaf", "f64", shape, &[], &fields)
     };
-    let (a, b) = (leaf("mat_in", "A", &[40, 40]), leaf("vec_in", "b", &[40]));
+    let (a, b) = (
+        leaf("plane_in", "A", &[40, 40]),
+        leaf("plane_in", "b", &[40]),
+    );
     let index = make(
         c,
         "LoopIndex",
@@ -281,13 +284,13 @@ fn eigh_steps(n: i64, vectors: bool, arm: bool, facts: &StageFacts) -> Vec<(i64,
             format!("((\"kind\", \"assign\"), (\"role\", \"mutable\"), (\"name\", \"{name}\"))");
         make(c, "Assign", "f64", shape, &[value], &fields)
     };
-    let matrix = leaf("mat_in", "A", "f64", &[n, n]);
+    let matrix = leaf("plane_in", "A", "f64", &[n, n]);
     let factor = op("eigh", &[n, n], &[matrix]);
     let values = op("eigh_w", &[n], &[factor]);
     let mut sinks = vec![];
     if arm {
         // the factor is read only by the arms of a dispatch on the plane `k`
-        let key = leaf("per_sample", "k", "i32", &[]);
+        let key = leaf("plane_in", "k", "i32", &[]);
         let other = op("exp", &[n], &[values]);
         let dispatch = make(c, "Dispatch", "f64", &[n], &[key, values, other], "()");
         sinks.push(store("y", &[n], dispatch));
@@ -374,7 +377,7 @@ fn an_eigh_in_a_loop_body_keeps_the_per_lane_form() {
     let c = fresh();
     let leaf = |name: &str| {
         let fields = format!(
-            "((\"kind\", \"vocab_read\"), (\"role\", \"mat_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
+            "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
         );
         make(c, "Leaf", "f64", &[32, 32], &[], &fields)
     };

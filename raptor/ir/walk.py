@@ -36,7 +36,7 @@ from .nodes import (
     Dispatch,
     Finish,
     SamplePosition,
-    PlaneExtent,
+    AxisExtent,
     Leaf,
     Node,
     SampleSum,
@@ -56,6 +56,11 @@ globals().update(_gen.records(_gen.parse(_core.manifest()), __name__, 'walk'))
 
 
 @dataclass(frozen=True)
+def _is_matrix_input(leaf: Any) -> bool:
+    """Whether ``leaf`` is a per-sample plane holding a rank-two value."""
+    return leaf.role == "plane_in" and len(leaf.ttype.shape) == 2
+
+
 class Walk:
     """The frozen product of :func:`canonical`, computed once.
 
@@ -132,15 +137,15 @@ class Walk:
 
     @property
     def gather_mats(self) -> tuple:
-        """The ``mat_in`` planes read ONLY through ``at()``: their column count
+        """The rank-two ``plane_in`` planes read ONLY through ``at()``: their column count
         is the caller's (a broadcast Matrix binds compact), not the lane count."""
         from .nodes import At
 
         direct = {o.name for n in self.order
                   if not isinstance(n, At) for o in n.operands
-                  if isinstance(o, Leaf) and o.role == "mat_in"}
+                  if isinstance(o, Leaf) and _is_matrix_input(o)}
         crossed = {n.operands[0].name for n in self.order
-                   if isinstance(n, At) and n.operands[0].role == "mat_in"}
+                   if isinstance(n, At) and _is_matrix_input(n.operands[0])}
         return tuple(sorted(crossed - direct))
 
     @property

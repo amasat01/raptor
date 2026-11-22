@@ -15,7 +15,7 @@ const CASES: &str = include_str!("data/rule_cases.json");
 
 /// The fields of a leaf node of the given name.
 fn leaf_fields(name: &str) -> String {
-    format!("(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False))")
+    format!("(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False))")
 }
 
 /// A leaf named `name` of the type of node `like`.

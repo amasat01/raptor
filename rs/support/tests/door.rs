@@ -58,7 +58,7 @@ fn text(
         .unwrap()
         .to_string()
 }
-const LEAF: &str = "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{}'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+const LEAF: &str = "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{}'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
 
 fn expression(c: *mut Ctx) -> [u32; 6] {
     let a = ok(c, "Leaf", &[], &LEAF.replace("{}", "a"));
@@ -112,7 +112,7 @@ fn probe_expression_reads_back() {
             field(a, "wire_index").as_str(),
             field(a, "sorted").as_str()
         ),
-        ("'a'", "'vec_in'", "0", "False")
+        ("'a'", "'plane_in'", "0", "False")
     );
     assert_eq!(
         (
@@ -152,8 +152,12 @@ fn key_lines_equal_today() {
         .collect();
     let (order, pre) = walk(&recs, &[hs[5]]).unwrap();
     assert_eq!(order.len(), 6);
-    assert_eq!(pre, "0|('leaf', 'vec_in', 'a')\n1|('leaf', 'vec_in', 'b')\n2|('add', 'f64', (), None, (0, 1), 'None')\n\
-                     3|('constant', 'f64', (), None, (), '2.0')\n4|('add', 'f64', (), None, (2, 3), 'None')\n5|('assign', 'f64', (), None, (4,), ('mutable', 'y'))\n");
+    assert_eq!(pre, "0|('leaf', 'plane_in', 'a', ())\n1|('leaf', 'plane_in', 'b', ())\n2|('add', 'f64', (), None, (0, 1), 'None')\n\
+                     3|('constant', 'f64', (), None, (), '2.0')\n4|('add', 'f64', (), None, (2, 3), 'None')\n5|('assign', 'f64', (), None, (4,), ('mutable', 'y', ()))\n");
+    // Before an assignment stated its axes the last line ended `('mutable', 'y'))`: removing the field gives that text.
+    assert!(pre
+        .replace("('mutable', 'y', ()))", "('mutable', 'y'))")
+        .ends_with("5|('assign', 'f64', (), None, (4,), ('mutable', 'y'))\n"));
     rx_ctx_free(c);
 }
 
@@ -248,10 +252,10 @@ fn every_core_class() {
             "(('literal', 1), ('label', 'n'))".into(),
         ),
         ("SampleIndex", vec![], "()".into()),
-        ("PlaneExtent", vec![l], "()".into()),
+        ("AxisExtent", vec![l], "(('axis', 0),)".into()),
         ("SamplePosition", vec![], "()".into()),
         ("Op", vec![i], "(('kind', 'neg'), ('literal', None))".into()),
-        ("At", vec![l, i], "()".into()),
+        ("At", vec![l, si], "()".into()),
         (
             "Primitive",
             vec![i],
@@ -581,7 +585,7 @@ fn parameter_form_and_typed_op() {
     let (st, a) = new(
         c,
         "Leaf",
-        &format!("(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'a'), ('ttype', {tt}))"),
+        &format!("(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'a'), ('ttype', {tt}))"),
         &[],
     );
     assert_eq!(st, RX_OK, "{}", err(c));

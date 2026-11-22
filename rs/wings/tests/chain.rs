@@ -35,7 +35,7 @@ fn make(c: *mut Ctx, cls: &str, ops: &[u32], fields: &str) -> u32 {
 /// A read of the plane `name` as a per-sample value.
 fn leaf(c: *mut Ctx, name: &str) -> u32 {
     let fields = format!(
-        "((\"kind\", \"vocab_read\"), (\"role\", \"per_sample\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
+        "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
     );
     make(c, "Leaf", &[], &fields)
 }

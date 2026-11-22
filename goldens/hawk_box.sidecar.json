@@ -11,12 +11,6 @@
   "kernel": "kg_fwd",
   "params": [],
   "params_schema": 2,
-  "per_sample": [
-    "lane"
-  ],
-  "vector_inputs": [],
-  "matrix_inputs": [],
-  "mat_shapes": {},
   "mutables": [
     {
       "name": "y",
@@ -29,7 +23,6 @@
     "y": 1,
     "lane": 1
   },
-  "vec_widths": {},
   "arg_shapes": {
     "y": 1,
     "lane": 1,
@@ -53,7 +46,7 @@
       "y"
     ],
     [
-      "per_sample",
+      "plane_in",
       "lane"
     ],
     [

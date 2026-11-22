@@ -129,6 +129,8 @@ impl Ctx {
                 text_val(&Val::Tuple(parts)),
                 text_val(&self.dedup_val(n)?)
             );
+            #[cfg(feature = "replay-key-form")]
+            let raw = self.keyed(&raw);
             key_of.insert(
                 n,
                 rcore::sha256::hex(raw.as_bytes())[..BODY_KEY_HEX].to_string(),

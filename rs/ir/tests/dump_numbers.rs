@@ -8,7 +8,7 @@ use std::ffi::{c_char, CStr};
 #[test]
 fn a_root_number_is_the_line_its_dump_gives_it() {
     let mut c = Ctx::new().unwrap();
-    let fields = "(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
+    let fields = "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))";
     let x = c.make("Leaf", "f64", &[], None, &[], fields).unwrap();
     let sum = c.make_op("add", &[x, x], &Val::None).unwrap();
     let product = c.make_op("mul", &[sum, x], &Val::None).unwrap();

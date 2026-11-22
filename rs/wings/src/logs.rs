@@ -207,9 +207,9 @@ fn stores(ctx: &mut Ctx, sink: u32, (width, slot): (i64, &Slot)) -> R<[u32; 2]> 
     let target = ctx.str_field(sink, "name")?;
     let kept = ctx.field(sink, "kept")?;
     let [values, cells] = names(&target);
-    let (value, index, key) = {
+    let (value, indices, key) = {
         let ops = &ctx.nodes[sink as usize].ops;
-        (ops[0], ops[1], ops[2])
+        (ops[0], ops[1..ops.len() - 1].to_vec(), ops[ops.len() - 1])
     };
     let (value_offset, cell_offset) = offsets(ctx, slot)?;
     let (lane, stride) = (sample_index(ctx)?, constant(ctx, width, "i64")?);
@@ -219,11 +219,44 @@ fn stores(ctx: &mut Ctx, sink: u32, (width, slot): (i64, &Slot)) -> R<[u32; 2]> 
     let stride = constant(ctx, width, "i32")?;
     let scaled = ctx.make_op("mul", &[key, stride], &Val::None)?;
     let cell_at = ctx.make_op("add", &[scaled, cell_offset], &Val::None)?;
+    let index = cell_of(ctx, sink, &indices)?;
     let cell = ctx.make_op("cast", &[index], &Val::Str("f64".into()))?;
     Ok([
         log_store(ctx, (&values, &target, &kept), (value, value_at, width))?,
         log_store(ctx, (&cells, &target, &kept), (cell, cell_at, width))?,
     ])
+}
+
+/// The one cell of the target plane that the index list `indices` of the ordered accumulate `sink` names: the position in storage
+/// order, last axis fastest, so `(i, j)` over the axes `(m, n)` is `i * n + j`. The extent of the first axis is never needed; the
+/// others must be stated, since the log holds a single number for the cell.
+fn cell_of(ctx: &mut Ctx, sink: u32, indices: &[u32]) -> R<u32> {
+    let Val::Tuple(axes) = ctx.field(sink, "axes")? else {
+        return refuse("an ordered accumulate states no axes");
+    };
+    let Some((&first, rest)) = indices.split_first() else {
+        return refuse("an ordered accumulate states no index");
+    };
+    if rest.is_empty() {
+        return Ok(first);
+    }
+    let mut cell = ctx.make_op("cast", &[first], &Val::Str("i32".into()))?;
+    for (&index, axis) in rest.iter().zip(axes.iter().skip(1)) {
+        let Val::Tuple(pair) = axis else {
+            return refuse("an ordered accumulate states an axis that is not a pair");
+        };
+        let Some(Val::Int(extent)) = pair.get(1) else {
+            return refuse(format!(
+                "an ordered accumulate into {} at several indices needs the extent of every axis but the first",
+                ctx.str_field(sink, "name")?
+            ));
+        };
+        let stride = constant(ctx, *extent as i64, "i32")?;
+        let scaled = ctx.make_op("mul", &[cell, stride], &Val::None)?;
+        let at = ctx.make_op("cast", &[index], &Val::Str("i32".into()))?;
+        cell = ctx.make_op("add", &[scaled, at], &Val::None)?;
+    }
+    Ok(cell)
 }
 
 /// The loop `lp` made again with the sinks `body` in place of its own, everything else kept.

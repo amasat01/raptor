@@ -3,6 +3,7 @@
 //! walks the reduce axis, the shape of the terms, and the lanes that share one slot of a staged operand. The caller tells the
 //! names of the staged planes, which the nodes do not carry.
 use crate::is_a;
+use crate::place::one_index;
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
 use std::collections::{HashMap, HashSet};
@@ -110,9 +111,11 @@ fn subtree(ctx: &Ctx, node: u32) -> R<Vec<u32>> {
     Ok(out)
 }
 
-/// Whether the node is a component read of a wide value.
+/// Whether the node is a component read of a wide value by one index (a deeper value is not recognised).
 fn is_component(ctx: &Ctx, node: u32) -> R<bool> {
-    Ok(is_a(ctx, node, "Op") && ctx.str_field(node, "kind")? == "component_at")
+    Ok(is_a(ctx, node, "Op")
+        && ctx.str_field(node, "kind")? == "component_at"
+        && one_index(ctx, node))
 }
 
 /// Whether the node is a read a term multiplies: a plane read or a component read.
@@ -156,9 +159,50 @@ fn reads_of(ctx: &Ctx, term: u32) -> R<Vec<Read>> {
     Ok(out)
 }
 
-/// The flat index a read walks.
-fn read_index(ctx: &Ctx, read: &Read) -> R<u32> {
-    Ok(ctx.node(read.node)?.ops[1])
+/// Every index operand of the reads of one operand.
+fn flat_indices(accesses: &[Access]) -> Vec<u32> {
+    accesses
+        .iter()
+        .flat_map(|a| a.indices.iter().copied())
+        .collect()
+}
+
+/// One read of an operand: its index operands, one per axis of the plane, and the extent of each axis (none: known at run time).
+struct Access {
+    /// The index operands.
+    indices: Vec<u32>,
+    /// The extent of each axis the indices address.
+    extents: Vec<Option<i64>>,
+}
+
+/// The access a read makes: a component read of a wide value has one run-time axis; a plane read has the plane leaf's axes.
+fn read_access(ctx: &Ctx, read: &Read) -> R<Access> {
+    let ops = &ctx.node(read.node)?.ops;
+    let declared = if read.component {
+        vec![]
+    } else if let Val::Tuple(axes) = ctx.field(ops[0], "axes")? {
+        axes
+    } else {
+        vec![]
+    };
+    let extents = if declared.is_empty() {
+        vec![None]
+    } else {
+        declared
+            .iter()
+            .map(|axis| match axis {
+                Val::Tuple(pair) => match pair.get(1) {
+                    Some(Val::Int(n)) => i64::try_from(*n).ok(),
+                    _ => None,
+                },
+                _ => None,
+            })
+            .collect()
+    };
+    Ok(Access {
+        indices: ops[1..].to_vec(),
+        extents,
+    })
 }
 
 /// The operand a read belongs to; a value built in the kernel is named `computed#k` by first read, through `computed`.
@@ -220,11 +264,11 @@ fn form_of(ctx: &Ctx, index: u32, var: Option<u32>) -> R<Option<Form>> {
 fn describe(
     ctx: &Ctx,
     name: &str,
-    indices: &[u32],
+    accesses: &[Access],
     loop_index: u32,
 ) -> R<(Option<Stride>, Vec<String>)> {
     let mut refusals: Vec<String> = vec![];
-    for &index in indices {
+    for &index in accesses.iter().flat_map(|access| &access.indices) {
         if subtree(ctx, index)?.iter().any(|&n| is_a(ctx, n, "At")) {
             refusals.push(format!(
                 "{name}: the index depends on a value read from a plane, so the row it walks is chosen at runtime"
@@ -233,30 +277,67 @@ fn describe(
         }
     }
     let mut strides: HashSet<Stride> = HashSet::new();
-    for &index in indices {
-        let Some(form) = form_of(ctx, index, Some(loop_index))? else {
-            refusals.push(format!(
-                "{name}: the index is not affine in the reduce axis"
-            ));
+    for access in accesses {
+        // the axis the reduce index walks, and how many elements of the plane one step moves it by
+        let mut walked: Vec<(usize, Form)> = vec![];
+        for (axis, &index) in access.indices.iter().enumerate() {
+            match form_of(ctx, index, Some(loop_index))? {
+                Some(form) if form.coefficient != 0 || form.symbol.is_some() => {
+                    walked.push((axis, form))
+                }
+                Some(_) => {}
+                None => refusals.push(format!(
+                    "{name}: the index is not affine in the reduce axis"
+                )),
+            }
+        }
+        if walked.is_empty() {
             continue;
-        };
-        if let Some(symbol) = form.symbol {
-            if form.coefficient == 1 {
-                strides.insert(Stride::Symbol(symbol));
-            } else {
-                refusals.push(format!(
+        }
+        if walked.iter().any(|(_, form)| form.symbol.is_some()) {
+            match &walked[..] {
+                [(
+                    _,
+                    Form {
+                        coefficient: 1,
+                        symbol: Some(symbol),
+                        ..
+                    },
+                )] => {
+                    strides.insert(Stride::Symbol(symbol.clone()));
+                }
+                _ => refusals.push(format!(
                     "{name}: the reduce-axis stride is a multiple of the sample count"
-                ));
+                )),
             }
             continue;
         }
-        if form.anonymous && form.coefficient != 0 {
+        if walked.iter().any(|(_, form)| form.anonymous) {
             refusals.push(format!(
                 "{name}: the reduce-axis stride is built from an anonymous integer literal, so it is not derivable from the declaration"
             ));
         }
-        if form.coefficient != 0 {
-            strides.insert(Stride::Int(form.coefficient));
+        // the elements one step moves: for each walked axis, its index step times the extents of the axes after it
+        let runtime_later = walked
+            .iter()
+            .any(|(axis, _)| access.extents[axis + 1..].iter().any(Option::is_none));
+        if runtime_later {
+            match &walked[..] {
+                [(_, Form { coefficient: 1, .. })] => {
+                    strides.insert(Stride::Symbol("n_samples".to_string()));
+                }
+                _ => refusals.push(format!(
+                    "{name}: the reduce-axis stride is a multiple of a run-time extent"
+                )),
+            }
+        } else {
+            let moved: i64 = walked
+                .iter()
+                .map(|(axis, form)| {
+                    form.coefficient * access.extents[axis + 1..].iter().flatten().product::<i64>()
+                })
+                .sum();
+            strides.insert(Stride::Int(moved));
         }
     }
     if strides.len() > 1 {
@@ -469,7 +550,7 @@ pub fn recognize(ctx: &mut Ctx, sinks: &[u32], staged: &[String]) -> R<Option<Co
     let terms: Vec<u32> = folds.iter().flat_map(|f| f.1.iter().copied()).collect();
     let mut computed: HashMap<u32, usize> = HashMap::new();
     let mut order: Vec<String> = vec![];
-    let mut per_plane: HashMap<String, Vec<u32>> = HashMap::new();
+    let mut per_plane: HashMap<String, Vec<Access>> = HashMap::new();
     let mut wide: HashMap<String, OperandRole> = HashMap::new();
     for &term in &terms {
         for read in reads_of(ctx, term)? {
@@ -480,7 +561,7 @@ pub fn recognize(ctx: &mut Ctx, sinks: &[u32], staged: &[String]) -> R<Option<Co
             per_plane
                 .entry(name.clone())
                 .or_default()
-                .push(read_index(ctx, &read)?);
+                .push(read_access(ctx, &read)?);
             if read.component {
                 let source = ctx.node(read.node)?.ops[0];
                 wide.insert(
@@ -522,8 +603,8 @@ pub fn recognize(ctx: &mut Ctx, sinks: &[u32], staged: &[String]) -> R<Option<Co
             reduce_stride: stride,
             dense: refusals.is_empty(),
             refusals,
-            lane_ops: lane_ops(ctx, &per_plane[name])?,
-            fanin: fanin(ctx, &per_plane[name])?,
+            lane_ops: lane_ops(ctx, &flat_indices(&per_plane[name]))?,
+            fanin: fanin(ctx, &flat_indices(&per_plane[name]))?,
         });
     }
     let form = term_form(ctx, &terms, &order, &mut computed)?;
@@ -533,7 +614,7 @@ pub fn recognize(ctx: &mut Ctx, sinks: &[u32], staged: &[String]) -> R<Option<Co
     }
     let mut staged_fanin = vec![];
     for name in order.iter().filter(|n| staged.contains(n)) {
-        staged_fanin.push((name.clone(), fanin(ctx, &per_plane[name])?));
+        staged_fanin.push((name.clone(), fanin(ctx, &flat_indices(&per_plane[name]))?));
     }
     Ok(Some(Contraction {
         carry: ctx.str_field(sinks[0], "name")?,

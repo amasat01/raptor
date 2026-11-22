@@ -4,7 +4,7 @@
 //! a loop carrying such values act on the slice alone; a narrow value is computed by every lane alike; a sum over a sliced
 //! value is each lane's partial sum added up across the lanes. A node with no rule here leaves the kernel in its thread form.
 use crate::construct::refs;
-use crate::place::{kind_of, ELEMENTWISE};
+use crate::place::{kind_of, one_index, ELEMENTWISE};
 use crate::planes::{type_parts, NodeType};
 use crate::rewrite::simplified;
 use crate::slots::{carries, inits, nexts};
@@ -278,7 +278,9 @@ impl Slicer<'_> {
     /// Whether the node reads one element of a sliced input or mutable at a run-time index.
     fn is_element_read(&self, node: u32) -> R<bool> {
         let ctx = &*self.ctx;
-        if !(is_a(ctx, node, "Op") && kind_of(ctx, node)?.as_deref() == Some("component_at")) {
+        if !(is_a(ctx, node, "Op") && kind_of(ctx, node)?.as_deref() == Some("component_at"))
+            || !one_index(ctx, node)
+        {
             return Ok(false);
         }
         let leaf = ctx.nodes[node as usize].ops[0];
@@ -286,14 +288,16 @@ impl Slicer<'_> {
             return Ok(false);
         }
         let role = ctx.str_field(leaf, "role")?;
-        Ok(role == "vec_in" || role == "mutable")
+        let vector_input = role == "plane_in" && ctx.nodes[leaf as usize].shape.len() == 1;
+        Ok(vector_input || role == "mutable")
     }
 
     /// A per-sample vector input read whole: lane `l` reads its elements `j * warp + l`.
     fn read(&mut self, leaf: u32) -> R<u32> {
         let ctx = &*self.ctx;
         let (role, kind) = (ctx.str_field(leaf, "role")?, ctx.str_field(leaf, "kind")?);
-        if role != "vec_in" && !(role == "mutable" && kind == "prior_read") {
+        let vector_input = role == "plane_in" && ctx.nodes[leaf as usize].shape.len() == 1;
+        if !vector_input && !(role == "mutable" && kind == "prior_read") {
             return Err(Stop::NoRule);
         }
         let ty = type_parts(ctx, leaf);
@@ -360,7 +364,7 @@ impl Slicer<'_> {
                 Ok((self.remake(node, &[inner], &out)?, true))
             }
             "vec" => Ok((self.vector(node, &out)?, true)),
-            "set_component_at" => Ok((self.write(node, &out)?, true)),
+            "set_component_at" if one_index(self.ctx, node) => Ok((self.write(node, &out)?, true)),
             _ => {
                 let held = operands
                     .iter()
@@ -430,7 +434,11 @@ impl Slicer<'_> {
             if let Some(base) = base {
                 at = self.ctx.make_op("add", &[base, at], &Val::None)?;
             }
-            let fields = fields(&[("kind", Val::Str("at".into())), ("literal", Val::None)]);
+            let fields = fields(&[
+                ("kind", Val::Str("at".into())),
+                ("literal", Val::None),
+                ("edge", Val::Str("unchecked".into())),
+            ]);
             parts.push(self.ctx.make(
                 "At",
                 &first_type.dtype,

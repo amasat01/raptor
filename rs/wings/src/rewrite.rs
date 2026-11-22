@@ -5,7 +5,7 @@
 //! core's loop constructor.
 use crate::construct::refs;
 use crate::is_a;
-use crate::place::{kind_of, Graph};
+use crate::place::{kind_of, one_index, Graph};
 use crate::plan::Slot;
 use crate::planes::{place_node, plane_leaf, Planes};
 use crate::slots::{carries, inits, nexts};
@@ -454,6 +454,7 @@ fn dead_zeroing(ctx: &Ctx, graph: &Graph, old: u32, new: u32, j: usize) -> Outco
     let ops = &ctx.nodes[next as usize].ops;
     let zeroing = is_a(ctx, next, "Op")
         && kind_of(ctx, next)?.as_deref() == Some("set_component_at")
+        && one_index(ctx, next)
         && ops[..2] == [carry, index]
         && is_a(ctx, ops[2], "Const");
     if read_after || ctx.nodes[carry as usize].shape.is_empty() || !zeroing {
@@ -466,7 +467,9 @@ fn dead_zeroing(ctx: &Ctx, graph: &Graph, old: u32, new: u32, j: usize) -> Outco
         for (k, &operand) in ctx.nodes[node as usize].ops.iter().enumerate() {
             uses += (operand == carry && !(node == next && k == 0)) as usize;
         }
-        let read = kind_of(ctx, node)?.as_deref() == Some("component_at") && is_a(ctx, node, "Op");
+        let read = kind_of(ctx, node)?.as_deref() == Some("component_at")
+            && is_a(ctx, node, "Op")
+            && one_index(ctx, node);
         if read && ctx.nodes[node as usize].ops[0] == carry {
             reads.push(node);
         }

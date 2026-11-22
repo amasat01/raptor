@@ -106,14 +106,6 @@ impl Asker<'_> {
         }
     }
 
-    /// `n` without the `clamp_index` a table read holds its index in.
-    fn peel(&self, n: u32) -> Result<u32, Fault> {
-        let node = self.ctx.node(n)?;
-        let is_clamp = self.ctx.is_a(n, "Op")
-            && matches!(self.ctx.field(n, "kind"), Ok(Val::Str(k)) if k == "clamp_index");
-        Ok(if is_clamp { node.ops[0] } else { n })
-    }
-
     /// Whether the variable occurs under `n`.
     fn carries(&self, n: u32) -> Result<bool, Fault> {
         let (mut pending, mut seen) = (vec![n], HashSet::new());
@@ -151,7 +143,6 @@ impl Asker<'_> {
 
     /// The form of `node`, or none when no form is claimed.
     fn form(&self, node: u32, quotients: bool) -> Result<Option<Form>, Fault> {
-        let node = self.peel(node)?;
         if !self.carries(node)? {
             let off = self.int_factor(node)?.map(|v| Q::int(v.0));
             return Ok(Some(Form::plain(Q::int(0), off)));

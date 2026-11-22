@@ -218,6 +218,29 @@ fn arity(kind: &str, n: usize) -> Checked<()> {
         }
         return Ok(());
     }
+    if kind == "at" {
+        if !(2..=9).contains(&n) {
+            return err(format!(
+                "at: a plane and one index per axis (at most 8) are required, got {n} operand(s)"
+            ));
+        }
+        return Ok(());
+    }
+    if kind == "component_at" || kind == "set_component_at" || kind == "add_at" {
+        // a value, one index per value axis (rank-dependent: counted by the typing) and, for a write, the entry
+        let least = if kind == "component_at" { 2 } else { 3 };
+        if n < least {
+            return err(format!(
+                "{kind}: a value, at least one index{} are required, got {n} operand(s)",
+                if kind == "component_at" {
+                    ""
+                } else {
+                    " and the entry"
+                }
+            ));
+        }
+        return Ok(());
+    }
     if kind == "dispatch" {
         if n < 3 {
             return err(format!(
@@ -229,8 +252,7 @@ fn arity(kind: &str, n: usize) -> Checked<()> {
     let want: usize = match kind {
         "lnot" | "cast" | "invert" | "isnan" | "isinf" | "isfinite" | "component" | "transpose"
         | "norm" | "sum" | "splat" | "quat_conj" | "quat_recip" | "as_pure" | "as_vec3" => 1,
-        "select" | "fma" | "clip" | "set_component_at" | "add_at" => 3,
-        "at" | "component_at" => 2,
+        "select" | "fma" | "clip" => 3,
         k if inn("LINALG_FACTORISATIONS", k)
             || inn("LINALG_PROJECTIONS", k)
             || k == "lstsq_info" =>
@@ -307,14 +329,10 @@ fn vector_shaped(kind: &str, ts: &[TT], lit: &Val) -> Checked<TT> {
             same(kind, &ts[0], &ts[1], 1, Some(3))?;
             Ok(tt(&[3], &promote(&ts[0].dtype, &ts[1].dtype)?, None))
         }
-        "norm" => {
-            rank(kind, &ts[0], 1, None)?;
-            Ok(tt(&[], &ts[0].dtype, None))
-        }
-        "sum" => {
-            if ![1, 2].contains(&ts[0].shape.len()) {
+        "norm" | "sum" => {
+            if ts[0].shape.is_empty() {
                 return err(format!(
-                    "sum: expected a rank-1 or rank-2 operand, got {}",
+                    "{kind}: expected an operand of rank one or more, got {}",
                     r(&ts[0])
                 ));
             }
@@ -338,6 +356,44 @@ fn vector_shaped(kind: &str, ts: &[TT], lit: &Val) -> Checked<TT> {
     }
 }
 
+/// The refusal of an index operand that is not a rank-0 integer value.
+fn index_refusal(kind: &str, index: &TT) -> String {
+    if kind == "component_at" {
+        format!("[component index type] component_at: the index must be a rank-0 integer value, got {}. A runtime component index is an address, so it must be an integer value, never a float", r(index))
+    } else {
+        format!(
+            "{kind}: the index must be a rank-0 integer value, got {} (see component_at)",
+            r(index)
+        )
+    }
+}
+
+/// Checks the operands of an element access: a value of rank one or more, then one rank-0 integer index per
+/// value axis, then `tail` more operands (the entry of a write). Names the value when the count is wrong.
+fn element_indices(kind: &str, ts: &[TT], tail: usize) -> Checked<()> {
+    let value = &ts[0];
+    if value.shape.is_empty() {
+        return err(format!(
+            "{kind}: the value must have rank one or more, got {}",
+            r(value)
+        ));
+    }
+    let given = ts.len() - 1 - (tail - 1);
+    if given != value.shape.len() {
+        return err(format!(
+            "{kind}: the value typed {} has {} axes and takes one index per axis, got {given} index operand(s)",
+            r(value),
+            value.shape.len()
+        ));
+    }
+    for index in &ts[1..=given] {
+        if !int_index(index) {
+            return err(index_refusal(kind, index));
+        }
+    }
+    Ok(())
+}
+
 /// The type of the component and vec ops: component, component_at, set_component_at, add_at, vec.
 fn component_shaped(kind: &str, ts: &[TT], lit: &Val) -> Checked<TT> {
     let lit_t = if let Val::Tuple(t) = lit {
@@ -348,7 +404,7 @@ fn component_shaped(kind: &str, ts: &[TT], lit: &Val) -> Checked<TT> {
     match kind {
         "component" => {
             let (index, extent): (Vec<Val>, Vec<i64>) = if let Some(t) = lit_t {
-                rank(kind, &ts[0], 2, None)?;
+                rank(kind, &ts[0], t.len(), None)?;
                 (t.clone(), ts[0].shape.clone())
             } else {
                 rank(kind, &ts[0], 1, None)?;
@@ -366,24 +422,16 @@ fn component_shaped(kind: &str, ts: &[TT], lit: &Val) -> Checked<TT> {
             Ok(tt(&[], &ts[0].dtype, None))
         }
         "component_at" => {
-            rank(kind, &ts[0], 1, None)?;
-            if !int_index(&ts[1]) {
-                return err(format!("[component index type] component_at: the index must be a rank-0 integer value, got {}. A runtime component index is an address, so it must be an integer value, never a float", r(&ts[1])));
-            }
+            element_indices(kind, ts, 1)?;
             Ok(tt(&[], &ts[0].dtype, None))
         }
         "set_component_at" | "add_at" => {
-            rank(kind, &ts[0], 1, None)?;
-            if !int_index(&ts[1]) {
-                return err(format!(
-                    "{kind}: the index must be a rank-0 integer value, got {} (see component_at)",
-                    r(&ts[1])
-                ));
-            }
-            rank(kind, &ts[2], 0, None)?;
+            element_indices(kind, ts, 2)?;
+            let entry = &ts[ts.len() - 1];
+            rank(kind, entry, 0, None)?;
             Ok(TT {
                 shape: ts[0].shape.clone(),
-                dtype: promote(&ts[0].dtype, &ts[2].dtype)?,
+                dtype: promote(&ts[0].dtype, &entry.dtype)?,
                 tag: ts[0].tag.clone(),
             })
         }
@@ -400,10 +448,10 @@ fn component_shaped(kind: &str, ts: &[TT], lit: &Val) -> Checked<TT> {
             }
             let shape: Option<Vec<i64>> = lit_t
                 .as_ref()
-                .filter(|t| t.len() == 2)
+                .filter(|t| t.len() >= 2)
                 .and_then(|t| t.iter().map(int_of).collect());
-            match shape { Some(s) if s[0] * s[1] == ts.len() as i64 => Ok(TT { shape: s, dtype, tag: None }),
-                _ => err(format!("vec: a matrix shape literal must be (rows, cols) with rows * cols == {} entries, got {}", ts.len(), text_val(lit))) }
+            match shape { Some(s) if s.iter().product::<i64>() == ts.len() as i64 => Ok(TT { shape: s, dtype, tag: None }),
+                _ => err(format!("vec: a shape literal must give a positive extent per axis (rank 2 or more) whose product is {} entries, got {}", ts.len(), text_val(lit))) }
         }
         _ => err(format!("op {kind} is not a vector op")),
     }

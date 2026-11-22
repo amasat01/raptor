@@ -1,0 +1,16 @@
+{
+ "accum_compensated_and_plain": "3743c9312226c41e4e4b3f81dc521afac751c08aedf82c9666d74b1ac0272b31",
+ "auto_dispatch": "f54f1b8ef4796ce64ff63fe6c5dce3dba5bf9799241737c7fbaa8d69970c3931",
+ "declared_slot": "aef7b375c193244aa6c4eb22c56b077e6a6e65c8aa7e6663e774de99939043d1",
+ "finishing": "db2124820d844bd7dcc447a7d6d51a9ab2278010c2285663df9e00e63acd6141",
+ "finishing_declared": "db2124820d844bd7dcc447a7d6d51a9ab2278010c2285663df9e00e63acd6141",
+ "fused_steps_read": "426a0962739a661dcb4c1067c1740c2f9492a2ad89ab3cd39151eb6233c7f4a9",
+ "max_sample_sum_has_no_companion": "6d6906be4826c12275ba5b7ce121d327ea473be1ec69f4c16a8df815fabc3395",
+ "no_companion": "d6dc7a6df456b9f8101b0bd43e5ad65deaa229cd340e0a74e93ee650e167b785",
+ "one_summing_sample_sum": "e0cc22ab32fbf6c48fd8ed7576db3b803b485cb94dcd23c02547c5d2417b3350",
+ "predicated_dispatch": "90b846ab74d614e4e9770dc6029c7e9420aa53086867551cf3cb9c36f3126aec",
+ "prior_read": "641423a41869e32e67b9966a84ff2203c05ed918e9150acd90ee4a381a9ca270",
+ "segmented_dispatch": "ed885d7cfeb4674122940a7b7b90acd01ede377efcc45dfa514b6566953d852f",
+ "sum_finish_auto": "5c6572c303d64e5347fedacd9e7682dba159d8c6568ace690221877d492dd819",
+ "switch_dispatch": "63d8ff2616b4351d106d0094577a77ea124c6a41afb24b23aa7ee8e1cd3aaa64"
+}

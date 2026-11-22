@@ -5,11 +5,9 @@
   "aether_abi": "aether-abi/1",
   "scalar_type": "float64",
   "kernel": "raptor_kernel",
-  "vector_inputs": [],
   "params": [
     "rate"
   ],
-  "per_sample": [],
   "mutables": [
     {
       "name": "counter",
@@ -18,7 +16,6 @@
       "default": 0.0
     }
   ],
-  "vec_widths": {},
   "arg_spec": [
     [
       "mutable",

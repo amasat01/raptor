@@ -140,9 +140,17 @@ impl<'a> Plan<'a> {
         if usage.kind != Kind::Operand || !is_a(self.ctx, usage.user, "Op") || usage.k != 0 {
             return Ok(false);
         }
-        let index = self.ctx.nodes[usage.user as usize].ops.get(1).copied();
-        let runtime = index.is_some_and(|i| !is_a(self.ctx, i, "Const"));
-        Ok(kind == "component_at" || (kind == "set_component_at" && runtime))
+        let ops = &self.ctx.nodes[usage.user as usize].ops;
+        let runtime = |entry: usize| {
+            ops[1..ops.len() - entry]
+                .iter()
+                .any(|&i| !is_a(self.ctx, i, "Const"))
+        };
+        Ok(match kind.as_str() {
+            "component_at" => true,
+            "set_component_at" => runtime(1),
+            _ => false,
+        })
     }
 
     /// Whether a rolled reduction reads the value element by element.

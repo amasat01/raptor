@@ -89,7 +89,7 @@ What a descriptor must **not** carry
 ------------------------------------
 
 ``aether_abi``, ``derivative``, ``host_entry``, and any populated ``buffers``,
-``mutables`` or ``mat_shapes`` are **forbidden** on a descriptor, and a populated
+``mutables`` are **forbidden** on a descriptor, and a populated
 ``arg_spec`` is forbidden too. Every one of them is kernel machinery that a loader
 would simply *ignore* on a descriptor, and a field that is silently ignored is how a
 confused producer ships something that does not do what it says. ``aether_abi`` in

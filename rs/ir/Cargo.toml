@@ -9,3 +9,8 @@ crate-type = ["rlib", "staticlib"]
 
 [dependencies]
 rcore = { path = "../core" }
+
+[features]
+# a context that rewrites the node keys its digests take: only the replay tools of recordings made before a node gained a field
+# enable it; the libraries are built without it
+replay-key-form = []

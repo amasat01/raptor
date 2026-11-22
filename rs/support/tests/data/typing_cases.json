@@ -972,23 +972,19 @@
 }
 ],
 "literal": "None",
-"message": "op 'norm': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+"message": "norm: expected an operand of rank one or more, got TensorType(shape=(), dtype='f64', tag=None)"
 },
 {
 "kind": "sum",
 "operands": [
 {
 "dtype": "f64",
-"shape": [
-2,
-2,
-2
-],
+"shape": [],
 "tag": null
 }
 ],
 "literal": "None",
-"message": "sum: expected a rank-1 or rank-2 operand, got TensorType(shape=(2, 2, 2), dtype='f64', tag=None)"
+"message": "sum: expected an operand of rank one or more, got TensorType(shape=(), dtype='f64', tag=None)"
 },
 {
 "kind": "splat",
@@ -1098,7 +1094,7 @@
 }
 ],
 "literal": "None",
-"message": "op 'component_at': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+"message": "component_at: the value must have rank one or more, got TensorType(shape=(), dtype='f64', tag=None)"
 },
 {
 "kind": "component_at",
@@ -1189,7 +1185,7 @@
 }
 ],
 "literal": "None",
-"message": "op 'add_at': operand typed TensorType(shape=(), dtype='f64', tag=None) is not the expected rank-1 value"
+"message": "add_at: the value must have rank one or more, got TensorType(shape=(), dtype='f64', tag=None)"
 },
 {
 "kind": "vec",
@@ -1225,7 +1221,7 @@
 }
 ],
 "literal": "(2, 2)",
-"message": "vec: a matrix shape literal must be (rows, cols) with rows * cols == 3 entries, got (2, 2)"
+"message": "vec: a shape literal must give a positive extent per axis (rank 2 or more) whose product is 3 entries, got (2, 2)"
 },
 {
 "kind": "vec",
@@ -1242,7 +1238,7 @@
 }
 ],
 "literal": "(1, 2, 3)",
-"message": "vec: a matrix shape literal must be (rows, cols) with rows * cols == 2 entries, got (1, 2, 3)"
+"message": "vec: a shape literal must give a positive extent per axis (rank 2 or more) whose product is 2 entries, got (1, 2, 3)"
 },
 {
 "kind": "mv",

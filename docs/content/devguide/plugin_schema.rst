@@ -36,8 +36,7 @@ and the sidecar itself, annotated:
      "pattern": "pure",
      "aether_abi": "aether-abi/1",
      "kernel": "raptor_kernel",
-     "per_sample": ["r_max"],
-     "arg_spec": [["nsamples", "N"], ["per_sample", "r_max"], ["mutable", "fired"]]
+     "arg_spec": [["nsamples", "N"], ["plane_in", "r_max"], ["mutable", "fired"]]
    }
 
 Reading it top to bottom: this artifact is PTX-format (:ref:`role-vocab`
@@ -49,7 +48,7 @@ layout ``aether-abi/1``, exposes the entry point ``raptor_kernel`` (the one
 name every artifact exports, see ``kernel`` below), and
 ``arg_spec`` is the exact, ordered list of arguments a loader must bind to
 call it — each a ``[role, name]`` pair. A **role** (``nsamples``,
-``per_sample``, ``mutable``, and 6 others) says *what kind* of argument a
+``plane_in``, ``mutable``, and 6 others) says *what kind* of argument a
 name is; :ref:`role-vocab` below is the complete list.
 
 When you have several kernels to deploy together, one **manifest**
@@ -121,7 +120,7 @@ The arg_spec role vocabulary
 ----------------------------
 
 ``arg_spec`` is an ordered list of two-element ``[role, name]`` arrays — **role
-first**. ``role`` is one of these **12 canonical arg-spec roles (schema v1)**.
+first**. ``role`` is one of these **10 canonical arg-spec roles (schema v1)**.
 This set is the single source of truth, enumerated identically in
 ``plugin/roles.h::kPluginArgRoles`` (C++) and :data:`eagle.roles.ROLES` (Python),
 and pinned by the cross-check test ``python/tests/test_roles_vocab.py``. The
@@ -137,14 +136,10 @@ shape change, so none of the three needed a ``schema_version`` bump.
      - Meaning
    * - ``out``
      - The plugin's output sink (the vector ``outVec`` accumulate slot).
-   * - ``vec_in``
-     - A named vector input (from ``vector_inputs``).
-   * - ``mat_in``
-     - A matrix input to a **pure** or **vector** kernel (see the note below;
+   * - ``plane_in``
+     - A named input read per sample, whatever the rank of its value (the slot's entry of ``slot_shapes`` states it); a matrix input to a **pure** or **vector** kernel is one (see the note below;
        vector twin — a returning kind's ``Matrix[R, C]`` vocabulary
        field, exercised by the code generator's own round-trip suite).
-   * - ``per_sample``
-     - A named per-sample scalar input (from ``per_sample``).
    * - ``lookup``
      - A read-only lookup buffer, bound by value as a flat handle (from
        ``buffers``).
@@ -171,14 +166,13 @@ shape change, so none of the three needed a ``schema_version`` bump.
        ``wide_out``'s plain scalar-handle ABI, kept as its own name so the
        exec-placement logic can refer to it distinctly.
 
-The per-kind subsets (vector = 6, pure = 8 roles) union to exactly this set of
-12.
+The per-kind subsets union to exactly this set.
 
 .. note::
 
-   ``mat_in`` is a **valid** schema-v1 role recognized by every loader; the
+   A ``plane_in`` of rank two is a **valid** schema-v1 slot recognized by every loader; the
    reference C++ host ``inject()`` (``plugin/host_registry.h``, CPU) packs it
-   identically to ``vec_in`` (a matrix GRef is a width-``R*C`` vector GRef, so
+   identically to a ``plane_in`` of rank one (a matrix GRef is a width-``R*C`` vector GRef, so
    it rides the same ``GRefMirror``), so a matrix pure **or** vector kernel
    host-round-trips today (``test_matrix_pure_to_host_matches_direct``
    / ``test_matrix_vector_to_host_matches_direct``). The device

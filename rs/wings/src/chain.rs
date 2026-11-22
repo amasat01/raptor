@@ -12,7 +12,7 @@ use raptor_ir::value::{ttype_val, Val};
 use std::collections::{HashMap, HashSet};
 
 /// The roles a member may read an intermediate as: its own lane's element.
-const BOUND_LEAF_ROLES: [&str; 4] = ["per_sample", "vec_in", "mat_in", "mutable"];
+const BOUND_LEAF_ROLES: [&str; 2] = ["plane_in", "mutable"];
 /// The roles an intermediate may be committed as.
 const BOUND_SINK_ROLES: [&str; 2] = ["mutable", "out"];
 /// The prefix of the plane a cut chain passes a value through from one piece to the next.
@@ -444,14 +444,9 @@ fn read_crossed(ctx: &mut Ctx, sinks: Vec<u32>, crossed: &HashSet<String>) -> R<
             continue;
         }
         let ty = type_parts(ctx, leaf);
-        let role = if ty.shape.is_empty() {
-            "per_sample"
-        } else {
-            "vec_in"
-        };
         let given = vec![
             ("kind", Val::Str("vocab_read".into())),
-            ("role", Val::Str(role.into())),
+            ("role", Val::Str("plane_in".into())),
             ("name", Val::Str(format!("{CROSS_PREFIX}{name}"))),
             ("ttype", ttype_val(&ty.dtype, &ty.shape, ty.tag.as_deref())),
         ];

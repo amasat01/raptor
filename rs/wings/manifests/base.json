@@ -164,7 +164,7 @@
    "wire": "ordered_accum_write",
    "operands": {
     "min": 3,
-    "max": 3
+    "max": 10
    },
    "result": [
     "same_as",

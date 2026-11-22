@@ -87,19 +87,27 @@ fn shape_lit(shape: &[i64]) -> Lit {
     Lit::Tuple(shape.iter().map(|&d| Lit::Int(i128::from(d))).collect())
 }
 
-/// The entry indices of a shape in row-major order: an integer each for a vector, a (row, column) pair each for a matrix.
+/// The entry indices of a shape in row-major order: an integer each for a vector, one tuple of an index per axis each for
+/// a value of rank two or more.
 fn entry_list(shape: &[i64]) -> Vec<Lit> {
     let int = |i: i64| Lit::Int(i128::from(i));
     if shape.len() == 1 {
         return (0..shape[0]).map(int).collect();
     }
-    let mut out = vec![];
-    for r in 0..shape[0] {
-        for c in 0..shape[1] {
-            out.push(Lit::Tuple(vec![int(r), int(c)]))
-        }
+    let mut out = vec![vec![]];
+    for &extent in shape {
+        out = out
+            .into_iter()
+            .flat_map(|head| {
+                (0..extent).map(move |k| {
+                    let mut next = head.clone();
+                    next.push(Lit::Int(i128::from(k)));
+                    next
+                })
+            })
+            .collect();
     }
-    out
+    out.into_iter().map(Lit::Tuple).collect()
 }
 
 /// The interpreter state: the context the nodes are made in, the names in scope, and what the run asks of its caller.
@@ -222,7 +230,7 @@ impl<'a> Interp<'a> {
             }
             parts.push(self.make(kind, &args, Lit::None)?);
         }
-        let lit = if shape.len() == 2 {
+        let lit = if shape.len() >= 2 {
             shape_lit(&shape)
         } else {
             Lit::None
@@ -589,13 +597,13 @@ impl<'a> Interp<'a> {
         }
     }
 
-    /// The forms over a shape literal: `vlit` keeps a matrix shape, `entries` lists the entry indices.
+    /// The forms over a shape literal: `vlit` keeps a shape of rank two or more, `entries` lists the entry indices.
     fn shape_form(&mut self, head: &str, a: &[J]) -> Res<Item> {
         let Item::Lit(Lit::Tuple(dims)) = self.ev(part(a, 1)?)? else {
             return bad(&format!("{head} takes a shape"));
         };
         if head == "vlit" {
-            return Ok(Item::Lit(if dims.len() == 2 {
+            return Ok(Item::Lit(if dims.len() >= 2 {
                 Lit::Tuple(dims)
             } else {
                 Lit::None
@@ -789,7 +797,7 @@ impl<'a> Interp<'a> {
             ("ops".into(), Item::List(ops.clone())),
         ];
         let names = t.get("operands").map(J::strs).unwrap_or_default();
-        self.env.extend(names.into_iter().zip(ops));
+        self.env.extend(bind_operands(&names, ops));
         for key in ["lets".to_string(), format!("{mode}_lets")] {
             for p in t.get(&key).map_or(&[][..], J::arr) {
                 let v = self.ev(part(p.arr(), 1)?)?;
@@ -831,6 +839,31 @@ impl<'a> Interp<'a> {
         }
         Ok(out)
     }
+}
+
+/// Binds the operand names of a rule to the operands of its node. A name written `...rest` takes every operand
+/// the other names leave over, as a list: the element accesses carry one index per axis of their value.
+fn bind_operands(names: &[String], ops: Vec<Item>) -> Vec<(String, Item)> {
+    let Some(at) = names.iter().position(|n| n.starts_with("...")) else {
+        return names.iter().cloned().zip(ops).collect();
+    };
+    let take = ops.len().saturating_sub(names.len() - 1);
+    let mut out: Vec<(String, Item)> = names[..at]
+        .iter()
+        .cloned()
+        .zip(ops.iter().cloned())
+        .collect();
+    out.push((
+        names[at][3..].to_string(),
+        Item::List(ops[at..at + take].to_vec()),
+    ));
+    out.extend(
+        names[at + 1..]
+            .iter()
+            .cloned()
+            .zip(ops[at + take..].iter().cloned()),
+    );
+    out
 }
 
 /// The node an item holds.

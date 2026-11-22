@@ -4,7 +4,7 @@ use crate::door::{cstr, guard, put, slice};
 use crate::record::{badarg, refuse, Ctx, Fault};
 use crate::value::{parse, text_val, ttype_val, Val};
 use rcore::{Rec, CONSTS, STR_CONSTS};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::ffi::{c_char, c_int};
 
 /// One finished walk, owned by its context: the canonical node order and the text of each field.
@@ -54,8 +54,19 @@ pub struct Tt {
     pub shape: Vec<i64>,
     /// The tag, if any.
     pub tag: Option<String>,
+    /// The axis list a plane leaf declares, as text; empty for a type bound without axes.
+    pub axes: String,
 }
 impl Tt {
+    /// The text of the type and of the axes a plane declares, as the digest states a slot.
+    fn slot_text(&self) -> String {
+        if self.axes.is_empty() {
+            self.text()
+        } else {
+            format!("{}|axes={}", self.text(), self.axes)
+        }
+    }
+
     /// The type as a TensorType value.
     fn val(&self) -> Val {
         ttype_val(&self.dtype, &self.shape, self.tag.as_deref())
@@ -92,6 +103,7 @@ impl Tt {
             } else {
                 None
             },
+            axes: String::new(),
         })
     }
 }
@@ -188,10 +200,15 @@ impl Ctx {
     /// The type of node `h`.
     fn tt(&self, h: u32) -> Tt {
         let n = &self.nodes[h as usize];
+        let axes = match self.field(h, "axes") {
+            Ok(Val::Tuple(declared)) if !declared.is_empty() => text_val(&Val::Tuple(declared)),
+            _ => String::new(),
+        };
         Tt {
             dtype: n.dtype.clone(),
             shape: n.shape.clone(),
             tag: n.tag.clone(),
+            axes,
         }
     }
 
@@ -219,15 +236,22 @@ impl Ctx {
         let access = self.access_class(&watched, exempt, force)?;
         let (listing, static_selector, selector_reads) = self.dispatch_listing(&watched)?;
         let prior = self.prior_reads(&tr)?;
-        let (fields, digest) = render_fields(
-            &ordered,
-            &spans,
-            access,
-            &tr.walk.pre,
-            listing,
-            &prior,
-            &finish,
-        );
+        #[cfg(feature = "replay-key-form")]
+        let pre = tr.walk.pre.lines().fold(String::new(), |text, line| {
+            text + &self.keyed_line(line) + "\n"
+        });
+        #[cfg(not(feature = "replay-key-form"))]
+        let pre = tr.walk.pre.as_str();
+        let taken_roles: Vec<String> = ordered
+            .iter()
+            .map(|((role, _), tt)| self.digest_role(role, tt.shape.len()))
+            .collect();
+        let keys = DigestKeys {
+            pre: &pre,
+            roles: &taken_roles,
+        };
+        let (fields, digest) =
+            render_fields(&ordered, &spans, access, keys, listing, &prior, &finish);
         let (objs, w) = (&tr.objs, &tr.walk);
         self.walks.push(WalkRes {
             leaves: ordered,
@@ -711,32 +735,47 @@ fn place_slots(
     Ok(Layout { slots, owner })
 }
 
+/// The slots of one place of the role order: those a quantity owns, then the free ones.
+type Placed<'a> = (Vec<&'a (Key, Tt)>, Vec<&'a (Key, Tt)>);
+
 /// The slots in role order: quantity wires in declaration order, then the rest by name. Refuses a role outside the order.
+///
+/// A read plane is placed by the rank of its value as well (`rcore::order_place`), so a unit lists its planes with a value first,
+/// by rank, and its per-sample scalars after the wide planes.
 fn order_slots(layout: &Layout) -> Result<Vec<(Key, Tt)>, Fault> {
     let (slots, owner) = (&layout.slots, &layout.owner);
-    // the role order: quantity wires in declaration order, then the rest by name
     let roles = CONSTS
         .iter()
         .find(|c| c.0 == "ROLE_ORDER")
         .map_or(&[][..], |c| c.1);
+    let mut places: BTreeMap<(usize, usize), Placed> = BTreeMap::new();
+    for slot in slots {
+        let (key, tt) = slot;
+        let Some(place) = rcore::order_place(roles, &key.0, tt.shape.len()) else {
+            return refuse(format!(
+                "binding with a role outside the canonical order: {}",
+                key.0
+            ));
+        };
+        let (owned, free) = places.entry(place).or_default();
+        if owner.contains_key(key) {
+            owned.push(slot)
+        } else {
+            free.push(slot)
+        }
+    }
     let mut ordered: Vec<&(Key, Tt)> = vec![];
-    for role in roles {
-        let (mut owned, mut free): (Vec<_>, Vec<_>) = slots
-            .iter()
-            .filter(|(k, _)| k.0 == *role)
-            .partition(|(k, _)| owner.contains_key(k));
+    for (mut owned, mut free) in places.into_values() {
         owned.sort_by_key(|(k, _)| owner[k]);
         free.sort_by(|a, b| (a.0).1.cmp(&(b.0).1));
         ordered.extend(owned);
         ordered.extend(free);
     }
-    if let Some(((r, _), _)) = slots.iter().find(|(k, _)| !roles.contains(&k.0.as_str())) {
-        return refuse(format!(
-            "binding with a role outside the canonical order: {r}"
-        ));
-    }
     Ok(ordered.into_iter().cloned().collect())
 }
+
+/// A run of a quantity's slots: a role and, for a read plane, the rank class the role order separates it by.
+type Run = (String, usize);
 
 /// The spans: one consecutive, declaration-ordered run per role for each quantity, as text sorted by namespace. Refuses
 /// a quantity whose slots are not one such run.
@@ -750,21 +789,27 @@ fn quantity_spans(
         .enumerate()
         .map(|(i, (k, _))| (k, i))
         .collect();
+    let order = CONSTS
+        .iter()
+        .find(|c| c.0 == "ROLE_ORDER")
+        .map_or(&[][..], |c| c.1);
     // the spans: one consecutive, declaration-ordered run per role
     let mut spans: Vec<(String, String)> = vec![];
     let mut rows: Vec<QuantityRow> = vec![];
     for (prefix, q) in reached {
         let expanded = q.expand(sep);
-        let (mut idx, mut per): (Vec<i128>, Vec<(String, Vec<i128>)>) = (vec![], vec![]);
-        for (k, _) in &expanded {
+        let (mut idx, mut per): (Vec<i128>, Vec<(Run, Vec<i128>)>) = (vec![], vec![]);
+        for (k, tt) in &expanded {
             let i = slot_of[k] as i128;
             idx.push(i);
-            match per.iter_mut().find(|p| p.0 == k.0) {
+            // a run is one role and, for a read plane, one rank class: the order lists them apart
+            let class = rcore::order_place(order, &k.0, tt.shape.len()).map_or(0, |p| p.1);
+            match per.iter_mut().find(|p| p.0 == (k.0.clone(), class)) {
                 Some(p) => p.1.push(i),
-                None => per.push((k.0.clone(), vec![i])),
+                None => per.push(((k.0.clone(), class), vec![i])),
             }
         }
-        for (role, run) in &per {
+        for ((role, _), run) in &per {
             let mut sorted = run.clone();
             sorted.sort();
             if *run != sorted
@@ -801,20 +846,35 @@ fn quantity_spans(
     Ok((spans, rows))
 }
 
+/// What a digest takes beside the slots: the node key lines, and the role of each slot as the digest names it.
+struct DigestKeys<'a> {
+    /// The node key lines, one per node, in walk order.
+    pre: &'a str,
+    /// The role of each ordered slot as the digest takes it.
+    roles: &'a [String],
+}
+
 /// The digest tail and the walk's fields as text, and the digest.
 fn render_fields(
     ordered: &[(Key, Tt)],
     spans: &[(String, String)],
     access: &str,
-    pre: &str,
+    keys: DigestKeys,
     listing: Vec<Val>,
     prior: &BTreeSet<String>,
     finish: &Val,
 ) -> (Vec<(&'static str, String)>, String) {
+    let DigestKeys {
+        pre,
+        roles: taken_roles,
+    } = keys;
     let (mut tail, mut leaves, mut spec, mut types, mut index) =
         (String::new(), vec![], vec![], vec![], vec![]);
+    let mut tail_spec = vec![];
     for (i, ((role, name), tt)) in ordered.iter().map(|x| (&x.0, &x.1)).enumerate() {
-        tail.push_str(&format!("leaf|{role}|{name}|{}\n", tt.text()));
+        let taken = &taken_roles[i];
+        tail.push_str(&format!("leaf|{taken}|{name}|{}\n", tt.slot_text()));
+        tail_spec.push(pair(taken, name));
         leaves.push(Val::Rec(
             "Slot".into(),
             vec![
@@ -829,7 +889,7 @@ fn render_fields(
     }
     tail.push_str(&format!(
         "arg_spec|{}\naccess|{access}|None\n",
-        text_val(&Val::Tuple(spec.clone()))
+        text_val(&Val::Tuple(tail_spec))
     ));
     for (_, q) in spans {
         tail.push_str(&format!("quantity|{q}\n"))

@@ -43,7 +43,7 @@ To add an attribute to a kind, edit its row in `core.json` and nothing else: `sl
   reusable checks live under `checks` (`node_base`).
 - rules: programs that differentiate a kind: `"mul": [["a", ["mul", "g", "b"]], ["b", ["mul", "g", "a"]]]` gives the adjoint of each
   operand in terms of `g`, the incoming adjoint (`rules.bin_vjp`).
-- consts: `"LEAF_ROLES": ["vec_in", "mat_in"]` a vocabulary the checks test membership in (`role not in SINK_ROLES`); `"ir.BODY_KEY_HEX": 32`
+- consts: `"LEAF_ROLES": ["plane_in", "wide_in"]` a vocabulary the checks test membership in (`role not in SINK_ROLES`); `"ir.BODY_KEY_HEX": 32`
   a fact shared with the core.
 
 `docs/MANIFEST.md` has the full grammar of expressions, steps, dedup items and the key-text rule.

@@ -25,7 +25,7 @@ arg_spec
   The sidecar's ordered list of `[role, name]` pairs. A loader binds arguments in exactly this order. See {ref}`the role vocabulary <role-vocab>`.
 
 role
-  What kind of argument a name is, such as `nsamples`, `per_sample` or `mutable`.
+  What kind of argument a name is, such as `nsamples`, `plane_in` or `mutable`.
 
 pattern
   Which shape a kernel has. A *pure* kernel writes its results in place; a *vector* kernel accumulates one output value.

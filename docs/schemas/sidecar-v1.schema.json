@@ -11,9 +11,7 @@
     "aether_abi",
     "scalar_type",
     "kernel",
-    "vector_inputs",
     "params",
-    "per_sample",
     "arg_spec"
   ],
   "properties": {
@@ -45,11 +43,6 @@
       "type": "string",
       "description": "The extern-\"C\" entry-point symbol the loader resolves in the artifact: always \"raptor_kernel\", the name raptor's schema fixes for every producer, hand-written kernels included."
     },
-    "vector_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "Named vector inputs, in binding order (mirrors the vec_in arg_spec roles)."
-    },
     "params": {
       "type": "array",
       "items": {
@@ -67,16 +60,8 @@
       },
       "description": "Named uniform scalar parameters (bound via the uniform role): bare names, or {name, dtype} entries when params_schema is 2."
     },
-    "per_sample": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "Named per-sample scalar inputs (bound via the per_sample role)."
-    },
     "arg_spec": {
       "$ref": "#/$defs/argSpec"
-    },
-    "vec_widths": {
-      "$ref": "#/$defs/vecWidths"
     },
     "launch": {
       "$ref": "#/$defs/launch"
@@ -199,14 +184,6 @@
     "mutables": {
       "$ref": "#/$defs/mutables"
     },
-    "matrix_inputs": {
-      "type": "array",
-      "items": { "type": "string" },
-      "description": "Pure only, and only when the kernel has matrix inputs: the mat_in binding order (mirrors vector_inputs)."
-    },
-    "mat_shapes": {
-      "$ref": "#/$defs/matShapes"
-    },
     "derivative": {
       "type": "object",
       "description": "Optional, additive schema-v1 field (no version bump): present only for a VJP/JVP derivative artifact (autodiff, generated or custom — structurally indistinguishable). Metadata only; the artifact still launches as an ordinary pure kernel. Recompute-only in v1, so residual_policy is 'recompute' and residuals is []; a populated residuals list is a future revision that bumps schema_version and is rejected by a v1 loader.",
@@ -251,7 +228,7 @@
         "properties": { "pattern": { "const": "vector" } }
       },
       "then": {
-        "required": ["accumulate", "sink", "vec_widths", "buffers"]
+        "required": ["accumulate", "sink", "buffers"]
       }
     },
     {
@@ -260,18 +237,16 @@
         "properties": { "pattern": { "const": "pure" } }
       },
       "then": {
-        "required": ["mutables", "vec_widths", "buffers"]
+        "required": ["mutables", "buffers"]
       }
     }
   ],
   "$defs": {
     "role": {
-      "description": "The 12 canonical arg-spec roles. Single source of truth: plugin/roles.h::kPluginArgRoles ≡ eagle.roles.ROLES (cross-checked by python/tests/test_roles_vocab.py). A loader rejects any role outside this set at LOAD time (forward-strict). Note: mat_in is a valid role recognized by every loader, but the reference C++ host inject() does not pack matrix arguments (a CUDA-backend capability).",
+      "description": "The 10 canonical arg-spec roles. Single source of truth: plugin/roles.h::kPluginArgRoles ≡ eagle.roles.ROLES (cross-checked by python/tests/test_roles_vocab.py). A loader rejects any role outside this set at LOAD time (forward-strict). A plane_in slot holds a value of any rank, which its slot_shapes entry states.",
       "enum": [
         "out",
-        "vec_in",
-        "mat_in",
-        "per_sample",
+        "plane_in",
         "lookup",
         "mutable",
         "terminated",
@@ -291,7 +266,7 @@
         "maxItems": 2,
         "prefixItems": [
           { "$ref": "#/$defs/role" },
-          { "type": "string", "description": "The argument name (a vector_input / param / per_sample / mutable / buffer name, or a fixed slot name such as \"out\"/\"terminated\"/\"nsamples\")." }
+          { "type": "string", "description": "The argument name (a param / plane_in / mutable / buffer name, or a fixed slot name such as \"out\"/\"terminated\"/\"nsamples\")." }
         ],
         "items": false
       }
@@ -343,7 +318,7 @@
       "properties": {
         "name": { "type": "string" },
         "dtype": {
-          "enum": ["scalar", "float", "int", "int32", "uint32", "vector", "matrix"],
+          "enum": ["scalar", "float", "int", "int32", "uint32", "vector", "matrix", "tensor"],
           "description": "Element kind of the mutable."
         },
         "width": {
@@ -372,16 +347,6 @@
       },
       "then": {
         "required": ["shape"]
-      }
-    },
-    "matShapes": {
-      "type": "object",
-      "description": "Pure only, and only when the kernel has matrix inputs: the (R, C) shape per matrix-input name.",
-      "additionalProperties": {
-        "type": "array",
-        "minItems": 2,
-        "maxItems": 2,
-        "items": { "type": "integer" }
       }
     },
     "launch": {

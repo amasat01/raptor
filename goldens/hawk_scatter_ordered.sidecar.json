@@ -12,19 +12,11 @@
   "kernel": "add",
   "params": [],
   "params_schema": 2,
-  "per_sample": [
-    "key",
-    "x"
-  ],
-  "vector_inputs": [],
-  "matrix_inputs": [],
-  "mat_shapes": {},
   "mutables": [],
   "arg_widths": {
     "key": 1,
     "x": 1
   },
-  "vec_widths": {},
   "arg_shapes": {
     "key": 1,
     "x": 1,
@@ -55,11 +47,11 @@
       "tms_acc_v"
     ],
     [
-      "per_sample",
+      "plane_in",
       "key"
     ],
     [
-      "per_sample",
+      "plane_in",
       "x"
     ]
   ],

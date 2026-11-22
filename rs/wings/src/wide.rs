@@ -1,6 +1,6 @@
 //! Questions about wide (vector) values: which nodes name planes, how element `k` of a vector is
 //! read without building the whole, and vectors that are runs of reads of one plane.
-use crate::{flag_out, in_kinds, is_a, raw_index, PLANE_PREFIX, RESIDENT_KIND};
+use crate::{flag_out, in_kinds, is_a, unclamped, PLANE_PREFIX, RESIDENT_KIND};
 use raptor_ir::door::guard;
 use raptor_ir::record::{Ctx, Fault};
 use raptor_ir::value::Val;
@@ -64,7 +64,7 @@ pub(crate) fn element_kind(ctx: &Ctx, node: u32) -> Outcome<&'static str> {
         return Ok("proxy");
     }
     if is_a(ctx, node, "Leaf") {
-        let vector_input = ctx.str_field(node, "role")? == "vec_in" && rank(ctx, node) == 1;
+        let vector_input = ctx.str_field(node, "role")? == "plane_in" && rank(ctx, node) == 1;
         return Ok(if vector_input { "input" } else { "none" });
     }
     let is_select = is_a(ctx, node, "Select");
@@ -177,14 +177,27 @@ pub(crate) fn gather(ctx: &Ctx, node: u32) -> Outcome<Option<Gather>> {
     let Some(plane_id) = scalar_read(ctx, first)? else {
         return Ok(None);
     };
-    let (base0, start) = split_index(ctx, raw_index(ctx, first))?;
+    // a gather is an arithmetic run of one flat index: a read with an index per axis of several axes is not one
+    let sole_index = |read: u32| match ctx.nodes[read as usize].ops[..] {
+        [_, index] => Some(index),
+        _ => None,
+    };
+    // the index of an old-form read carries its clamp as an operation: the run is of the index before it
+    let raw_index = |read: u32| sole_index(read).map(|index| unclamped(ctx, index));
+    let Some(first_index) = raw_index(first) else {
+        return Ok(None);
+    };
+    let (base0, start) = split_index(ctx, first_index)?;
     let mut step = 0;
     let mut seen = HashMap::new();
     for (k, &part) in parts.iter().enumerate() {
         if scalar_read(ctx, part)? != Some(plane_id.clone()) {
             return Ok(None);
         }
-        let (base, offset) = split_index(ctx, raw_index(ctx, part))?;
+        let Some(index) = raw_index(part) else {
+            return Ok(None);
+        };
+        let (base, offset) = split_index(ctx, index)?;
         let same_base = match (base, base0) {
             (None, None) => true,
             (Some(a), Some(b)) => ctx.same_index(a, b, &mut seen)?,
@@ -200,7 +213,12 @@ pub(crate) fn gather(ctx: &Ctx, node: u32) -> Outcome<Option<Gather>> {
             return Ok(None);
         }
     }
-    let clamped = ctx.nodes[first as usize].ops[1] != raw_index(ctx, first);
+    // a run is spelled as clamped or unchecked reads: another edge rule keeps its reads one by one
+    let edge = ctx.str_field(first, "edge")?;
+    if !matches!(edge.as_str(), "clamp" | "unchecked") {
+        return Ok(None);
+    }
+    let clamped = edge == "clamp" || sole_index(first) != raw_index(first);
     Ok(Some(Gather {
         plane: ctx.nodes[first as usize].ops[0],
         base: base0,

@@ -29,7 +29,7 @@ def param_cell(name: str, ttype: TensorType, per_cell: bool = False) -> At:
     or, with ``per_cell``, the cell the sample's ``param_cell`` plane names."""
     plane = Leaf("table_read", "lookup", name, ttype)
     if per_cell:
-        return At(plane, Leaf("vocab_read", "per_sample", CELL_PLANE, _INDEX), ttype)
+        return At(plane, Leaf("vocab_read", "plane_in", CELL_PLANE, _INDEX), ttype)
     return At(plane, RoleConst(0, PARAM_CELL, _INDEX), ttype)
 
 

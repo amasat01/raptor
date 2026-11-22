@@ -102,15 +102,27 @@ pub(crate) fn flat(c: &Ctx, nodes: &[u32], out: &mut Vec<u32>) -> R<()> {
     Ok(())
 }
 
-/// The index of a read before its clamp.
-pub(crate) fn raw_index(ctx: &Ctx, read: u32) -> u32 {
-    let index = ctx.nodes[read as usize].ops[1];
-    let clamped = in_kinds(ctx, index, |kind| kind == "clamp_index").unwrap_or(false);
-    if clamped {
-        ctx.nodes[index as usize].ops[0]
+/// The index operands of a read, one per axis of the plane it reads.
+pub(crate) fn index_operands(ctx: &Ctx, read: u32) -> Vec<u32> {
+    ctx.nodes[read as usize].ops[1..].to_vec()
+}
+
+/// The node without an explicit `clamp_index` around it: a recorded read of the old form keeps its clamp as an operation on its
+/// index, and every question about the index asks the value before the clamp.
+pub(crate) fn unclamped(ctx: &Ctx, node: u32) -> u32 {
+    if in_kinds(ctx, node, |kind| kind == "clamp_index").unwrap_or(false) {
+        ctx.nodes[node as usize].ops[0]
     } else {
-        index
+        node
     }
+}
+
+/// The index operands of a read before any explicit clamp, one per axis of the plane it reads.
+pub(crate) fn raw_indices(ctx: &Ctx, read: u32) -> Vec<u32> {
+    index_operands(ctx, read)
+        .into_iter()
+        .map(|index| unclamped(ctx, index))
+        .collect()
 }
 
 /// The nodes of the walk in its order.
@@ -308,7 +320,9 @@ pub fn gather_mats(c: &Ctx, w: u32) -> R<Vec<String>> {
     for n in walk_order(c, w)? {
         let at = is_a(c, n, "At");
         for (place, &o) in c.nodes[n as usize].ops.iter().enumerate() {
-            let matrix = is_a(c, o, "Leaf") && c.str_field(o, "role")? == "mat_in";
+            let matrix = is_a(c, o, "Leaf")
+                && c.str_field(o, "role")? == "plane_in"
+                && c.nodes[o as usize].shape.len() == 2;
             if !matrix {
                 continue;
             }

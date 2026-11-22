@@ -1,7 +1,7 @@
 [
  {
   "id": "no_companion",
-  "digest": "d6dc7a6df456b9f8101b0bd43e5ad65deaa229cd340e0a74e93ee650e167b785",
+  "digest": "7d87c13ef394f132ad6dc53bcd2270a249a0992189533f1113997eb176f0a6cd",
   "access": [
    "sample_local",
    null
@@ -22,7 +22,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -33,7 +33,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -82,7 +82,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -93,7 +93,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -136,7 +136,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -157,7 +157,7 @@
  },
  {
   "id": "finishing",
-  "digest": "db2124820d844bd7dcc447a7d6d51a9ab2278010c2285663df9e00e63acd6141",
+  "digest": "44af551068783a8bd60a6a544d64840fa4097d19da2d1438cd54ed8e8f8c64fa",
   "access": [
    "sample_local",
    null
@@ -178,7 +178,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -189,7 +189,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -228,7 +228,7 @@
  },
  {
   "id": "auto_dispatch",
-  "digest": "f54f1b8ef4796ce64ff63fe6c5dce3dba5bf9799241737c7fbaa8d69970c3931",
+  "digest": "f2eb64b1a2734e296b0d10208425a9af8af35ede841756e9fd0871f7c6564898",
   "access": [
    "sample_local",
    null
@@ -249,7 +249,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ],
     [
@@ -260,7 +260,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -271,7 +271,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -304,7 +304,7 @@
   "selector_reads": [
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ]
    ]
@@ -313,7 +313,7 @@
  },
  {
   "id": "predicated_dispatch",
-  "digest": "90b846ab74d614e4e9770dc6029c7e9420aa53086867551cf3cb9c36f3126aec",
+  "digest": "b94d2c0cb5e51d76a657edefd6ae58979d0d08cf8a844bc13379ade1ab60c8a6",
   "access": [
    "sample_local",
    null
@@ -334,7 +334,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ],
     [
@@ -345,7 +345,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -356,7 +356,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -378,7 +378,7 @@
   "selector_reads": [
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ]
    ]
@@ -387,7 +387,7 @@
  },
  {
   "id": "segmented_dispatch",
-  "digest": "ed885d7cfeb4674122940a7b7b90acd01ede377efcc45dfa514b6566953d852f",
+  "digest": "428d6ea1035333c9619fc8717a212d3fb6b2580cfde5cd29b3444112abf95b09",
   "access": [
    "sample_local",
    null
@@ -408,7 +408,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ],
     [
@@ -419,7 +419,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -430,7 +430,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -452,7 +452,7 @@
   "selector_reads": [
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ]
    ]
@@ -461,7 +461,7 @@
  },
  {
   "id": "switch_dispatch",
-  "digest": "63d8ff2616b4351d106d0094577a77ea124c6a41afb24b23aa7ee8e1cd3aaa64",
+  "digest": "49bee74ff6f68c7a8e8772d061c47d8ad28fa81860e47e09d3017c78c0e28d06",
   "access": [
    "sample_local",
    null
@@ -482,7 +482,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ],
     [
@@ -493,7 +493,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -504,7 +504,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -526,7 +526,7 @@
   "selector_reads": [
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ]
    ]
@@ -535,7 +535,7 @@
  },
  {
   "id": "fused_steps_read",
-  "digest": "426a0962739a661dcb4c1067c1740c2f9492a2ad89ab3cd39151eb6233c7f4a9",
+  "digest": "cffe0fa029914b45896912b93c991a4abd3bb6754afd288d24f94bc04ec5da56",
   "access": [
    "sample_local",
    null
@@ -556,7 +556,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -584,7 +584,7 @@
  },
  {
   "id": "declared_slot",
-  "digest": "aef7b375c193244aa6c4eb22c56b077e6a6e65c8aa7e6663e774de99939043d1",
+  "digest": "74abcb1afd3424e120b52969ceb720746b09c14def3d37d6eef06d9ac7ccc220",
   "access": [
    "sample_local",
    null
@@ -605,7 +605,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -633,7 +633,7 @@
  },
  {
   "id": "prior_read",
-  "digest": "641423a41869e32e67b9966a84ff2203c05ed918e9150acd90ee4a381a9ca270",
+  "digest": "ab8a1ffad4778a7c95f03eff7b03c4ffd0d55eaa989cc0eedf6852641ba47c21",
   "access": [
    "sample_local",
    null
@@ -656,7 +656,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "p"
     ],
     [
@@ -667,7 +667,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -684,7 +684,7 @@
  },
  {
   "id": "sum_finish_auto",
-  "digest": "5c6572c303d64e5347fedacd9e7682dba159d8c6568ace690221877d492dd819",
+  "digest": "ce28df871fec787eb95223da4ee9b2a5f3551d78472d2c514a469e45a735c774",
   "access": [
    "sample_local",
    null
@@ -727,7 +727,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ],
     [
@@ -738,7 +738,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -749,7 +749,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -809,7 +809,7 @@
   "selector_reads": [
    [
     [
-     "per_sample",
+     "plane_in",
      "k"
     ]
    ]
@@ -818,7 +818,7 @@
  },
  {
   "id": "finishing_declared",
-  "digest": "db2124820d844bd7dcc447a7d6d51a9ab2278010c2285663df9e00e63acd6141",
+  "digest": "44af551068783a8bd60a6a544d64840fa4097d19da2d1438cd54ed8e8f8c64fa",
   "access": [
    "sample_local",
    null
@@ -839,7 +839,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -850,7 +850,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [
@@ -893,7 +893,7 @@
  },
  {
   "id": "accum_compensated_and_plain",
-  "digest": "3743c9312226c41e4e4b3f81dc521afac751c08aedf82c9666d74b1ac0272b31",
+  "digest": "3c53c6f23f3f44d9868b5d5d08e6255155bd4df97a6522e281dd54db06ccf785",
   "access": [
    "sample_local",
    null
@@ -936,7 +936,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "x"
     ],
     [
@@ -947,7 +947,7 @@
    ],
    [
     [
-     "per_sample",
+     "plane_in",
      "y"
     ],
     [

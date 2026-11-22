@@ -12,17 +12,8 @@
   "kernel": "gram",
   "params": [],
   "params_schema": 2,
-  "per_sample": [],
-  "vector_inputs": [
-    "j"
-  ],
-  "matrix_inputs": [],
-  "mat_shapes": {},
   "mutables": [],
   "arg_widths": {
-    "j": 24
-  },
-  "vec_widths": {
     "j": 24
   },
   "arg_shapes": {
@@ -46,7 +37,7 @@
       "tmb0_u"
     ],
     [
-      "vec_in",
+      "plane_in",
       "j"
     ]
   ],

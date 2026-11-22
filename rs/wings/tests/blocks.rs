@@ -20,7 +20,7 @@ fn build(c: &mut Ctx, spec: &J, leaves: &mut HashMap<String, u32>) -> u32 {
             .map(J::int)
             .collect();
         let dtype = spec.get("dtype").and_then(J::str).unwrap();
-        let fields = format!("(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False))");
+        let fields = format!("(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False))");
         let made = c.make("Leaf", dtype, &shape, None, &[], &fields).unwrap();
         leaves.insert(name.to_string(), made);
         return made;

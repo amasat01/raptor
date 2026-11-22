@@ -565,12 +565,21 @@ pub(crate) fn read(ctx: &mut Ctx, plane: &str, (like, at): (u32, Option<u32>)) -
             class,
             vec![
                 ("plane", Val::Node(leaf)),
-                ("index", Val::Node(index)),
+                ("indices", Val::Tuple(vec![Val::Node(index)])),
+                ("edge", Val::Str("unchecked".into())),
                 ("ttype", ttype),
             ],
         );
     }
-    build(ctx, class, vec![("operands", operands), ("ttype", ttype)])
+    build(
+        ctx,
+        class,
+        vec![
+            ("operands", operands),
+            ("edge", Val::Str("unchecked".into())),
+            ("ttype", ttype),
+        ],
+    )
 }
 
 /// The lane's own index into a scratch plane (64-bit, since `lanes x size` passes 2^31).

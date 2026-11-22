@@ -132,7 +132,7 @@ fn a_key_that_changes_with_the_lane_inside_a_row_has_no_run() {
 #[test]
 fn a_key_read_from_a_plane_has_no_run() {
     let mut k = Kernel::new();
-    let key = k.leaf("key", "per_sample", false);
+    let key = k.leaf("key", "plane_in", false);
     let sink = k.accumulate(key, &[8192]);
     assert_eq!(k.run(sink), None);
 }
@@ -162,7 +162,7 @@ fn a_quotient_key_over_divisors_that_are_not_a_chain_is_tested_at_run_time() {
 #[test]
 fn a_key_plane_declared_sorted_has_a_run_found_at_run_time() {
     let mut k = Kernel::new();
-    let key = k.leaf("key", "per_sample", true);
+    let key = k.leaf("key", "plane_in", true);
     let sink = k.accumulate(key, &[8192]);
     let run = k.run(sink).unwrap();
     assert_eq!((run.form, run.width), ("sorted", 32));
@@ -171,7 +171,7 @@ fn a_key_plane_declared_sorted_has_a_run_found_at_run_time() {
 #[test]
 fn a_sorted_plane_plus_a_constant_is_still_sorted() {
     let mut k = Kernel::new();
-    let (plane, three) = (k.leaf("key", "per_sample", true), k.int(3));
+    let (plane, three) = (k.leaf("key", "plane_in", true), k.int(3));
     let key = k.op("add", &[plane, three]);
     let sink = k.accumulate(key, &[8192]);
     assert_eq!(k.run(sink).unwrap().form, "sorted");
@@ -180,7 +180,7 @@ fn a_sorted_plane_plus_a_constant_is_still_sorted() {
 #[test]
 fn a_sorted_plane_minus_a_constant_is_still_sorted() {
     let mut k = Kernel::new();
-    let (plane, three) = (k.leaf("key", "per_sample", true), k.int(3));
+    let (plane, three) = (k.leaf("key", "plane_in", true), k.int(3));
     let key = k.op("sub", &[plane, three]);
     let sink = k.accumulate(key, &[8192]);
     assert_eq!(k.run(sink).unwrap().form, "sorted");
@@ -190,7 +190,7 @@ fn a_sorted_plane_minus_a_constant_is_still_sorted() {
 fn a_sorted_plane_scaled_or_reversed_is_not_known_to_be_sorted() {
     // `2 * key` and `3 - key` are not the plane's own order (a product is opaque, a negation reverses it)
     let mut k = Kernel::new();
-    let (plane, two, three) = (k.leaf("key", "per_sample", true), k.int(2), k.int(3));
+    let (plane, two, three) = (k.leaf("key", "plane_in", true), k.int(2), k.int(3));
     let doubled = k.op("mul", &[plane, two]);
     let negated = k.op("sub", &[three, plane]);
     for key in [doubled, negated] {
@@ -203,7 +203,7 @@ fn a_sorted_plane_scaled_or_reversed_is_not_known_to_be_sorted() {
 fn a_sorted_plane_plus_a_lane_term_is_not_known_to_be_sorted() {
     // the added term moves with a lane axis, so the key is no longer the plane's order
     let mut k = Kernel::new();
-    let plane = k.leaf("key", "per_sample", true);
+    let plane = k.leaf("key", "plane_in", true);
     let s = k.remainder(8192);
     let key = k.op("add", &[plane, s]);
     let sink = k.accumulate(key, &[]);

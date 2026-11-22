@@ -25,7 +25,7 @@ fn make(c: *mut raptor_ir::record::Ctx, cls: &str, ops: &[u32], fields: &str) ->
 fn probe_digest() {
     let c = rx_ctx_new();
     let leaf = |n: &str| {
-        format!("(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{n}'), ('quantity', None), ('wire_index', 0), ('sorted', False))")
+        format!("(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{n}'), ('quantity', None), ('wire_index', 0), ('sorted', False))")
     };
     let (a, b) = (
         make(c, "Leaf", &[], &leaf("a")),
@@ -53,7 +53,34 @@ fn probe_digest() {
     assert_eq!(rx_digest(c, w, d.as_mut_ptr()), RX_OK);
     assert_eq!(
         unsafe { CStr::from_ptr(d.as_ptr()) }.to_str().unwrap(),
-        "e5528739b51eb34fa87421825d26571b381966750395a5e74f9b131dd037afff"
+        "5822d803d90146cc81ffa03b8c357ee07e1b1faba2e520342aac9851898ed233"
+    );
+    // The digest recorded before an assignment stated its axes is this walk with that field removed from the key text.
+    let walk = unsafe { &*c }.walk(w).unwrap();
+    let field = |name: &str| walk.fields.iter().find(|f| f.0 == name).unwrap().1.clone();
+    let mut tail = String::new();
+    for ((role, name), tt) in &walk.leaves {
+        let ttype = raptor_ir::value::text_val(&raptor_ir::value::ttype_val(
+            &tt.dtype,
+            &tt.shape,
+            tt.tag.as_deref(),
+        ));
+        let old = raptor_support::migrate::old_role_name(role, tt.shape.len());
+        tail.push_str(&format!("leaf|{old}|{name}|{ttype}\n"));
+    }
+    // a recording of that time names the read planes by the rank of their value
+    let arg_spec = field("arg_spec").replace("'plane_in'", "'per_sample'");
+    tail.push_str(&format!(
+        "arg_spec|{arg_spec}\naccess|{}|None\n",
+        walk.access
+    ));
+    let before = field("preimage")
+        .replace("('mutable', 'y', ()))", "('mutable', 'y'))")
+        .replace("'plane_in', 'a', ())", "'per_sample', 'a')")
+        .replace("'plane_in', 'b', ())", "'per_sample', 'b')");
+    assert_eq!(
+        rcore::digest(&before, tail.as_bytes()),
+        "0db90d308394bc9e5c08cc87f761e9479027b3b2708e945db3864380f004398a"
     );
     let mut order = [0u32; 8];
     let mut n = 0;
@@ -67,7 +94,7 @@ fn probe_digest() {
     );
     assert_eq!(
         unsafe { CStr::from_ptr(buf.as_ptr()) }.to_str().unwrap(),
-        "(('mutable', 'y'), ('vec_in', 'a'), ('vec_in', 'b'))"
+        "(('mutable', 'y'), ('plane_in', 'a'), ('plane_in', 'b'))"
     );
     walk_slot_answers(c, w, y);
     rx_ctx_free(c);
@@ -86,8 +113,8 @@ fn walk_slot_answers(c: *mut raptor_ir::record::Ctx, w: u32, y: u32) {
         out
     };
     assert_eq!(binds(w, "mutable", "y"), 1);
-    assert_eq!(binds(w, "vec_in", "b"), 1);
-    assert_eq!(binds(w, "vec_in", "y"), 0);
+    assert_eq!(binds(w, "plane_in", "b"), 1);
+    assert_eq!(binds(w, "plane_in", "y"), 0);
     assert_eq!(binds(w, "terminated", "b"), 0);
     let (mut len, mut count) = (0usize, 0usize);
     assert_eq!(
@@ -106,10 +133,10 @@ fn walk_slot_answers(c: *mut raptor_ir::record::Ctx, w: u32, y: u32) {
         .map(|t| std::str::from_utf8(t).unwrap())
         .collect();
     assert_eq!(count, 3);
-    assert_eq!(texts, ["mutable", "y", "vec_in", "a", "vec_in", "b"]);
+    assert_eq!(texts, ["mutable", "y", "plane_in", "a", "plane_in", "b"]);
     let mut again = 0;
     assert_eq!(rx_canonical_like(c, &y, 1, w, &mut again), RX_OK);
-    assert_eq!(binds(again, "vec_in", "a"), 1);
+    assert_eq!(binds(again, "plane_in", "a"), 1);
     assert_eq!(rx_walk_binds_refuses(c), RX_REFUSED);
 }
 

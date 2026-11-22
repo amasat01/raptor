@@ -1,6 +1,6 @@
 //! The operations a set of nodes runs once, counted in the IR by class (arithmetic or library call, 32 or 64 bits, loads,
 //! gathers). A step of a finishing kernel is priced by its 64-bit total.
-use super::{is_a, konst, library_kind, op_kind, raw_index, R};
+use super::{index_operands, is_a, konst, library_kind, op_kind, raw_indices, R};
 use crate::construct::refs;
 use raptor_ir::record::{refuse, Ctx};
 use raptor_ir::typing::all_kinds;
@@ -185,7 +185,7 @@ fn own_counts(c: &Ctx, h: u32) -> R<Counts> {
         out[GATHERS] = elements(c, h).max(1.0);
     } else if is_a(c, h, "Loop") {
         let trips = trips(c, h)?;
-        for (slot, body) in out.iter_mut().zip(work(c, &c.body_nodes(h)?)?) {
+        for (slot, body) in out.iter_mut().zip(run_work(c, &c.body_nodes(h)?)?) {
             *slot = trips * body;
         }
     } else if let Some((class, amount)) = op_slot(c, h)? {
@@ -208,13 +208,28 @@ pub(crate) fn work(c: &Ctx, nodes: &[u32]) -> R<Counts> {
     Ok(total)
 }
 
+/// The six counts of `nodes` as a whole run counts them: each node once, and each read under the clamp edge rule also the
+/// clamp of each of its indices (one operation of the index's width), which an explicit clamp operation was counted as.
+/// A group's branch costs follow dependent paths, which wait for the raw indices, and use `work` alone.
+fn run_work(c: &Ctx, nodes: &[u32]) -> R<Counts> {
+    let mut total = work(c, nodes)?;
+    for &h in nodes {
+        if is_a(c, h, "At") && c.str_field(h, "edge")? == "clamp" {
+            for index in index_operands(c, h) {
+                total[usize::from(wide(c, index)?)] += 1.0;
+            }
+        }
+    }
+    Ok(total)
+}
+
 /// The 64-bit floating-point operations `nodes` run once: the 64-bit arithmetic and library calls of the nodes, a loop body
 /// counted once per trip (a library call counts once per element).
 ///
 /// # Errors
 /// Refuses a handle the context does not hold and a loop whose trip count is not a count.
 pub fn fp64_ops(c: &Ctx, nodes: &[u32]) -> R<i64> {
-    let counts = work(c, nodes)?;
+    let counts = run_work(c, nodes)?;
     Ok((counts[1] + counts[3]) as i64)
 }
 
@@ -243,7 +258,7 @@ fn length(path: &Path) -> f64 {
 /// The nodes `h` waits for: its operands, or for a gather its index alone (the indexed plane is not read).
 fn dependencies(c: &Ctx, h: u32) -> Vec<u32> {
     if is_a(c, h, "At") {
-        vec![raw_index(c, h)]
+        raw_indices(c, h)
     } else {
         c.nodes[h as usize].ops.clone()
     }
@@ -443,7 +458,7 @@ mod tests {
         /// A per-sample plane read of the element type.
         fn plane(&mut self, name: &str, dtype: &str) -> u32 {
             let fields = format!(
-                "(('kind', 'vocab_read'), ('role', 'per_sample'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False))"
+                "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{name}'), ('quantity', None), ('wire_index', 0), ('sorted', False), ('axes', ()))"
             );
             self.c.make("Leaf", dtype, &[], None, &[], &fields).unwrap()
         }

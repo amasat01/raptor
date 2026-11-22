@@ -32,16 +32,27 @@ pub(crate) fn int_like(ctx: &mut Ctx, value: i64, like: u32) -> R<u32> {
     )
 }
 
-/// The row-major component indices of a value of the shape: a number for a vector, a pair for a matrix.
+/// The row-major component indices of a value of the shape: a number for a vector, one index per axis for a value of rank two or more.
 fn components(shape: &[i64]) -> Vec<Val> {
     match shape {
+        [] => vec![],
         [n] => (0..*n).map(|r| Val::Int(i128::from(r))).collect(),
-        [rows, cols] => (0..*rows)
-            .flat_map(|r| {
-                (0..*cols).map(move |c| Val::Tuple(vec![Val::Int(r as i128), Val::Int(c as i128)]))
-            })
-            .collect(),
-        _ => vec![],
+        _ => {
+            let mut out = vec![vec![]];
+            for &extent in shape {
+                out = out
+                    .into_iter()
+                    .flat_map(|head| {
+                        (0..extent).map(move |k| {
+                            let mut next = head.clone();
+                            next.push(Val::Int(i128::from(k)));
+                            next
+                        })
+                    })
+                    .collect();
+            }
+            out.into_iter().map(Val::Tuple).collect()
+        }
     }
 }
 
@@ -87,7 +98,7 @@ pub fn stored(ctx: &mut Ctx, reduction: u32, name: &str) -> R<Vec<u32>> {
     let mut out = vec![];
     for (k, index) in all.into_iter().enumerate() {
         let literal = match &index {
-            Val::Tuple(pair) if parts.shape.len() == 2 => Val::Tuple(pair.clone()),
+            Val::Tuple(at) if parts.shape.len() >= 2 => Val::Tuple(at.clone()),
             Val::Tuple(pair) => pair[0].clone(),
             other => other.clone(),
         };
@@ -120,7 +131,7 @@ fn stored_keyed(
         let given = vec![
             ("name", Val::Str(name.into())),
             ("value", Val::Node(value)),
-            ("index", Val::Node(key)),
+            ("indices", Val::Tuple(vec![Val::Node(key)])),
             ("ttype", scalar),
             ("contract", Val::Str(contract.into())),
             ("reduced", Val::Node(reduction)),
@@ -139,7 +150,7 @@ fn stored_keyed(
         let given = vec![
             ("name", Val::Str(name.into())),
             ("value", Val::Node(entry)),
-            ("index", Val::Node(at)),
+            ("indices", Val::Tuple(vec![Val::Node(at)])),
             ("ttype", scalar.clone()),
             ("contract", Val::Str(contract.into())),
         ];
@@ -163,19 +174,20 @@ fn plane_read(ctx: &mut Ctx, plane: &str, index: u32, dtype: &str) -> R<u32> {
         "At",
         vec![
             ("plane", Val::Node(leaf)),
-            ("index", Val::Node(index)),
+            ("indices", Val::Tuple(vec![Val::Node(index)])),
+            ("edge", Val::Str("unchecked".into())),
             ("ttype", scalar),
         ],
     )
 }
 
 /// The read of the finished cell of a reduction: the one-cell plane `cell` (a vector's column `k` is the plane `cell_k`), or the
-/// plane of a keyed reduction at the lane's own key. A matrix is refused.
+/// plane of a keyed reduction at the lane's own key. A value of rank two or more is refused.
 pub(crate) fn cell_read(ctx: &mut Ctx, reduction: u32, cell: &str) -> R<u32> {
     let parts = type_parts(ctx, reduction);
-    if parts.shape.len() == 2 {
+    if parts.shape.len() >= 2 {
         return refuse(
-            "a matrix reduced over samples is not read back whole: reduce each entry the kernel reads",
+            "a matrix or higher-rank value reduced over samples is not read back whole: reduce each entry the kernel reads",
         );
     }
     let key = node_field(ctx, reduction, "key")?;
@@ -259,6 +271,7 @@ fn slot_type(ctx: &Ctx, node: u32) -> R<Tt> {
         dtype: n.dtype.clone(),
         shape: n.shape.clone(),
         tag: n.tag.clone(),
+        axes: String::new(),
     })
 }
 
@@ -354,6 +367,7 @@ pub fn kernel_walk(
         dtype: "uint32".into(),
         shape: vec![],
         tag: None,
+        axes: String::new(),
     };
     let finishing = sinks.iter().any(|&s| is_a(ctx, s, "Finish"));
     let finished: Vec<(Key, Tt)> = if finishing {

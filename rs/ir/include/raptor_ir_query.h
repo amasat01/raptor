@@ -109,7 +109,7 @@ int rx_structural_keys(rx_ctx* ctx, const rx_node* order, size_t n, int64_t* buf
 
 /* Refuses, by name, a compound quantity declaration: a pack outside the manifest's QUANTITY_PACKS, an empty slug, no wire, a
    wire whose role no leaf kind mints (QUANTITY_ROLE_PAIRS) or two wires of one name. wires_kt is the key text of a tuple of
-   (role, name) pairs, in declaration order, such as (('vec_in', 'x'), ('mat_in', 'm')). Answers RX_OK for a sound one. */
+   (role, name) pairs, in declaration order, such as (('plane_in', 'x'), ('plane_in', 'm')). Answers RX_OK for a sound one. */
 int rx_quantity_check(rx_ctx* ctx, const char* slug, const char* pack, const char* wires_kt);
 
 /* The derivative rules, as templates of the manifest run over the nodes of the context. A table is one of the manifest's rule

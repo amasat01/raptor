@@ -97,7 +97,7 @@ fn round_trip(c: *mut Ctx, roots: &[u32]) {
 #[test]
 fn boxed_sinks_in_a_context_with_only_the_wings_kinds() {
     let c = fresh();
-    let x = leaf(c, "per_sample", "x", &[]);
+    let x = leaf(c, "plane_in", "x", &[]);
     let op = |kind: &str, ops: &[u32]| {
         let mut out = 0;
         let kind = CString::new(kind).unwrap();
@@ -134,7 +134,7 @@ fn boxed_sinks_in_a_context_with_only_the_wings_kinds() {
 fn no_box_is_chosen_for_a_kernel_with_one_axis_or_a_per_lane_input() {
     let c = fresh();
     let context = unsafe { &*c };
-    let plain = assign(c, "o", leaf(c, "per_sample", "x", &[]), &[]);
+    let plain = assign(c, "o", leaf(c, "plane_in", "x", &[]), &[]);
     assert!(choose_box(context, &[plain], 1, 16).unwrap().is_none());
     let per_lane = assign(c, "p", leaf(c, "mutable", "m", &[]), &[]);
     assert!(choose_box(context, &[per_lane], 1, 16).unwrap().is_none());
@@ -145,8 +145,8 @@ fn no_box_is_chosen_for_a_kernel_with_one_axis_or_a_per_lane_input() {
 fn lowered_sinks_in_a_context_with_only_the_wings_kinds() {
     let c = fresh();
     let (a, b) = (
-        leaf(c, "mat_in", "a", &[4, 2]),
-        leaf(c, "vec_in", "b", &[4]),
+        leaf(c, "plane_in", "a", &[4, 2]),
+        leaf(c, "plane_in", "b", &[4]),
     );
     let mut solve = 0;
     assert_eq!(
@@ -191,8 +191,8 @@ fn lowered_sinks_in_a_context_with_only_the_wings_kinds() {
 fn placed_sinks_in_a_context_with_only_the_wings_kinds() {
     let c = fresh();
     let (a, b) = (
-        leaf(c, "vec_in", "a", &[100]),
-        leaf(c, "vec_in", "b", &[100]),
+        leaf(c, "plane_in", "a", &[100]),
+        leaf(c, "plane_in", "b", &[100]),
     );
     let sum = make(
         c,

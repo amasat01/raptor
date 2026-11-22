@@ -8,6 +8,7 @@
 //! kept as a chain and pushed through the same ops, and lowered to selects where a static slot is forced. A loop is a scope and
 //! is never entered. A node with nothing to rewrite comes back as the same node.
 use crate::cells::{build, int_like};
+use crate::place::one_index;
 use crate::{flag_out, in_kinds, is_a, list_out, op_kind, R};
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
@@ -30,7 +31,7 @@ struct Chain {
 /// Follows the `add_at` ops from `node` down to the node they add into.
 fn chain(c: &Ctx, node: u32) -> R<Chain> {
     let (mut at, mut links) = (node, vec![]);
-    while in_kinds(c, at, |kind| kind == "add_at")? {
+    while is_chain(c, at)? {
         let operands = &c.node(at)?.ops;
         if operands.len() < 3 {
             return refuse("an add_at has fewer than three operands");
@@ -176,7 +177,7 @@ fn is_zero(c: &Ctx, node: u32) -> R<bool> {
 
 /// `parts` as a `vec` of `shape`; refuses a type the node `like` never had.
 fn assemble(c: &mut Ctx, shape: &[i64], parts: &[u32], like: u32) -> R<u32> {
-    let literal = if shape.len() == 2 {
+    let literal = if shape.len() >= 2 {
         Val::Tuple(shape.iter().map(|&d| Val::Int(i128::from(d))).collect())
     } else {
         Val::None
@@ -441,10 +442,14 @@ fn component(c: &mut Ctx, node: u32, ops: &[u32]) -> R<Option<u32>> {
     let shape = shape_of(c, ops[0])?;
     let at = match c.field(node, "literal")? {
         Val::Int(i) => i,
-        Val::Tuple(rc) => match rc.as_slice() {
-            [Val::Int(r), Val::Int(k)] if shape.len() == 2 => r * i128::from(shape[1]) + k,
-            _ => return bail(),
-        },
+        Val::Tuple(at) if at.len() == shape.len() => {
+            let mut flat = 0;
+            for (k, &extent) in at.iter().zip(&shape) {
+                let Val::Int(k) = k else { return bail() };
+                flat = flat * i128::from(extent) + k;
+            }
+            flat
+        }
         _ => return bail(),
     };
     let part = usize::try_from(at).ok().and_then(|i| parts.get(i).copied());
@@ -478,7 +483,7 @@ fn sum(c: &mut Ctx, node: u32, ops: &[u32]) -> R<Option<u32>> {
 
 /// Whether the node is an `add_at`.
 fn is_chain(c: &Ctx, node: u32) -> R<bool> {
-    in_kinds(c, node, |kind| kind == "add_at")
+    Ok(in_kinds(c, node, |kind| kind == "add_at")? && one_index(c, node))
 }
 
 /// The base of the chain under `node` and its links in order.

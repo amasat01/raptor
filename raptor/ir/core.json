@@ -16,10 +16,8 @@
    "prior_read"
   ],
   "LEAF_ROLES": [
-   "vec_in",
-   "mat_in",
+   "plane_in",
    "wide_in",
-   "per_sample",
    "lookup",
    "terminated",
    "uniform",
@@ -40,12 +38,16 @@
    "as_pure",
    "as_vec3"
   ],
+  "EDGE_RULES": [
+   "clamp",
+   "wrap",
+   "zero",
+   "unchecked"
+  ],
   "AT_ROLES": [
    "lookup",
    "wide_in",
-   "per_sample",
-   "vec_in",
-   "mat_in"
+   "plane_in"
   ],
   "FACTOR_TAGS": [
    "lu_factor",
@@ -75,14 +77,14 @@
   "REDUCE_KIND": "reduce",
   "SAMPLE_INDEX_KIND": "sample_index",
   "SAMPLE_POSITION_KIND": "sample_position",
-  "PLANE_EXTENT_KIND": "plane_extent",
+  "AXIS_EXTENT_KIND": "axis_extent",
   "DISPATCH_KIND": "dispatch",
   "NAMESPACE_SEP": "__",
   "PARAM_CELL": "param_cell",
   "CELL_PLANE": "param_cell",
   "RAW_LANGUAGE": "aether",
   "GATHER_ROLES": ["lookup", "wide_in"],
-  "PER_SAMPLE_ROLES": ["per_sample", "vec_in", "mat_in", "terminated", "mutable", "out"],
+  "PER_SAMPLE_ROLES": ["plane_in", "terminated", "mutable", "out"],
   "ACCESS_CLASSES": ["sample_local", "cross_sample_read", "cross_sample_write", "mapreduce"],
   "COMPANION_SUFFIX": "_c",
   "SAMPLE_SUM_COMP_SUFFIX": "_comp",
@@ -92,10 +94,9 @@
    "out",
    "wide_out",
    "accum_out",
-   "vec_in",
-   "mat_in",
+   "plane_in",
    "wide_in",
-   "per_sample",
+   "plane_in",
    "lookup",
    "terminated",
    "uniform",
@@ -339,13 +340,9 @@
    "tuple"
   ],
   "QUANTITY_ROLE_PAIRS": [
-   "vec_in",
-   "vocab_read",
-   "mat_in",
+   "plane_in",
    "vocab_read",
    "wide_in",
-   "vocab_read",
-   "per_sample",
    "vocab_read",
    "lookup",
    "table_read",
@@ -526,7 +523,7 @@
     "name",
     "form",
     "ttype",
-    "dims=()",
+    "axes=()",
     "staged=False",
     "grid=()",
     "sorted=False",
@@ -639,7 +636,7 @@
     "role",
     "name",
     "value",
-    "index",
+    "indices",
     "ttype"
    ],
    "steps": [
@@ -651,7 +648,7 @@
     [
      "let",
      "ops",
-     "cat((value,), opt(index))"
+     "cat((value,), indices)"
     ],
     [
      "node",
@@ -719,16 +716,18 @@
     "name",
     "quantity",
     "wire_index",
-    "sorted"
+    "sorted",
+    "axes"
    ],
-   "params": "kind: str, role: str, name: str, ttype: TensorType, *, quantity: 'Quantity | None' = None, wire_index: int = 0, sorted: bool = False",
+   "params": "kind: str, role: str, name: str, ttype: TensorType, *, quantity: 'Quantity | None' = None, wire_index: int = 0, sorted: bool = False, axes: tuple = ()",
    "assigns": [
     "kind",
     "role",
     "name",
     "quantity",
     "wire_index",
-    "sorted"
+    "sorted",
+    "axes"
    ],
    "binding": "slot",
    "dedup": [
@@ -740,7 +739,8 @@
     "name",
     "wire_index",
     "sorted",
-    "quantity"
+    "quantity",
+    "axes"
    ],
    "from": [
     "@kind",
@@ -749,7 +749,8 @@
     "ttype",
     "quantity=@quantity",
     "wire_index=@wire_index",
-    "sorted=@sorted"
+    "sorted=@sorted",
+    "axes=@axes"
    ],
    "ctor": {
     "steps": [
@@ -767,6 +768,11 @@
       "check",
       "role not in LEAF_ROLES",
       "leaf {name!r}: unknown leaf role {role!r}, expected one of {LEAF_ROLES}"
+     ],
+     [
+      "check",
+      "axes_fault(axes) is not None",
+      "leaf {name!r}: {axes_fault(axes)}"
      ]
     ],
     "out": [
@@ -775,7 +781,8 @@
      "name",
      "quantity",
      "wire_index",
-     "sorted"
+     "sorted",
+     "axes"
     ]
    }
   },
@@ -915,26 +922,46 @@
    }
   },
   {
-   "name": "plane_extent",
-   "class": "PlaneExtent",
+   "name": "axis_extent",
+   "class": "AxisExtent",
    "family": "expr",
    "refines": "node",
    "operands": {
     "min": 1,
     "max": 1
    },
-   "wire_attr": "plane_extent",
-   "params": "plane: Leaf, ttype: TensorType | None = None",
-   "assigns": [],
+   "slots": [
+    "axis"
+   ],
+   "wire_attr": "axis_extent",
+   "params": "plane: Leaf, axis: int = 0, ttype: TensorType | None = None",
+   "assigns": [
+    "axis"
+   ],
    "dedup": [
-    "none"
+    "one",
+    "f:axis"
+   ],
+   "state": [
+    "axis"
    ],
    "from": [
     "op:0",
+    "@axis",
     "ttype"
    ],
    "ctor": {
     "steps": [
+     [
+      "check",
+      "not (isinstance(plane, Leaf) and plane.role in AT_ROLES)",
+      "axis_extent(): the plane must be a leaf in one of the roles {AT_ROLES}, got {plane!r}"
+     ],
+     [
+      "check",
+      "axis_fault(plane, axis) is not None",
+      "axis_extent(): {axis_fault(plane, axis)}"
+     ],
      [
       "let",
       "tt",
@@ -946,7 +973,9 @@
       "(plane,)"
      ]
     ],
-    "out": []
+    "out": [
+     "axis"
+    ]
    },
    "props": [
     [
@@ -1038,18 +1067,32 @@
    "refines": "op",
    "operands": {
     "min": 2,
-    "max": 2
+    "max": 9
    },
    "refinable": true,
-   "params": "plane: Leaf, index: Node, ttype: TensorType",
+   "slots": [
+    "edge"
+   ],
+   "params": "plane: Leaf, indices: Sequence[Node], ttype: TensorType, edge: str = 'clamp'",
    "assigns": [
     "kind",
-    "literal"
+    "literal",
+    "edge"
+   ],
+   "dedup": [
+    "tup",
+    "r:literal",
+    "f:edge"
+   ],
+   "state": [
+    "+Op",
+    "edge"
    ],
    "from": [
     "op:0",
-    "op:1",
-    "ttype"
+    "ops:1",
+    "ttype",
+    "@edge"
    ],
    "watch": "all",
    "ctor": {
@@ -1060,14 +1103,25 @@
       "at(): the indexed plane must be a leaf in one of the roles {AT_ROLES}, got {plane!r}"
      ],
      [
+      "check",
+      "edge not in EDGE_RULES",
+      "at(): the edge rule {edge!r} of {plane.name!r} is not one of {EDGE_RULES}"
+     ],
+     [
+      "check",
+      "index_fault(plane, indices) is not None",
+      "at(): {index_fault(plane, indices)}"
+     ],
+     [
       "node",
       "ttype",
-      "(plane, index)"
+      "cat((plane,), indices)"
      ]
     ],
     "out": [
      "'at'",
-     "None"
+     "None",
+     "edge"
     ]
    },
    "props": [
@@ -1075,11 +1129,6 @@
      "plane",
      "op",
      "0"
-    ],
-    [
-     "index",
-     "op",
-     "1"
     ]
    ],
    "wire": "at"
@@ -1287,7 +1336,7 @@
    "refines": "node",
    "operands": {
     "min": 1,
-    "max": 2
+    "max": 9
    },
    "refinable": true,
    "slots": [
@@ -1295,7 +1344,7 @@
     "role",
     "name"
    ],
-   "params": "kind: str, role: str, name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None",
+   "params": "kind: str, role: str, name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None",
    "assigns": [
     "kind",
     "role",
@@ -1317,7 +1366,7 @@
     "@role",
     "@name",
     "op:0",
-    "opq:1",
+    "ops:1",
     "ttype"
    ],
    "watch": "all",
@@ -1330,7 +1379,7 @@
       "role",
       "name",
       "value",
-      "index",
+      "indices",
       "ttype"
      ]
     ],
@@ -1363,16 +1412,31 @@
     "max": 1
    },
    "refinable": true,
-   "params": "name: str, value: Node, ttype: TensorType | None = None",
+   "slots": [
+    "axes"
+   ],
+   "params": "name: str, value: Node, ttype: TensorType | None = None, axes: tuple = ()",
    "assigns": [
     "kind",
     "role",
-    "name"
+    "name",
+    "axes"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "f:axes"
+   ],
+   "state": [
+    "+Sink",
+    "axes"
    ],
    "from": [
     "@name",
     "op:0",
-    "ttype"
+    "ttype",
+    "@axes"
    ],
    "ctor": {
     "steps": [
@@ -1383,14 +1447,20 @@
       "'mutable'",
       "name",
       "value",
-      "None",
+      "()",
       "ttype"
+     ],
+     [
+      "check",
+      "axes_fault(axes) is not None",
+      "assign {name!r}: {axes_fault(axes)}"
      ]
     ],
     "out": [
      "'assign'",
      "'mutable'",
-     "name"
+     "name",
+     "axes"
     ]
    },
    "role": "mutable",
@@ -1403,20 +1473,40 @@
    "refines": "sink",
    "operands": {
     "min": 1,
-    "max": 2
+    "max": 9
    },
    "refinable": true,
-   "params": "name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None",
+   "slots": [
+    "edge",
+    "axes"
+   ],
+   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, edge: str = 'unchecked', axes: tuple = ()",
    "assigns": [
     "kind",
     "role",
-    "name"
+    "name",
+    "edge",
+    "axes"
+   ],
+   "dedup": [
+    "tup",
+    "f:role",
+    "f:name",
+    "f:edge",
+    "f:axes"
+   ],
+   "state": [
+    "+Sink",
+    "edge",
+    "axes"
    ],
    "from": [
     "@name",
     "op:0",
-    "opq:1",
-    "ttype"
+    "ops:1",
+    "ttype",
+    "@edge",
+    "@axes"
    ],
    "watch": "all",
    "ctor": {
@@ -1428,14 +1518,31 @@
       "'wide_out'",
       "name",
       "value",
-      "index",
+      "indices",
       "ttype"
+     ],
+     [
+      "check",
+      "edge not in EDGE_RULES",
+      "wide_write {name!r}: the edge rule {edge!r} is not one of {EDGE_RULES}"
+     ],
+     [
+      "check",
+      "axes_fault(axes) is not None",
+      "wide_write {name!r}: {axes_fault(axes)}"
+     ],
+     [
+      "check",
+      "store_index_fault(name, axes, indices) is not None",
+      "wide_write {name!r}: {store_index_fault(name, axes, indices)}"
      ]
     ],
     "out": [
      "'wide_write'",
      "'wide_out'",
-     "name"
+     "name",
+     "edge",
+     "axes"
     ]
    },
    "role": "wide_out",
@@ -1448,29 +1555,37 @@
    "refines": "sink",
    "operands": {
     "min": 1,
-    "max": 2
+    "max": 9
    },
    "slots": [
     "contract",
-    "reduced"
+    "reduced",
+    "edge",
+    "axes"
    ],
-   "params": "name: str, value: Node, index: Node | None = None, ttype: TensorType | None = None, contract: str = \"auto\", reduced: Node | None = None",
+   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, contract: str = \"auto\", reduced: Node | None = None, edge: str = 'unchecked', axes: tuple = ()",
    "assigns": [
     "kind",
     "role",
     "name",
     "contract",
-    "reduced"
+    "reduced",
+    "edge",
+    "axes"
    ],
    "dedup": [
     "tup",
     "f:role",
     "f:name",
-    "fx:contract:auto,plain"
+    "fx:contract:auto,plain",
+    "f:edge",
+    "f:axes"
    ],
    "state": [
     "+Sink",
-    "contract"
+    "contract",
+    "edge",
+    "axes"
    ],
    "edges": [
     "reduced?"
@@ -1478,10 +1593,12 @@
    "from": [
     "@name",
     "op:0",
-    "opq:1",
+    "ops:1",
     "ttype",
     "@contract",
-    "edge:reduced"
+    "edge:reduced",
+    "@edge",
+    "@axes"
    ],
    "from_edges": true,
    "watch": "all",
@@ -1494,13 +1611,28 @@
       "'accum_out'",
       "name",
       "value",
-      "index",
+      "indices",
       "ttype"
      ],
      [
       "check",
       "not (contract in SCATTER_CONTRACTS or contract == 'keyed_auto')",
       "accum_write {name!r}: contract {contract!r} is not one of {SCATTER_CONTRACTS}"
+     ],
+     [
+      "check",
+      "edge not in EDGE_RULES",
+      "accum_write {name!r}: the edge rule {edge!r} is not one of {EDGE_RULES}"
+     ],
+     [
+      "check",
+      "axes_fault(axes) is not None",
+      "accum_write {name!r}: {axes_fault(axes)}"
+     ],
+     [
+      "check",
+      "store_index_fault(name, axes, indices) is not None",
+      "accum_write {name!r}: {store_index_fault(name, axes, indices)}"
      ]
     ],
     "out": [
@@ -1508,7 +1640,9 @@
      "'accum_out'",
      "name",
      "contract",
-     "reduced"
+     "reduced",
+     "edge",
+     "axes"
     ]
    }
   },
@@ -1657,7 +1791,7 @@
       "'accum_out'",
       "name",
       "value",
-      "None",
+      "()",
       "ttype"
      ],
      [
@@ -5891,11 +6025,14 @@
     "jvp": [
      "div",
      [
-      "dot",
-      "a",
+      "sum",
       [
-       "t",
-       "a"
+       "mul",
+       "a",
+       [
+        "t",
+        "a"
+       ]
       ]
      ],
      "n"
@@ -6021,7 +6158,7 @@
    "component_at": {
     "operands": [
      "v",
-     "index"
+     "...indices"
     ],
     "vjp": [
      [
@@ -6032,7 +6169,10 @@
         "zero_like",
         "v"
        ],
-       "index",
+       [
+        "...",
+        "indices"
+       ],
        "g"
       ]
      ]
@@ -6052,14 +6192,17 @@
      [
       "component_at",
       "tv",
-      "index"
+      [
+       "...",
+       "indices"
+      ]
      ]
     ]
    },
    "add_at": {
     "operands": [
      "v",
-     "index",
+     "...indices",
      "value"
     ],
     "vjp": [
@@ -6072,7 +6215,10 @@
       [
        "component_at",
        "g",
-       "index"
+       [
+        "...",
+        "indices"
+       ]
       ]
      ]
     ],
@@ -6108,7 +6254,10 @@
         "v"
        ]
       ],
-      "index",
+      [
+       "...",
+       "indices"
+      ],
       [
        "or",
        "tw",
@@ -6123,7 +6272,7 @@
    "set_component_at": {
     "operands": [
      "v",
-     "index",
+     "...indices",
      "value"
     ],
     "vjp_lets": [
@@ -6141,7 +6290,10 @@
       [
        "set_component_at",
        "g",
-       "index",
+       [
+        "...",
+        "indices"
+       ],
        "zero"
       ]
      ],
@@ -6150,7 +6302,10 @@
       [
        "component_at",
        "g",
-       "index"
+       [
+        "...",
+        "indices"
+       ]
       ]
      ]
     ],
@@ -6186,7 +6341,10 @@
         "v"
        ]
       ],
-      "index",
+      [
+       "...",
+       "indices"
+      ],
       [
        "or",
        "tw",

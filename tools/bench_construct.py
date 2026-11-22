@@ -26,7 +26,7 @@ from raptor.ir.types import TensorType
 def _cases():
     f64 = TensorType((), "f64")
     i32 = TensorType((), "i32")
-    leaf = nodes.Leaf("vocab_read", "per_sample", "x", f64)
+    leaf = nodes.Leaf("vocab_read", "plane_in", "x", f64)
     table = nodes.Leaf("table_read", "lookup", "t", TensorType((8,), "f64"))
     one = nodes.Const(1.0, f64)
     idx = nodes.Const(3, i32)

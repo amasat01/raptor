@@ -5,7 +5,7 @@
 use crate::construct::refs;
 use crate::lanes::{box_candidate, reachable, varying_nodes};
 use crate::planes::{type_parts, NodeType};
-use crate::{in_kinds, is_a, konst, kstr, list_out, op_kind, raw_index};
+use crate::{in_kinds, index_operands, is_a, konst, kstr, list_out, op_kind};
 use raptor_ir::build::LoopParts;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
@@ -93,7 +93,7 @@ impl Copy<'_> {
     fn operands_to_copy(&self, node: u32) -> Vec<u32> {
         let ctx = &*self.ctx;
         if is_a(ctx, node, "At") {
-            return vec![raw_index(self.ctx, node)];
+            return index_operands(self.ctx, node);
         }
         if self.fusing(node) {
             return vec![];
@@ -250,11 +250,12 @@ impl Copy<'_> {
             }
         }
         if is_a(self.ctx, node, "Leaf") {
-            let per_sample = self.ctx.str_field(node, "role")? == "per_sample";
+            let per_sample = self.ctx.str_field(node, "role")? == "plane_in"
+                && self.ctx.nodes[node as usize].shape.is_empty();
             if lane == 0 || !per_sample {
                 return Ok(node);
             }
-            let fields = "((\"kind\", \"at\"), (\"literal\", None))";
+            let fields = "((\"kind\", \"at\"), (\"literal\", None), (\"edge\", \"unchecked\"))";
             return self.ctx.make(
                 "At",
                 &ty.dtype,
@@ -281,33 +282,12 @@ impl Copy<'_> {
             kids.push(self.memo[&(child, lane)]);
         }
         if is_a(self.ctx, node, "At") {
-            kids = vec![
-                self.ctx.nodes[node as usize].ops[0],
-                self.copied_index(node, kids[0])?,
-            ];
+            kids.insert(0, self.ctx.nodes[node as usize].ops[0]);
         }
         if kids == self.ctx.nodes[node as usize].ops {
             return Ok(node);
         }
         self.ctx.rebuild(node, &kids)
-    }
-
-    /// The index of a copied read: the original index when the raw index did not move, else the
-    /// copy, with the clamp the original held.
-    fn copied_index(&mut self, read: u32, copied_raw: u32) -> Outcome<u32> {
-        let (index, raw) = (
-            self.ctx.nodes[read as usize].ops[1],
-            raw_index(self.ctx, read),
-        );
-        if copied_raw == raw {
-            return Ok(index);
-        }
-        if index == raw {
-            return Ok(copied_raw);
-        }
-        let bound = self.ctx.nodes[index as usize].ops[1];
-        let ty = type_parts(self.ctx, index);
-        self.op("clamp_index", &ty, &[copied_raw, bound])
     }
 }
 
@@ -394,15 +374,12 @@ fn boxable(ctx: &Ctx, sinks: &[u32]) -> Outcome<bool> {
     Ok(true)
 }
 
-/// Whether a leaf is one a box can share: not a per-lane input, a mutable or a terminated flag.
+/// Whether a leaf is one a box can share: not a per-lane plane (an input holding a value of rank one or more, a mutable)
+/// or a terminated flag.
 fn lane_local_leaf(ctx: &Ctx, leaf: u32) -> Outcome<bool> {
     let role = ctx.str_field(leaf, "role")?;
-    let per_lane_input = matches!(
-        role.as_str(),
-        "vec_in" | "mat_in" | "mutable" | "terminated"
-    );
-    let wide_per_sample = role == "per_sample" && !ctx.nodes[leaf as usize].shape.is_empty();
-    Ok(!(per_lane_input || wide_per_sample))
+    let value_plane = role == "plane_in" && !ctx.nodes[leaf as usize].shape.is_empty();
+    Ok(!(value_plane || matches!(role.as_str(), "mutable" | "terminated")))
 }
 
 /// Whether a loop is one a box can fuse: it runs a fixed count, commits nothing, holds no loop inside and carries scalar reals.

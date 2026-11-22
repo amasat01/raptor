@@ -2,7 +2,7 @@
 //! index into themselves or element by element from themselves, and which step loops carry a wide
 //! mutable they only overwrite.
 use crate::construct::refs;
-use crate::place::{kind_of, width, Kind, Use, ELEMENTWISE};
+use crate::place::{kind_of, one_index, width, Kind, Use, ELEMENTWISE};
 use crate::plan::Plan;
 use crate::wide::rank;
 use crate::{is_a, wide};
@@ -93,11 +93,11 @@ impl<'a> Plan<'a> {
     /// final value, else none.
     fn slot_pattern(&self, lp: u32, j: usize) -> Outcome<Option<&'static str>> {
         let ctx = self.ctx;
-        let reads =
-            |usage: &Use| -> Outcome<bool> {
-                Ok(self.indexed(usage)?
-                    && kind_of(ctx, usage.user)?.as_deref() == Some("component_at"))
-            };
+        let reads = |usage: &Use| -> Outcome<bool> {
+            Ok(self.indexed(usage)?
+                && kind_of(ctx, usage.user)?.as_deref() == Some("component_at")
+                && one_index(ctx, usage.user))
+        };
         for usage in self.graph.users(carries(ctx, lp)?[j]) {
             if reads(usage)? {
                 return Ok(Some("rotate"));
@@ -106,6 +106,7 @@ impl<'a> Plan<'a> {
         for node in ctx.body_nodes(lp)? {
             let runtime_read = kind_of(ctx, node)?.as_deref() == Some("component_at")
                 && is_a(ctx, node, "Op")
+                && one_index(ctx, node)
                 && !is_a(ctx, ctx.nodes[node as usize].ops[1], "Const");
             if runtime_read {
                 return Ok(Some("slot_read"));
@@ -133,6 +134,7 @@ impl<'a> Plan<'a> {
             kind_of(ctx, node)?.as_deref(),
             Some("set_component_at" | "add_at")
         ) && is_a(ctx, node, "Op")
+            && one_index(ctx, node)
         {
             links.push(node);
             node = ctx.nodes[node as usize].ops[0];
@@ -170,7 +172,9 @@ impl<'a> Plan<'a> {
 
     /// Whether the node is an `Op` reading one component of a vector.
     fn reads_component(&self, node: u32) -> bool {
-        is_a(self.ctx, node, "Op") && any_kind(self.ctx, node) == "component_at"
+        is_a(self.ctx, node, "Op")
+            && any_kind(self.ctx, node) == "component_at"
+            && one_index(self.ctx, node)
     }
 
     /// The nodes the stored values and indices of a chain of stores are computed from.

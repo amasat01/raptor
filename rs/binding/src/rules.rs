@@ -105,7 +105,7 @@ fn entrywise<'py>(
             .collect::<PyResult<Vec<_>>>()?;
         parts.push(mk(py, kind, args, None)?);
     }
-    let lit = if shape.len() == 2 {
+    let lit = if shape.len() >= 2 {
         Some(PyTuple::new(py, shape)?.into_any())
     } else {
         None
@@ -156,13 +156,23 @@ fn entry_list<'py>(py: Python<'py>, shape: &[i64]) -> PyResult<Vec<Bound<'py, Py
             .map(|i| Ok(i.into_pyobject(py)?.into_any()))
             .collect();
     }
-    let mut v = vec![];
-    for r in 0..shape[0] {
-        for c in 0..shape[1] {
-            v.push(PyTuple::new(py, [r, c])?.into_any())
-        }
+    let mut heads: Vec<Vec<i64>> = vec![vec![]];
+    for &extent in shape {
+        heads = heads
+            .into_iter()
+            .flat_map(|head| {
+                (0..extent).map(move |k| {
+                    let mut next = head.clone();
+                    next.push(k);
+                    next
+                })
+            })
+            .collect();
     }
-    Ok(v)
+    heads
+        .into_iter()
+        .map(|at| Ok(PyTuple::new(py, at)?.into_any()))
+        .collect()
 }
 fn idx_i(v: &Val<'_>) -> PyResult<i64> {
     if let Val::I(i) = v {
@@ -386,7 +396,7 @@ fn ev<'py>(py: Python<'py>, t: &J, env: &mut Env<'py>) -> PyResult<Val<'py>> {
                     let Val::P(sh) = ev(py, &a[1], env)? else {
                         return Err(he("rules: vlit takes a shape".into()));
                     };
-                    Ok(Val::P(if sh.len()? == 2 {
+                    Ok(Val::P(if sh.len()? >= 2 {
                         sh
                     } else {
                         py.None().into_bound(py)
@@ -712,6 +722,31 @@ pub fn rule_factor<'py>(
 /// A rule program: the operands of `n` bound to the names the row lists, its `lets` run in order, then the `vjp` pairs (arg = the cotangent) or
 /// the `jvp` expression (arg = the tangent function).
 #[pyfunction]
+/// Binds the operand names of a rule to the operands of its node. A name written `...rest` takes every operand
+/// the other names leave over, as a list: the element accesses carry one index per axis of their value.
+fn bind_operands<'py>(names: &[String], ops: Vec<Val<'py>>) -> Env<'py> {
+    let Some(at) = names.iter().position(|n| n.starts_with("...")) else {
+        return names.iter().cloned().zip(ops).collect();
+    };
+    let take = ops.len().saturating_sub(names.len() - 1);
+    let mut out: Env<'py> = names[..at]
+        .iter()
+        .cloned()
+        .zip(ops.iter().cloned())
+        .collect();
+    out.push((
+        names[at][3..].to_string(),
+        Val::L(ops[at..at + take].to_vec()),
+    ));
+    out.extend(
+        names[at + 1..]
+            .iter()
+            .cloned()
+            .zip(ops[at + take..].iter().cloned()),
+    );
+    out
+}
+
 pub fn rule_run<'py>(
     py: Python<'py>,
     table: &str,
@@ -739,14 +774,9 @@ pub fn rule_run<'py>(
         "ops".into(),
         Val::L(ops.iter().map(|o| Val::N(o.clone())).collect()),
     ));
-    for (name, o) in t
-        .get("operands")
-        .map(|x| x.strs())
-        .unwrap_or_default()
-        .into_iter()
-        .zip(ops)
-    {
-        e.push((name, Val::N(o)))
+    let names = t.get("operands").map(|x| x.strs()).unwrap_or_default();
+    for (name, v) in bind_operands(&names, ops.into_iter().map(Val::N).collect()) {
+        e.push((name, v))
     }
     for p in t.get("lets").map(|x| x.arr()).unwrap_or(&[]) {
         let v = ev(py, &p.arr()[1], &mut e)?;

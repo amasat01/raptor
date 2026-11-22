@@ -7,13 +7,13 @@ use raptor_ir::walkreads::{rx_walk_quantity_slots, rx_walk_quantity_wires};
 fn wire_leaf(c: &mut Ctx, slug: &str, wires: &[&str], at: usize) -> u32 {
     let declared: Vec<String> = wires
         .iter()
-        .map(|w| format!("Wire(name='{w}', role='vec_in', shape=(), dtype='f64', tag=None)"))
+        .map(|w| format!("Wire(name='{w}', role='plane_in', shape=(), dtype='f64', tag=None)"))
         .collect();
     let quantity = format!(
         "Quantity(slug='{slug}', pack='auto', wires=({},))",
         declared.join(", ")
     );
-    let fields = format!("(('kind', 'vocab_read'), ('role', 'vec_in'), ('name', '{slug}__{}'), ('quantity', {quantity}), ('wire_index', {at}), ('sorted', False))", wires[at]);
+    let fields = format!("(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', '{slug}__{}'), ('quantity', {quantity}), ('wire_index', {at}), ('sorted', False))", wires[at]);
     c.make("Leaf", "f64", &[], None, &[], &fields).unwrap()
 }
 
@@ -28,8 +28,8 @@ fn text(p: &RxPairPart) -> String {
 fn a_walk_names_its_quantities_with_their_wires_and_slots_in_walk_order() {
     let mut c = Ctx::new().unwrap();
     // The walk reaches `pos` (wires x, v) and then `acc` (wire w); `y` is a plain plane.
-    // Slots are ordered by role (mutable, out, ..., vec_in, ...), and inside a role the wires of the reached quantities come first, in
-    // the order the quantities are reached and then in declaration order. So the mutable plane `y` is slot 0 and the vec_in slots are
+    // Slots are ordered by role (mutable, out, ..., plane_in, ...), and inside a role the wires of the reached quantities come first, in
+    // the order the quantities are reached and then in declaration order. So the mutable plane `y` is slot 0 and the plane_in slots are
     // pos__x 1, pos__v 2, acc__w 3.
     let (px, pv) = (
         wire_leaf(&mut c, "pos", &["x", "v"], 0),

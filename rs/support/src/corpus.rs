@@ -8,6 +8,23 @@ use rcore::keytext::py_str;
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
 
+/// A context for replaying recorded walks. Every recording predates the shared read-plane role, so the digests take the role of
+/// a slot as the recording named it. For a walk recorded before the planes carried axes (`before_axes`), they also take the keys
+/// without the fields the recording predates; otherwise the keys are the current ones.
+pub fn replay_ctx(before_axes: bool) -> *mut Ctx {
+    let c = rx_ctx_new();
+    // SAFETY: `rx_ctx_new` returned a live context that nothing else holds yet.
+    unsafe {
+        (*c).role_form = Some(crate::migrate::old_role_name);
+        (*c).key_form = Some(if before_axes {
+            crate::migrate::remove_added_fields
+        } else {
+            crate::migrate::old_read_role
+        });
+    }
+    c
+}
+
 /// Writes the recorded elements `v` between `open` and `close` as value text; `one` adds the comma of a one-element tuple.
 pub fn seq(v: &[J], h: &[u32], open: &str, close: &str, one: bool) -> String {
     let items: Vec<String> = v.iter().map(|x| val(x, h)).collect();

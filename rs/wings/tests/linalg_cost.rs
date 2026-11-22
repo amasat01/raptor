@@ -38,7 +38,7 @@ impl Graph {
 
     /// The factorisation `kind` of an `n` by `n` matrix of the element type.
     fn factor(&mut self, kind: &str, dtype: &str, n: i64) -> u32 {
-        let a = self.input(dtype, &[n, n], "mat_in");
+        let a = self.input(dtype, &[n, n], "plane_in");
         self.op(kind, dtype, &[n, n], &[a])
     }
 
@@ -92,7 +92,7 @@ fn solve_operation_counts_are_n_squared_times_the_right_hand_columns() {
     let mut g = Graph::new();
     for (n, k) in [(4_i64, 3_i64), (32, 5)] {
         let (lu, chol) = (g.factor("lu", "f64", n), g.factor("chol", "f64", n));
-        let rhs = g.input("f64", &[n, k], "mat_in");
+        let rhs = g.input("f64", &[n, k], "plane_in");
         let by_lu = g.op("lu_solve", "f64", &[n, k], &[lu, rhs]);
         let by_chol = g.op("cho_solve", "f64", &[n, k], &[chol, rhs]);
         assert_eq!(g.ops_of(&[by_lu]), n * n * k);
@@ -105,7 +105,7 @@ fn the_derivative_solves_cost_their_triangular_halves() {
     let mut g = Graph::new();
     for n in [4_i64, 32] {
         let (lu, chol) = (g.factor("lu", "f64", n), g.factor("chol", "f64", n));
-        let rhs = g.input("f64", &[n, n], "mat_in");
+        let rhs = g.input("f64", &[n, n], "plane_in");
         let transposed = g.op("lu_solve_t", "f64", &[n, n], &[lu, rhs]);
         let lower = g.op("tri_lower", "f64", &[n, n], &[chol, rhs]);
         let upper = g.op("tri_upper_t", "f64", &[n, n], &[chol, rhs]);
@@ -174,10 +174,10 @@ fn storage_bytes_per_kind_follow_the_documented_sizes() {
         assert_eq!(g.bytes_of(&[lu]), n * n * w + 4 * n + 4);
         assert_eq!(g.bytes_of(&[chol]), n * n * w + 4);
         assert_eq!(g.bytes_of(&[eigh]), (2 * n * n + n) * w + 4);
-        let rhs = g.input(dtype, &[n, 2], "mat_in");
+        let rhs = g.input(dtype, &[n, 2], "plane_in");
         let solve = g.op("lu_solve", dtype, &[n, 2], &[lu, rhs]);
         assert_eq!(g.bytes_of(&[solve]), n * 2 * w);
-        let column = g.input(dtype, &[n], "vec_in");
+        let column = g.input(dtype, &[n], "plane_in");
         let by_chol = g.op("cho_solve", dtype, &[n], &[chol, column]);
         assert_eq!(g.bytes_of(&[by_chol]), n * w);
         let factor = g.op("chol_factor", dtype, &[n, n], &[chol]);
@@ -191,9 +191,9 @@ fn storage_bytes_per_kind_follow_the_documented_sizes() {
 fn the_stack_of_a_kernel_is_the_sum_over_its_nodes() {
     let mut g = Graph::new();
     let lu = g.factor("lu", "f64", 32);
-    let column = g.input("f64", &[32], "vec_in");
+    let column = g.input("f64", &[32], "plane_in");
     let solve = g.op("lu_solve", "f64", &[32], &[lu, column]);
-    let plane = g.input("f64", &[32, 32], "mat_in");
+    let plane = g.input("f64", &[32, 32], "plane_in");
     assert_eq!(
         g.bytes_of(&[lu, solve, plane]),
         32 * 32 * 8 + 4 * 32 + 4 + 32 * 8

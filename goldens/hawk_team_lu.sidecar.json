@@ -12,32 +12,11 @@
   "kernel": "la_lu_71",
   "params": [],
   "params_schema": 2,
-  "per_sample": [],
-  "vector_inputs": [
-    "b"
-  ],
-  "matrix_inputs": [
-    "A",
-    "B"
-  ],
-  "mat_shapes": {
-    "A": [
-      71,
-      71
-    ],
-    "B": [
-      71,
-      2
-    ]
-  },
   "mutables": [],
   "arg_widths": {
     "b": 71,
     "A": 5041,
     "B": 142
-  },
-  "vec_widths": {
-    "b": 71
   },
   "arg_shapes": {
     "b": 71,
@@ -78,15 +57,15 @@
       "tm0_x1"
     ],
     [
-      "vec_in",
+      "plane_in",
       "b"
     ],
     [
-      "mat_in",
+      "plane_in",
       "A"
     ],
     [
-      "mat_in",
+      "plane_in",
       "B"
     ]
   ],

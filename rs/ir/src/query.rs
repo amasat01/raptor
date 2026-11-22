@@ -63,8 +63,7 @@ impl Ctx {
         if !self.is_a(node, "At") {
             return Ok(false);
         }
-        let index = self.field(node, "index")?;
-        let Val::Node(index) = index else {
+        let [_, index] = self.nodes[node as usize].ops[..] else {
             return Ok(false);
         };
         if !self.is_a(index, "RoleConst") {

@@ -36,7 +36,7 @@ from .nodes import AccumWrite, Assign, At, Const, Op
 from .nodes import Dispatch as Dispatch
 from ..errors import RaptorError as RaptorError
 from .nodes import SamplePosition as SamplePosition
-from .nodes import PlaneExtent as PlaneExtent
+from .nodes import AxisExtent as AxisExtent
 from .nodes import Leaf as Leaf
 from .nodes import Node as Node
 from .nodes import Primitive as Primitive

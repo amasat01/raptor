@@ -2,7 +2,7 @@
 //! the walk. Oracle: tests/data/walk.json, recorded from the previous Python `cells.walk` on the same sinks.
 use raptor_ir::record::{Ctx, Fault};
 use raptor_ir::typed::{RxPair, RxPairPart, RxType};
-use raptor_ir::value::{ttype_val, Val};
+use raptor_ir::value::{text_val, ttype_val, Val};
 use raptor_ir::walkreads::{
     rx_walk_access_class, rx_walk_accum_companions, rx_walk_prior, rx_walk_selector_reads,
     rx_walk_slot_type, rx_walk_static_selector,
@@ -50,7 +50,7 @@ fn sample_sum(c: &mut Ctx, name: &str, value: u32, op: &str) -> u32 {
 
 /// A dispatch of two branches pinned to the strategy word.
 fn dispatch(c: &mut Ctx, (x, y): (u32, u32), word: &str) -> u32 {
-    let selector = leaf(c, ("per_sample", "vocab_read"), "k", "i32");
+    let selector = leaf(c, ("plane_in", "vocab_read"), "k", "i32");
     let (a, b) = (
         c.make_op("add", &[x, y], &Val::None).unwrap(),
         c.make_op("mul", &[x, y], &Val::None).unwrap(),
@@ -72,7 +72,7 @@ fn dispatch(c: &mut Ctx, (x, y): (u32, u32), word: &str) -> u32 {
 
 /// The sinks and declared slots of a recorded case.
 fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
-    let per = ("per_sample", "vocab_read");
+    let per = ("plane_in", "vocab_read");
     let (x, y) = (leaf(c, per, "x", "f64"), leaf(c, per, "y", "f64"));
     let sum = |c: &mut Ctx, a, b| c.make_op("add", &[a, b], &Val::None).unwrap();
     let mut declared = String::from("()");
@@ -131,7 +131,7 @@ fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
             vec![sink(c, "Assign", "o", x)]
         }
         "prior_read" => {
-            let p = leaf(c, ("per_sample", "prior_read"), "p", "f64");
+            let p = leaf(c, ("plane_in", "prior_read"), "p", "f64");
             vec![{
                 let v = sum(c, x, p);
                 sink(c, "Assign", "o", v)
@@ -161,6 +161,9 @@ fn the_kernel_walk_is_the_recorded_one() {
         let id = case.get("id").and_then(J::str).unwrap();
         let mut c = Ctx::new().unwrap();
         declare_kinds(&mut c).unwrap();
+        // the recorded digests name the read planes by the rank of their value
+        c.role_form = Some(raptor_support::migrate::old_role_name);
+        c.key_form = Some(raptor_support::migrate::old_read_role);
         let (sinks, declared) = case_sinks(&mut c, id);
         let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
         let got = kernel_walk(&mut c, &sinks, &declared, None, &[]);
@@ -461,4 +464,98 @@ fn the_plane_names_of_a_group_are_the_recorded_ones() {
             "dispatch3_mix"
         ]
     );
+}
+
+/// A key line of a walk as it was written before a plane stated its axes and a read and a store stated their edge rule: the fields
+/// those changes added are removed, and the extent of a flat plane is named as it was.
+fn key_line_before_axes(line: &str) -> String {
+    if line.contains("('accum_write'") || line.contains("('wide_write'") {
+        if let Some(head) = line.strip_suffix(", 'unchecked', ()))") {
+            return format!("{head}))");
+        }
+    }
+    if line.contains("('assign'") {
+        if let Some(head) = line.strip_suffix(", ()))") {
+            return format!("{head}))");
+        }
+    }
+    if line.contains("('at'") {
+        if let Some(head) = line.strip_suffix(", ('None', 'clamp'))") {
+            return format!("{head}, 'None')");
+        }
+    }
+    if line.contains("('axis_extent'") {
+        if let Some(head) = line.strip_suffix(", 0)") {
+            return format!(
+                "{}, None)",
+                head.replace("('axis_extent'", "('plane_extent'")
+            );
+        }
+    }
+    line.to_string()
+}
+
+/// The digests recorded before the change are the walks of the same sinks with the added fields removed: the key lines of today's
+/// walk, restated as they were written, hash with the walk's own tail to the digest the previous function gave. This is what lets
+/// `walk.json` hold today's digests.
+#[test]
+fn the_digests_recorded_before_the_axes_are_the_walks_with_the_added_fields_removed() {
+    let before = json::parse(include_str!("data/walk_digests_before_axes.json")).unwrap();
+    let data = json::parse(include_str!("data/walk.json")).unwrap();
+    let mut proved = 0;
+    for case in data.arr() {
+        let id = case.get("id").and_then(J::str).unwrap();
+        let mut c = Ctx::new().unwrap();
+        declare_kinds(&mut c).unwrap();
+        let (sinks, declared) = case_sinks(&mut c, id);
+        let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
+        let Ok(w) = kernel_walk(&mut c, &sinks, &declared, None, &[]) else {
+            continue; // a refused kernel has no digest
+        };
+        let walk = c.walk(w).unwrap();
+        assert!(
+            walk.quantities.is_empty(),
+            "{id}: the proof states no quantity tail"
+        );
+        let field = |name: &str| walk.fields.iter().find(|f| f.0 == name).unwrap().1.clone();
+        let (mut tail, mut old_tail) = (String::new(), String::new());
+        for ((role, name), tt) in &walk.leaves {
+            let ttype = text_val(&ttype_val(&tt.dtype, &tt.shape, tt.tag.as_deref()));
+            let old = raptor_support::migrate::old_role_name(role, tt.shape.len());
+            tail.push_str(&format!("leaf|{role}|{name}|{ttype}\n"));
+            old_tail.push_str(&format!("leaf|{old}|{name}|{ttype}\n"));
+        }
+        tail.push_str(&format!(
+            "arg_spec|{}\naccess|{}|None\n",
+            field("arg_spec"),
+            walk.access
+        ));
+        // the recordings name the read planes by the rank of their value
+        let old_arg_spec = field("arg_spec").replace("'plane_in'", "'per_sample'");
+        old_tail.push_str(&format!(
+            "arg_spec|{old_arg_spec}\naccess|{}|None\n",
+            walk.access
+        ));
+        let pre = field("preimage");
+        assert_eq!(
+            rcore::digest(&pre, tail.as_bytes()),
+            walk.digest,
+            "{id}: the tail is the walk's own"
+        );
+        let old: String = pre
+            .lines()
+            .map(|l| key_line_before_axes(&raptor_support::migrate::old_read_role(l)) + "\n")
+            .collect();
+        let recorded = before
+            .get(id)
+            .and_then(J::str)
+            .unwrap_or_else(|| panic!("{id}: no recorded digest"));
+        assert_eq!(
+            rcore::digest(&old, old_tail.as_bytes()),
+            recorded,
+            "{id}: the walk before the axes"
+        );
+        proved += 1;
+    }
+    assert!(proved >= 10, "{proved} walks proved");
 }

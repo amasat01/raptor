@@ -47,7 +47,7 @@ const GOOD: &[&str] = &[
     "Wire()",
     "TensorType(shape=(), dtype='f64', tag=None)",
     "TensorType(shape=(2, 3), dtype='i32', tag='lu_factor')",
-    "Slot(role='vec_in', name='a', ttype=TensorType(shape=(), dtype='f64', tag=None))",
+    "Slot(role='plane_in', name='a', ttype=TensorType(shape=(), dtype='f64', tag=None))",
     "Quantity(slug='q', name='x', wires=('a', 'b'), pack='auto')",
     "#0",
     "#12",

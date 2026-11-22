@@ -651,27 +651,37 @@ pub fn canonical<'py>(
         }
     }
     let roles = const_of("ROLE_ORDER").expect("ROLE_ORDER in the manifest");
-    let mut ordered: Vec<Bound<'py, PyAny>> = vec![];
-    for role in roles {
-        let mut owned: Vec<(&(usize, usize), &Bound<'py, PyAny>)> = vec![];
-        let mut free: Vec<(&String, &Bound<'py, PyAny>)> = vec![];
-        for (k, s) in &slots {
-            if k.0 == *role {
-                match owner.get(k) {
-                    Some(o) => owned.push((o, s)),
-                    None => free.push((&k.1, s)),
-                }
-            }
+    // a read plane is placed by the rank of its value as well, as the order of the walk does (`rcore::order_place`)
+    let value_rank = |slot: &Bound<'py, PyAny>| -> PyResult<usize> {
+        slot.getattr("ttype")?.getattr("shape")?.len()
+    };
+    type Places<'a, 'py> = std::collections::BTreeMap<
+        (usize, usize),
+        (
+            Vec<(&'a (usize, usize), &'a Bound<'py, PyAny>)>,
+            Vec<(&'a String, &'a Bound<'py, PyAny>)>,
+        ),
+    >;
+    let mut places: Places<'_, 'py> = Default::default();
+    for (k, s) in &slots {
+        let Some(place) = rcore::order_place(roles, &k.0, value_rank(s)?) else {
+            return Err(he(format!(
+                "binding with a role outside the canonical order: {}",
+                k.0
+            )));
+        };
+        let (owned, free) = places.entry(place).or_default();
+        match owner.get(k) {
+            Some(o) => owned.push((o, s)),
+            None => free.push((&k.1, s)),
         }
+    }
+    let mut ordered: Vec<Bound<'py, PyAny>> = vec![];
+    for (mut owned, mut free) in places.into_values() {
         owned.sort_by_key(|x| *x.0);
         free.sort_by(|a, b| a.0.cmp(b.0));
         ordered.extend(owned.into_iter().map(|x| x.1.clone()));
         ordered.extend(free.into_iter().map(|x| x.1.clone()));
-    }
-    if let Some(((r, _), _)) = slots.iter().find(|(k, _)| !roles.contains(&k.0.as_str())) {
-        return Err(he(format!(
-            "binding with a role outside the canonical order: {r}"
-        )));
     }
     let (arg_spec, slot_of, slot_types) = (PyList::empty(py), PyDict::new(py), PyDict::new(py));
     for (i, s) in ordered.iter().enumerate() {
@@ -685,7 +695,7 @@ pub fn canonical<'py>(
     for (prefix, q) in &reached {
         let expanded = quantity_expand(q, &slot_c, &ttype_c, &sep)?;
         let mut idx = vec![];
-        let mut per: Vec<(String, Vec<i64>)> = vec![];
+        let mut per: Vec<((String, usize), Vec<i64>)> = vec![];
         for s in &expanded {
             let k = kv(py, &st(s, "role")?, &st(s, "name")?)?;
             let i: i64 = slot_of
@@ -694,12 +704,13 @@ pub fn canonical<'py>(
                 .extract()?;
             idx.push(i);
             let role = st(s, "role")?;
-            match per.iter_mut().find(|p| p.0 == role) {
+            let class = rcore::order_place(roles, &role, value_rank(s)?).map_or(0, |p| p.1);
+            match per.iter_mut().find(|p| p.0 == (role.clone(), class)) {
                 Some(p) => p.1.push(i),
-                None => per.push((role, vec![i])),
+                None => per.push(((role, class), vec![i])),
             }
         }
-        for (role, run) in &per {
+        for ((role, _), run) in &per {
             let mut sorted = run.clone();
             sorted.sort();
             if *run != sorted || run.iter().enumerate().any(|(j, v)| *v != run[0] + j as i64) {

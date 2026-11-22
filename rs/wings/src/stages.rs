@@ -605,7 +605,9 @@ fn with_companions(ctx: &mut Ctx, stores: Vec<u32>) -> R<Vec<u32>> {
             let given = vec![
                 ("name", Val::Str(name)),
                 ("value", Val::Node(zero)),
-                ("index", Val::Node(index)),
+                ("indices", Val::Tuple(vec![Val::Node(index)])),
+                ("axes", ctx.field(sink, "axes")?),
+                ("edge", ctx.field(sink, "edge")?),
                 ("ttype", tt),
             ];
             out.push(build(ctx, "AccumWrite", given)?);

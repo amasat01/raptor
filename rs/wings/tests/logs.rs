@@ -66,7 +66,7 @@ fn make(c: *mut Ctx, class: &str, dtype: &str, shape: &[i64], ops: &[u32], field
 /// A per-sample read of the plane `name`.
 fn read(c: *mut Ctx, name: &str) -> u32 {
     let fields = format!(
-        "((\"kind\", \"vocab_read\"), (\"role\", \"per_sample\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
+        "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
     );
     make(c, "Leaf", "f64", &[], &[], &fields)
 }
@@ -74,7 +74,7 @@ fn read(c: *mut Ctx, name: &str) -> u32 {
 /// A per-sample read of the integer plane `name`.
 fn read_int(c: *mut Ctx, name: &str) -> u32 {
     let fields = format!(
-        "((\"kind\", \"vocab_read\"), (\"role\", \"per_sample\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
+        "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"{name}\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))"
     );
     make(c, "Leaf", "i64", &[], &[], &fields)
 }
@@ -167,7 +167,7 @@ fn each_target_is_folded_by_its_own_keyed_stage_after_the_stage_that_fills_its_l
 fn an_ordered_accumulate_of_a_vector_is_refused_by_name() {
     let c = fresh();
     let key = read_int(c, "k");
-    let fields = "((\"kind\", \"vocab_read\"), (\"role\", \"per_sample\"), (\"name\", \"v\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))";
+    let fields = "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"v\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))";
     let vector = make(c, "Leaf", "f64", &[3], &[], fields);
     let fields = "((\"name\", \"g\"), (\"role\", \"accum_out\"), (\"kept\", ()))";
     let sink = make(

@@ -134,6 +134,10 @@ const BUILTINS: &[&str] = &[
     "first_mismatch",
     "first_not_instance",
     "carry_fault",
+    "index_fault",
+    "axis_fault",
+    "axes_fault",
+    "store_index_fault",
     "ttype_fault",
     "literal_fault",
 ];
@@ -757,6 +761,39 @@ fn literal_fault(v: &Val) -> Option<String> {
         Some(format!("{} is not a plain literal", text_val(v)))
     }
 }
+/// Why `axes` is not an axis list: a tuple of at most eight (label, extent) pairs, each label a distinct non-empty text and each
+/// extent a positive whole number or none (an extent known at run time).
+fn axes_fault(axes: &Val) -> Option<String> {
+    let Val::Tuple(list) = axes else {
+        return Some("axes is a tuple of (label, extent) pairs".into());
+    };
+    if list.len() > 8 {
+        return Some(format!("a plane has at most 8 axes, got {}", list.len()));
+    }
+    let mut seen: Vec<&str> = vec![];
+    for axis in list {
+        let Val::Tuple(pair) = axis else {
+            return Some("an axis is a (label, extent) pair".into());
+        };
+        match pair.as_slice() {
+            [Val::Str(label), extent] if !label.is_empty() => {
+                if seen.contains(&label.as_str()) {
+                    return Some(format!("the axis label {label:?} is given twice"));
+                }
+                seen.push(label);
+                if !matches!(extent, Val::None) && !matches!(extent, Val::Int(n) if *n >= 1) {
+                    return Some(format!(
+                        "axis {label:?}: the extent is a positive whole number or none, got {}",
+                        text_val(extent)
+                    ));
+                }
+            }
+            _ => return Some("an axis is a (label, extent) pair with a non-empty label".into()),
+        }
+    }
+    None
+}
+
 /// The reason a type value is invalid, if it is.
 fn ttype_fault(t: &Val) -> Option<String> {
     let Val::Rec(_, fs) = t else {
@@ -949,7 +986,9 @@ impl Ev<'_> {
         let v = a.iter().map(|x| self.eval(x, env)).collect::<R<Vec<_>>>()?;
         match n {
             "width_of" | "first_ne_ttype" | "first_mismatch" | "first_not_instance"
-            | "carry_fault" => self.call_over_nodes(n, &v),
+            | "carry_fault" | "index_fault" | "axis_fault" | "store_index_fault" => {
+                self.call_over_nodes(n, &v)
+            }
             _ => self.call_plain(n, &v),
         }
     }
@@ -1029,6 +1068,7 @@ impl Ev<'_> {
                     0
                 })
             }
+            "axes_fault" => axes_fault(&v[0]).map_or(Val::None, Val::Str),
             "ttype_fault" => ttype_fault(&v[0]).map_or(Val::None, Val::Str),
             "literal_fault" => literal_fault(&v[0]).map_or(Val::None, Val::Str),
             _ => return Err(format!("unknown function {n}")),
@@ -1079,6 +1119,27 @@ impl Ev<'_> {
                 }
                 Val::Int(at)
             }
+            "index_fault" => {
+                let (plane, indices) = (
+                    node_list(&Val::Tuple(vec![v[0].clone()]))?[0],
+                    node_list(&v[1])?,
+                );
+                self.index_fault(plane, &indices)?
+                    .map_or(Val::None, Val::Str)
+            }
+            "store_index_fault" => {
+                let Val::Str(name) = &v[0] else {
+                    return Err("store_index_fault: a plane name".into());
+                };
+                let indices = node_list(&v[2])?;
+                self.store_index_fault(name, &v[1], &indices)?
+                    .map_or(Val::None, Val::Str)
+            }
+            "axis_fault" => {
+                let plane = node_list(&Val::Tuple(vec![v[0].clone()]))?[0];
+                self.axis_fault(plane, int(&v[1])?)?
+                    .map_or(Val::None, Val::Str)
+            }
             "carry_fault" => {
                 let (c, i, x) = (node_list(&v[0])?, node_list(&v[1])?, node_list(&v[2])?);
                 for j in 0..c.len() {
@@ -1098,6 +1159,113 @@ impl Ev<'_> {
             _ => return Err(format!("unknown function {n}")),
         })
     }
+    /// The axes a plane leaf declares as (label, extent) pairs; a leaf without axes has the one runtime axis of a flat plane.
+    fn plane_axes(&self, plane: u32) -> R<Vec<(String, bool)>> {
+        let declared = match self.c.field(plane, "axes").map_err(|e| format!("{e:?}"))? {
+            Val::Tuple(axes) => axes,
+            _ => vec![],
+        };
+        if declared.is_empty() {
+            return Ok(vec![(String::new(), true)]);
+        }
+        declared
+            .iter()
+            .map(|axis| {
+                let pair = seq(axis)?;
+                let label = match &pair[0] {
+                    Val::Str(s) => s.clone(),
+                    _ => String::new(),
+                };
+                Ok((label, matches!(pair[1], Val::None)))
+            })
+            .collect()
+    }
+
+    /// The name a refusal gives the axis at `position` of `plane`: its label, else its position.
+    fn axis_name(axes: &[(String, bool)], position: usize) -> String {
+        match axes.get(position) {
+            Some((label, _)) if !label.is_empty() => format!("axis {label:?}"),
+            _ => format!("axis {position}"),
+        }
+    }
+
+    /// Why `indices` do not address `plane`: the count against the plane's axes, then each index being a rank-0 integer.
+    fn index_fault(&self, plane: u32, indices: &[u32]) -> R<Option<String>> {
+        let axes = self.plane_axes(plane)?;
+        let Val::Str(name) = self.c.field(plane, "name").map_err(|e| format!("{e:?}"))? else {
+            return Err("a plane leaf has no name".into());
+        };
+        Ok(self.address_fault("plane", &name, &axes, indices))
+    }
+
+    /// Why a store at `indices` into the plane `name` that declares `axes` is refused; a store with no index commits at the
+    /// lane's own cell and states no address.
+    fn store_index_fault(&self, name: &str, axes: &Val, indices: &[u32]) -> R<Option<String>> {
+        if indices.is_empty() {
+            return Ok(None);
+        }
+        let declared = match axes {
+            Val::Tuple(list) if !list.is_empty() => list
+                .iter()
+                .map(|axis| {
+                    let pair = seq(axis)?;
+                    let label = match &pair[0] {
+                        Val::Str(s) => s.clone(),
+                        _ => String::new(),
+                    };
+                    Ok((label, matches!(pair[1], Val::None)))
+                })
+                .collect::<R<Vec<_>>>()?,
+            _ => vec![(String::new(), true)],
+        };
+        Ok(self.address_fault("sink", name, &declared, indices))
+    }
+
+    /// The count and type faults of `indices` against the axes of the named plane or sink.
+    fn address_fault(
+        &self,
+        what: &str,
+        name: &str,
+        axes: &[(String, bool)],
+        indices: &[u32],
+    ) -> Option<String> {
+        if indices.len() != axes.len() {
+            let labels: Vec<String> = (0..axes.len()).map(|k| Self::axis_name(axes, k)).collect();
+            return Some(format!(
+                "{what} {name:?} has {} axes ({}), so an access takes one index per axis, got {}",
+                axes.len(),
+                labels.join(", "),
+                indices.len()
+            ));
+        }
+        indices.iter().enumerate().find_map(|(k, &h)| {
+            let node = &self.c.nodes[h as usize];
+            (!node.shape.is_empty() || !(node.dtype == "i32" || node.dtype == "i64")).then(|| {
+                format!(
+                    "{what} {name:?} {}: the index must be a rank-0 integer (i32 or i64), got {} of shape {:?}",
+                    Self::axis_name(axes, k),
+                    node.dtype,
+                    node.shape
+                )
+            })
+        })
+    }
+
+    /// Why `axis` is not an axis of `plane`.
+    fn axis_fault(&self, plane: u32, axis: i128) -> R<Option<String>> {
+        let axes = self.plane_axes(plane)?;
+        let Val::Str(name) = self.c.field(plane, "name").map_err(|e| format!("{e:?}"))? else {
+            return Err("a plane leaf has no name".into());
+        };
+        let known = usize::try_from(axis).is_ok_and(|a| a < axes.len());
+        Ok((!known).then(|| {
+            format!(
+                "plane {name:?} has {} axes, there is no axis {axis}",
+                axes.len()
+            )
+        }))
+    }
+
     /// The field `k` of a record value.
     fn field_of(&self, t: &Val, k: &str) -> R<Val> {
         if let Val::Rec(_, f) = t {
@@ -1453,6 +1621,13 @@ fn program_of(ctx: &Ctx, class: usize) -> Option<&Prog> {
         .iter()
         .find_map(|&k| ctx.progs.by_class.get(&ctx.table.classes[k].name))
         .map(|&i| &ctx.progs.progs[i])
+}
+
+/// The default the constructor of a core class states for the parameter named like `slot`, if it states one.
+pub fn slot_default(ctx: &Ctx, class: usize, slot: &str) -> Option<Val> {
+    let p = program_of(ctx, class)?;
+    let at = p.pnames.iter().position(|n| n == slot)?;
+    p.pdef[at].clone()
 }
 
 /// Runs the declared program of a core class forward over constructor parameters (name, value); a node reference in a value is a handle.

@@ -5,6 +5,6 @@ edition = "2021"
 license = "Apache-2.0"
 
 [dependencies]
-raptor_ir = { path = "../ir" }
+raptor_ir = { path = "../ir", features = ["replay-key-form"] }
 rcore = { path = "../core" }
 raptor_wings = { path = "../wings" }

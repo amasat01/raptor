@@ -96,7 +96,7 @@ fn a_selector_over_a_carry_started_from_a_plane_reads_that_plane_and_not_the_car
     // the shape of the jump kernel: xs starts from the plane x, is updated by a constant-free add, and the selector mixes xs with t
     let nodes = [
         INDEX.to_string(),
-        leaf("per_sample", "x"),
+        leaf("plane_in", "x"),
         leaf("uniform", "t"),
         carry(0, "xs"),
         op("add", 3, 3),
@@ -105,7 +105,7 @@ fn a_selector_over_a_carry_started_from_a_plane_reads_that_plane_and_not_the_car
     ];
     assert_eq!(
         reads_of(&nodes),
-        pairs(&[("per_sample", "x"), ("uniform", "t")])
+        pairs(&[("plane_in", "x"), ("uniform", "t")])
     );
 }
 
@@ -113,8 +113,8 @@ fn a_selector_over_a_carry_started_from_a_plane_reads_that_plane_and_not_the_car
 fn a_carry_whose_update_reads_another_plane_includes_that_plane() {
     let nodes = [
         INDEX.to_string(),
-        leaf("per_sample", "x"),
-        leaf("per_sample", "y"),
+        leaf("plane_in", "x"),
+        leaf("plane_in", "y"),
         carry(0, "acc"),
         op("add", 3, 2),
         lp(&[1], &[3], &[4]),
@@ -122,7 +122,7 @@ fn a_carry_whose_update_reads_another_plane_includes_that_plane() {
     ];
     assert_eq!(
         reads_of(&nodes),
-        pairs(&[("per_sample", "x"), ("per_sample", "y")])
+        pairs(&[("plane_in", "x"), ("plane_in", "y")])
     );
 }
 
@@ -130,7 +130,7 @@ fn a_carry_whose_update_reads_another_plane_includes_that_plane() {
 fn two_carries_that_feed_each_other_terminate_and_read_both_starts() {
     let nodes = [
         INDEX.to_string(),
-        leaf("per_sample", "x"),
+        leaf("plane_in", "x"),
         leaf("uniform", "t"),
         carry(0, "a"),
         carry(1, "b"),
@@ -139,6 +139,6 @@ fn two_carries_that_feed_each_other_terminate_and_read_both_starts() {
     ];
     assert_eq!(
         reads_of(&nodes),
-        pairs(&[("per_sample", "x"), ("uniform", "t")])
+        pairs(&[("plane_in", "x"), ("uniform", "t")])
     );
 }

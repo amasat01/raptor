@@ -31,8 +31,8 @@ fn shared_node_is_named_and_sink_kind_shows() {
         &[s, s],
         "(('kind', 'mul'), ('literal', None))",
     );
-    let w = mk(c, "WideWrite", None, &[e], "(('name', 'w'),)");
-    assert_eq!(pseudo(c, w), "t0 = neg(x)\nwide_write w = (t0 * t0)\n");
+    let w = mk(c, "Update", None, &[e], "(('name', 'w'),)");
+    assert_eq!(pseudo(c, w), "t0 = neg(x)\nupdate w = (t0 * t0)\n");
     rx_ctx_free(c);
 }
 

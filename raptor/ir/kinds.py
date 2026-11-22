@@ -15,7 +15,7 @@ from types import MappingProxyType
 from typing import Any
 
 from raptor import _core
-from .nodes import Assign, At, Node, Sink, WideWrite, plain_in, plain_out
+from .nodes import Assign, At, Node, Sink, Update, plain_in, plain_out
 from ..errors import RaptorError
 
 #: The core kinds a declared kind may refine: name -> (family, class, role of a sink, wire kind).

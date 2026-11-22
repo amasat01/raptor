@@ -196,13 +196,7 @@ pub fn plain_blocks(
         }
     }
     for &sink in &out {
-        let compensated = is_a(ctx, sink, "AccumWrite")
-            && matches!(
-                ctx.str_field(sink, "contract")?.as_str(),
-                "compensated" | "keyed_auto"
-            )
-            && !sinks.contains(&sink);
-        if compensated {
+        if ctx.compensates(sink)? && !sinks.contains(&sink) {
             return refuse("a block sum made plain under a compensated contract");
         }
     }

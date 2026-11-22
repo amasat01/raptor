@@ -1,6 +1,6 @@
 //! The split wing's question about a kernel whose sink commits through a compensated sum: which
 //! output the correction belongs to, and whether that output is the lane's own column.
-use crate::{is_a, name_of, text_out};
+use crate::{is_a, is_update_of, name_of, text_out};
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
@@ -35,7 +35,7 @@ fn writes_own_column(ctx: &Ctx, sink: u32) -> Outcome<bool> {
     if is_a(ctx, sink, "Assign") {
         return Ok(true);
     }
-    Ok(is_a(ctx, sink, "AccumWrite") && ctx.field(sink, "index")? == Val::None)
+    Ok(is_update_of(ctx, sink, "add")? && ctx.field(sink, "index")? == Val::None)
 }
 
 /// The compensated sink's target `(name, own_column)`: the one output other than the companion.
@@ -68,7 +68,10 @@ fn compensated_target(
             matching.push(sink);
         }
     }
-    if matching.iter().any(|&sink| is_a(ctx, sink, "WideWrite")) {
+    if matching
+        .iter()
+        .any(|&sink| is_update_of(ctx, sink, "store").unwrap_or(false))
+    {
         return refuse(format!(
             "compensated target {name:?} is a wide output; it must be a mutable"
         ));

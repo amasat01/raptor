@@ -796,7 +796,7 @@ fn walk(c: &mut Ctx, root: u32, memo: &mut HashMap<u32, u32>) -> R<()> {
 fn resink(c: &mut Ctx, sink: u32, memo: &HashMap<u32, u32>) -> R<u32> {
     let operands = c.node(sink)?.ops.clone();
     let new: Vec<u32> = operands.iter().map(|o| memo[o]).collect();
-    let rebuilt = ["SampleSum", "Assign", "WideWrite", "AccumWrite"]
+    let rebuilt = ["SampleSum", "Assign", "Update"]
         .iter()
         .any(|class| is_a(c, sink, class));
     if new == operands || !rebuilt {

@@ -41,8 +41,8 @@ A v2 artifact's entry points additionally take an explicit **partition
 triple** ``{base, count, nSamples}`` after their ordinary role arguments —
 eagle, never the plugin, decides how a run is split and drives the *same*
 body once per partition (a device kernel launch, or one CPU thread team's
-tile). The ``accum_out`` role (see :ref:`role-vocab`) names the cross-sample
-accumulate plane a ``cross_sample_write`` body writes into.
+tile). The ``plane_out`` role (see :ref:`role-vocab`), for a plane the sidecar lists in
+``zeroed_outputs``, names the cross-sample accumulate plane a ``cross_sample_write`` body writes into.
 
 **Legacy v1 artifacts are unaffected.** A ``schema_version: 1`` /
 ``aether_abi: "aether-abi/1"`` plugin carries none of the three keys above

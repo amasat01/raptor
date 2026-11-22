@@ -120,13 +120,12 @@ The arg_spec role vocabulary
 ----------------------------
 
 ``arg_spec`` is an ordered list of two-element ``[role, name]`` arrays — **role
-first**. ``role`` is one of these **10 canonical arg-spec roles (schema v1)**.
+first**. ``role`` is one of these **9 canonical arg-spec roles (schema v1)**.
 This set is the single source of truth, enumerated identically in
 ``plugin/roles.h::kPluginArgRoles`` (C++) and :data:`eagle.roles.ROLES` (Python),
 and pinned by the cross-check test ``python/tests/test_roles_vocab.py``. The
-first 9 were present at the schema-v1 freeze; ``wide_in``, ``wide_out`` and
-``accum_out`` were added later, additively — admitting a role is not a wire
-shape change, so none of the three needed a ``schema_version`` bump.
+first 9 were present at the schema-v1 freeze; ``wide_in`` and ``plane_out`` were added later, additively — admitting a role is
+not a wire shape change, so neither needed a ``schema_version`` bump.
 
 .. list-table::
    :header-rows: 1
@@ -157,14 +156,10 @@ shape change, so none of the three needed a ``schema_version`` bump.
        runtime quantity baked into the kernel's own row arithmetic, never the
        ABI, so it rides its own binding path rather than reusing
        ``lookup``/``buffers``.
-   * - ``wide_out``
-     - A named wide-buffer output: the VJP scatter-gradient counterpart to
-       ``wide_in``, bound through the same by-value handle ABI.
-   * - ``accum_out``
-     - The cross-sample accumulate plane a ``cross_sample_write`` body (the
-       v2 execution axis below) writes into — construction-identical to
-       ``wide_out``'s plain scalar-handle ABI, kept as its own name so the
-       exec-placement logic can refer to it distinctly.
+   * - ``plane_out``
+     - A plane the body writes, bound through the same by-value handle ABI as ``wide_in``. The planes the run zeroes before it
+       starts (the cross-sample accumulate planes a ``cross_sample_write`` body writes into, see the v2 execution axis below)
+       are the ones the sidecar lists in ``zeroed_outputs``; a store target is not zeroed.
 
 The per-kind subsets union to exactly this set.
 

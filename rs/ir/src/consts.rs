@@ -132,30 +132,17 @@ pub fn put_names<S: AsRef<str>>(
     put(buf, cap, len, &packed)
 }
 
-/// Whether an accumulate under `contract` commits through a companion plane: the `compensated` contract and the
-/// contract a keyed accumulate takes by default.
-pub fn compensates(contract: &str) -> bool {
-    contract == "compensated"
-        || STR_CONSTS
-            .iter()
-            .any(|c| c.0 == "KEYED_AUTO" && c.1 == contract)
-}
-
-/// Whether an accumulate under `contract` commits through a companion plane (`*out` is 0 or 1).
+/// Whether the update `node` commits through a companion plane (`*out` is 0 or 1): an add under the compensated summation.
 ///
 /// # Safety
-/// `contract` is a NUL-terminated string; `out` is valid for one write.
+/// `out` is valid for one write.
 #[no_mangle]
-pub unsafe extern "C" fn rx_compensates(
-    ctx: *mut Ctx,
-    contract: *const c_char,
-    out: *mut c_int,
-) -> c_int {
-    guard(ctx, |_| {
+pub unsafe extern "C" fn rx_compensates(ctx: *mut Ctx, node: u32, out: *mut c_int) -> c_int {
+    guard(ctx, |c| {
         if out.is_null() {
             return Err(crate::record::Fault::BadArg("out is NULL".into()));
         }
-        unsafe { *out = compensates(cstr(contract, "contract")?) as c_int };
+        unsafe { *out = c.compensates(node)? as c_int };
         Ok(())
     })
 }

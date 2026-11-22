@@ -5,7 +5,7 @@ import pytest
 
 from raptor.errors import RaptorError
 from raptor.ir import cells, ops
-from raptor.ir.nodes import (ADJOINT_PREFIX, COMPANION_SUFFIX, GATHER_ROLES, RAW_LANGUAGE, ROLE_ORDER, Assign, Const, Leaf, SampleSum,
+from raptor.ir.nodes import (ADJOINT_PREFIX, COMPANION_SUFFIX, GATHER_ROLES, RAW_LANGUAGE, ROLE_ORDER, Assign, Const, Leaf, SampleSum, Update,
                              compensates, element_count, is_param_cell, param_cell_names, peel_clamp, plain_in, plain_out,
                              sample_sums, same_index)
 from raptor.ir.types import TensorType
@@ -18,9 +18,13 @@ def test_the_naming_constants_are_the_documented_literals():
     assert GATHER_ROLES == ("lookup", "wide_in") and set(GATHER_ROLES) <= set(ROLE_ORDER)
 
 
-def test_a_compensated_or_keyed_auto_accumulate_commits_through_a_companion():
-    assert compensates("compensated") and compensates("keyed_auto")
-    assert not compensates("fast") and not compensates("")
+def test_only_a_compensated_add_commits_through_a_companion():
+    def update(**fields):
+        return Update("g", Const(1.0, F64), None, F64, **fields)
+
+    assert compensates(update(op="add", summation="compensated"))
+    assert not compensates(update(op="add")) and not compensates(update(op="add", summation="plain"))
+    assert not compensates(update(op="store")) and not compensates(update(op="or"))
 
 
 def test_a_literal_round_trips_through_plain_data_with_tuples_tagged():

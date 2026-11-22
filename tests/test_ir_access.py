@@ -150,7 +150,7 @@ def test_var_is_matched_by_identity():
 
 
 # access.infer, over hand-built DAGs: the most restrictive of the three access forms wins.
-from raptor.ir import AccumWrite, Assign, canonical, infer
+from raptor.ir import Assign, Update, canonical, infer
 from raptor.ir.nodes import Leaf
 
 _V3 = TensorType((3,), "f64")
@@ -167,12 +167,12 @@ def test_own_column_only_is_sample_local():
 def test_lookup_read_and_scattered_write_are_cross_sample_and_the_write_wins():
     read = canonical((Assign("acc", At(_TABLE, c(3), _V3), _V3),))
     assert read.access.cls == "cross_sample_read"
-    scatter = AccumWrite("e", Op("norm", (_X,), F64), c(3), F64)
+    scatter = Update("e", Op("norm", (_X,), F64), c(3), F64, op="add")
     assert canonical((scatter,)).access.cls == "cross_sample_write"
     both = canonical((Assign("acc", At(_TABLE, c(3), _V3), _V3), scatter))
     assert infer(both).cls == "cross_sample_write"
 
 
 def test_an_own_column_accumulate_is_not_a_scatter():
-    walk = canonical((AccumWrite("e", Op("norm", (_X,), F64), None, F64),))
+    walk = canonical((Update("e", Op("norm", (_X,), F64), None, F64, op="add"),))
     assert infer(walk).cls == "sample_local"

@@ -15,6 +15,9 @@ pub struct WalkRes {
     pub order: Vec<u32>,
     /// The slots the walk binds, each with its key and type, in argument order.
     pub leaves: Vec<(Key, Tt)>,
+    /// The written-plane slots the runtime zeroes before the run: a sink on the plane accumulates, sums samples or is an
+    /// ordered accumulate; a plane only plain stores write is left as the caller gave it.
+    pub zeroed: HashSet<Key>,
     /// The access class of the walk.
     pub access: String,
     /// The name of the finish statement among the sinks, when there is one.
@@ -161,14 +164,25 @@ impl Quantity {
     }
 }
 
-/// The declared slots: a tuple of Slot records.
-pub fn declared_slots(text: Option<&str>) -> Result<Vec<(Key, Tt)>, Fault> {
+/// The slots a caller declares for a walk: each with its type, and which of them are written planes the runtime zeroes.
+#[derive(Clone, Default)]
+pub struct Declared {
+    /// The declared slots, in the caller's order.
+    pub slots: Vec<(Key, Tt)>,
+    /// The written planes among them that the runtime zeroes before the run.
+    pub zeroed: HashSet<Key>,
+}
+
+/// The declared slots: a tuple of Slot records. A record may state `zeroed=True` for a written plane no sink of the walk writes
+/// by accumulating (a companion plane the runtime folds).
+pub fn declared_slots(text: Option<&str>) -> Result<Declared, Fault> {
     let (Val::Tuple(v) | Val::List(v)) = parse(text.unwrap_or("()")).map_err(Fault::Refused)?
     else {
         return refuse("declared: expected a tuple of Slot records");
     };
-    v.iter()
-        .map(|x| {
+    let mut declared = Declared::default();
+    for x in v.iter() {
+        {
             let Val::Rec(_, f) = x else {
                 return refuse("declared: expected Slot records");
             };
@@ -178,9 +192,14 @@ pub fn declared_slots(text: Option<&str>) -> Result<Vec<(Key, Tt)>, Fault> {
             else {
                 return refuse("Slot: role, name and ttype");
             };
-            Ok(((r.clone(), n.clone()), Tt::of(t)?))
-        })
-        .collect()
+            let key = (r.clone(), n.clone());
+            if matches!(get("zeroed"), Some(Val::Bool(true))) {
+                declared.zeroed.insert(key.clone());
+            }
+            declared.slots.push((key, Tt::of(t)?));
+        }
+    }
+    Ok(declared)
 }
 
 /// A text value.
@@ -218,7 +237,7 @@ impl Ctx {
     pub fn canonical(
         &mut self,
         sinks: &[u32],
-        declared: &[(Key, Tt)],
+        declared: &Declared,
         force: Option<&str>,
         exempt: &[String],
     ) -> Result<usize, Fault> {
@@ -229,9 +248,9 @@ impl Ctx {
         let declared_sinks = merge_declared(&mut bound, declared)?;
         let sep = str_const("NAMESPACE_SEP");
         let reached = self.reached_quantities(&tr, sep)?;
-        let layout = place_slots(&reached, declared_sinks, &bound.held, sep)?;
+        let layout = place_slots(&reached, declared_sinks, &bound, sep)?;
         let ordered = order_slots(&layout)?;
-        let (spans, quantities) = quantity_spans(&reached, &ordered, sep)?;
+        let (spans, quantities) = quantity_spans(&reached, &ordered, &layout.zeroed, sep)?;
         let watched = self.watched_nodes(&tr);
         let access = self.access_class(&watched, exempt, force)?;
         let (listing, static_selector, selector_reads) = self.dispatch_listing(&watched)?;
@@ -244,7 +263,10 @@ impl Ctx {
         let pre = tr.walk.pre.as_str();
         let taken_roles: Vec<String> = ordered
             .iter()
-            .map(|((role, name), tt)| self.digest_role(role, name, tt.shape.len()))
+            .map(|(key, tt)| {
+                let zeroed = layout.zeroed.contains(key);
+                self.digest_role(&key.0, &key.1, tt.shape.len(), zeroed)
+            })
             .collect();
         let keys = DigestKeys {
             pre: &pre,
@@ -255,6 +277,7 @@ impl Ctx {
         let (objs, w) = (&tr.objs, &tr.walk);
         self.walks.push(WalkRes {
             leaves: ordered,
+            zeroed: layout.zeroed,
             access: access.to_string(),
             finish: match finish {
                 Val::Str(name) => Some(name),
@@ -353,6 +376,19 @@ impl Ctx {
         &self.table.classes[self.nodes[tr.objs[i as usize] as usize].class]
     }
 
+    /// Whether the node, a sink on a `plane_out` plane, is a write the runtime zeroes the plane for: an update that is not a
+    /// store, a sample sum or an ordered accumulate.
+    fn zeroes_plane(&self, node: u32, role: &str) -> Result<bool, Fault> {
+        if role != "plane_out" {
+            return Ok(false);
+        }
+        // an ordered accumulate is a refinement of the update that states no operation of its own, so it is asked first
+        if self.is_a(node, "SampleSum") || self.is_a(node, "OrderedAccumWrite") {
+            return Ok(true);
+        }
+        Ok(self.is_a(node, "Update") && self.str_field(node, "op")? != "store")
+    }
+
     /// The total merge of the bindings, in visit order; a canonical node is the first of its key. Refuses two nodes that
     /// share a (role, name) key with different types.
     fn merge_bindings(&self, tr: &Traversal) -> Result<Bindings, Fault> {
@@ -360,6 +396,7 @@ impl Ctx {
         let class_of = |i: u32| self.class_of_visit(tr, i);
         let mut held: Vec<(Key, Tt, String)> = vec![];
         let mut at: HashMap<Key, usize> = HashMap::new();
+        let mut zeroed: HashSet<Key> = HashSet::new();
         let mut pairs: Vec<(u32, u32)> = vec![];
         for &v in &w.visits {
             let (node, canon) = (
@@ -377,6 +414,9 @@ impl Ctx {
         }
         for (node, canon) in pairs {
             let key = (self.str_field(node, "role")?, self.str_field(node, "name")?);
+            if self.zeroes_plane(node, &key.0)? {
+                zeroed.insert(key.clone());
+            }
             match at.get(&key) {
                 None => {
                     at.insert(key.clone(), held.len());
@@ -398,7 +438,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 }
             }
         }
-        Ok(Bindings { held, at })
+        Ok(Bindings { zeroed, held, at })
     }
 
     /// The quantities reached, by namespace, in walk order; refuses two quantities that share a namespace with different wires.
@@ -503,9 +543,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                         acc.map_or("None".into(), |a| text_val(&a)), rcore::facts::ACCESS_RANK)) }
             } else if self.is_a(h, "At") {
                 1
-            } else if (self.is_a(h, "WideWrite") || self.is_a(h, "AccumWrite"))
-                && self.nodes[h as usize].ops.len() > 1
-            {
+            } else if self.is_a(h, "Update") && self.nodes[h as usize].ops.len() > 1 {
                 2
             } else {
                 0
@@ -638,6 +676,8 @@ struct Traversal {
 
 /// The bound slots: each key's type and class name in order of first binding, and where each key sits.
 struct Bindings {
+    /// The written planes some sink of the walk zeroes.
+    zeroed: HashSet<Key>,
     /// The key, type and class name of each slot.
     held: Vec<(Key, Tt, String)>,
     /// The index in `held` of each key.
@@ -646,6 +686,8 @@ struct Bindings {
 
 /// Every slot in placement order, and which quantity wire (quantity index, wire index) owns each key.
 struct Layout {
+    /// The written planes the runtime zeroes (the walk's `zeroed`).
+    zeroed: HashSet<Key>,
     /// The slots, in placement order.
     slots: Vec<(Key, Tt)>,
     /// The owning quantity and wire of each key a quantity expands to.
@@ -666,14 +708,15 @@ fn parse_exempt(exempt: Option<&str>) -> Result<Vec<String>, Fault> {
 
 /// Adds the declared slots to the bound ones: a read is minted when the body binds none, a sink slot is kept for the
 /// order and returned. Refuses a declared slot typed differently from the body's.
-fn merge_declared(bound: &mut Bindings, declared: &[(Key, Tt)]) -> Result<Vec<(Key, Tt)>, Fault> {
-    let Bindings { held, at } = bound;
+fn merge_declared(bound: &mut Bindings, declared: &Declared) -> Result<Vec<(Key, Tt)>, Fault> {
     let sink_roles = CONSTS
         .iter()
         .find(|c| c.0 == "SINK_ROLES")
         .map_or(&[][..], |c| c.1);
     let mut declared_sinks: Vec<(Key, Tt)> = vec![];
-    for (key, tt) in declared.iter().cloned() {
+    bound.zeroed.extend(declared.zeroed.iter().cloned());
+    let Bindings { held, at, .. } = bound;
+    for (key, tt) in declared.slots.iter().cloned() {
         let (role, name) = key.clone();
         match at.get(&key) {
             None if sink_roles.contains(&role.as_str()) => declared_sinks.push((key, tt)),
@@ -696,9 +739,10 @@ fn merge_declared(bound: &mut Bindings, declared: &[(Key, Tt)]) -> Result<Vec<(K
 fn place_slots(
     reached: &[(String, Quantity)],
     declared_sinks: Vec<(Key, Tt)>,
-    held: &[(Key, Tt, String)],
+    bound: &Bindings,
     sep: &str,
 ) -> Result<Layout, Fault> {
+    let held = &bound.held;
     let mut owner: HashMap<Key, (usize, usize)> = HashMap::new();
     let mut slots: Vec<(Key, Tt)> = vec![];
     let mut pos_of: HashMap<Key, usize> = HashMap::new();
@@ -732,7 +776,11 @@ fn place_slots(
     {
         return refuse(format!("wire {} (role {}) is bound with no owning quantity: the {} namespace is reserved for compound-quantity wires, which only a Quantity declaration may mint ", rcore::keytext::py_str(name), rcore::keytext::py_str(role), rcore::keytext::py_str(sep)));
     }
-    Ok(Layout { slots, owner })
+    Ok(Layout {
+        zeroed: bound.zeroed.clone(),
+        slots,
+        owner,
+    })
 }
 
 /// The slots of one place of the role order: those a quantity owns, then the free ones.
@@ -740,8 +788,18 @@ type Placed<'a> = (Vec<&'a (Key, Tt)>, Vec<&'a (Key, Tt)>);
 
 /// The slots in role order: quantity wires in declaration order, then the rest by name. Refuses a role outside the order.
 ///
-/// A read plane is placed by the rank of its value as well (`rcore::order_place`), so a unit lists its planes with a value first,
-/// by rank, and its per-sample scalars after the wide planes.
+/// The class a slot is placed by inside its role: the rank of a read plane's value, and for a written plane whether the runtime
+/// leaves it as it is (1) or zeroes it (0), which `rcore::order_place` reads as a value plane and a scalar.
+fn slot_class(key: &Key, tt: &Tt, zeroed: &HashSet<Key>) -> usize {
+    if key.0 == "plane_out" {
+        usize::from(!zeroed.contains(key))
+    } else {
+        tt.shape.len()
+    }
+}
+
+/// A read plane is placed by the rank of its value, and a written plane by whether the runtime zeroes it (`slot_class`), so a
+/// unit lists its planes with a value first, by rank, and its per-sample scalars after the wide planes.
 fn order_slots(layout: &Layout) -> Result<Vec<(Key, Tt)>, Fault> {
     let (slots, owner) = (&layout.slots, &layout.owner);
     let roles = CONSTS
@@ -751,7 +809,8 @@ fn order_slots(layout: &Layout) -> Result<Vec<(Key, Tt)>, Fault> {
     let mut places: BTreeMap<(usize, usize), Placed> = BTreeMap::new();
     for slot in slots {
         let (key, tt) = slot;
-        let Some(place) = rcore::order_place(roles, &key.0, tt.shape.len()) else {
+        let Some(place) = rcore::order_place(roles, &key.0, slot_class(key, tt, &layout.zeroed))
+        else {
             return refuse(format!(
                 "binding with a role outside the canonical order: {}",
                 key.0
@@ -782,6 +841,7 @@ type Run = (String, usize);
 fn quantity_spans(
     reached: &[(String, Quantity)],
     ordered: &[(Key, Tt)],
+    zeroed: &HashSet<Key>,
     sep: &str,
 ) -> Result<Spans, Fault> {
     let slot_of: HashMap<&Key, usize> = ordered
@@ -803,7 +863,8 @@ fn quantity_spans(
             let i = slot_of[k] as i128;
             idx.push(i);
             // a run is one role and, for a read plane, one rank class: the order lists them apart
-            let class = rcore::order_place(order, &k.0, tt.shape.len()).map_or(0, |p| p.1);
+            let class =
+                rcore::order_place(order, &k.0, slot_class(k, tt, zeroed)).map_or(0, |p| p.1);
             match per.iter_mut().find(|p| p.0 == (k.0.clone(), class)) {
                 Some(p) => p.1.push(i),
                 None => per.push(((k.0.clone(), class), vec![i])),
@@ -979,7 +1040,11 @@ pub unsafe extern "C" fn rx_canonical_like(
         if out.is_null() {
             return badarg("out is NULL");
         }
-        let kept = c.walk(like)?.leaves.clone();
+        let held = c.walk(like)?;
+        let kept = Declared {
+            slots: held.leaves.clone(),
+            zeroed: held.zeroed.clone(),
+        };
         let w = c.canonical(slice(sinks, n, "sinks")?, &kept, None, &[])?;
         unsafe { *out = w as u32 }
         Ok(())

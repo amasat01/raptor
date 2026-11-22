@@ -5,7 +5,7 @@
 use crate::construct::refs;
 use crate::lanes::{box_candidate, reachable, varying_nodes};
 use crate::planes::{type_parts, NodeType};
-use crate::{in_kinds, index_operands, is_a, konst, kstr, list_out, op_kind};
+use crate::{in_kinds, index_operands, is_a, is_update_of, konst, kstr, list_out, op_kind};
 use raptor_ir::build::LoopParts;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
@@ -350,7 +350,7 @@ pub struct ChosenBox {
 /// scalar real, no dispatch, random draw or raw block).
 fn boxable(ctx: &Ctx, sinks: &[u32]) -> Outcome<bool> {
     for &sink in sinks {
-        let commit = is_a(ctx, sink, "Assign") || is_a(ctx, sink, "WideWrite");
+        let commit = is_a(ctx, sink, "Assign") || is_update_of(ctx, sink, "store")?;
         if !commit
             || ctx.field(sink, "index")? != Val::None
             || !ctx.nodes[sink as usize].shape.is_empty()

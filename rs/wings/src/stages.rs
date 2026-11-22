@@ -10,7 +10,7 @@ use crate::place::{kind_of, Graph};
 use crate::planes::type_parts;
 use crate::scatter;
 use crate::team::{self, Grid, Group, TeamLimits, TeamSpec};
-use crate::{is_a, R};
+use crate::{is_a, is_routable_add, is_update_of, R};
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
 use std::collections::{HashMap, HashSet};
@@ -206,14 +206,8 @@ pub(crate) fn kept_of(ctx: &Ctx, node: u32) -> R<Vec<(Option<String>, Option<i64
 /// Whether the sink is an ordered scatter: a keyed accumulate of the ordered contract, or of any contract when the build routes
 /// them to the ordered stages.
 pub(crate) fn is_ordered_sink(ctx: &Ctx, sink: u32, routed: bool) -> R<bool> {
-    let keyed = is_a(ctx, sink, "AccumWrite") && ctx.nodes[sink as usize].ops.len() > 1;
-    Ok(keyed
-        && (ctx.str_field(sink, "contract")? == "ordered"
-            || routed
-                && matches!(
-                    ctx.str_field(sink, "contract")?.as_str(),
-                    "auto" | "compensated" | "keyed_auto"
-                )))
+    let keyed = is_update_of(ctx, sink, "add")? && ctx.nodes[sink as usize].ops.len() > 1;
+    Ok(keyed && (ctx.str_field(sink, "order")? == "lane" || routed && is_routable_add(ctx, sink)?))
 }
 
 /// The cells the kernel's own sample sums store, by the reduced value and the operation.
@@ -587,12 +581,7 @@ fn cut_stages(
 fn with_companions(ctx: &mut Ctx, stores: Vec<u32>) -> R<Vec<u32>> {
     let mut out = stores.clone();
     for sink in stores {
-        let compensated = is_a(ctx, sink, "AccumWrite")
-            && matches!(
-                ctx.str_field(sink, "contract")?.as_str(),
-                "compensated" | "keyed_auto"
-            );
-        if compensated {
+        if ctx.compensates(sink)? {
             let parts = type_parts(ctx, sink);
             let tt = raptor_ir::value::ttype_val(&parts.dtype, &parts.shape, parts.tag.as_deref());
             let zero = build(
@@ -609,8 +598,9 @@ fn with_companions(ctx: &mut Ctx, stores: Vec<u32>) -> R<Vec<u32>> {
                 ("axes", ctx.field(sink, "axes")?),
                 ("edge", ctx.field(sink, "edge")?),
                 ("ttype", tt),
+                ("op", Val::Str("add".into())),
             ];
-            out.push(build(ctx, "AccumWrite", given)?);
+            out.push(build(ctx, "Update", given)?);
         }
     }
     Ok(out)
@@ -713,7 +703,7 @@ fn edges(
         if is_a(ctx, sink, "SampleSum") {
             push(&mut out, ctx.str_field(sink, "cell")?);
         }
-        if is_a(ctx, sink, "AccumWrite") {
+        if is_update_of(ctx, sink, "add")? {
             let name = ctx.str_field(sink, "name")?;
             if keyed_of.contains_key(&name) {
                 push(&mut keyed, name);

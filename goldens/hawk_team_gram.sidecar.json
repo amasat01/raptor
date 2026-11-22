@@ -25,15 +25,15 @@
     "j": "float64"
   },
   "wide_inputs": [],
-  "wide_outputs": [
+  "plane_outputs": [
     "tmb0_u"
   ],
-  "accum_outputs": [],
+  "zeroed_outputs": [],
   "dispatch": [],
   "buffers": [],
   "arg_spec": [
     [
-      "wide_out",
+      "plane_out",
       "tmb0_u"
     ],
     [

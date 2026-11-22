@@ -10,7 +10,7 @@
   {
    "name": "team_store",
    "family": "sink",
-   "refines": "wide_write",
+   "refines": "update",
    "operands": {
     "min": 2,
     "max": 2
@@ -160,7 +160,7 @@
   {
    "name": "ordered_accum_write",
    "family": "sink",
-   "refines": "wide_write",
+   "refines": "update",
    "wire": "ordered_accum_write",
    "operands": {
     "min": 3,
@@ -188,7 +188,7 @@
   {
    "name": "block_sum_write",
    "family": "sink",
-   "refines": "wide_write",
+   "refines": "update",
    "operands": {
     "min": 1,
     "max": 1

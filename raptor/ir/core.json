@@ -27,8 +27,7 @@
   "SINK_ROLES": [
    "mutable",
    "out",
-   "wide_out",
-   "accum_out"
+   "plane_out"
   ],
   "QUAT_OPS": [
    "quat_mul",
@@ -60,19 +59,16 @@
    "compensated",
    "ordered"
   ],
-  "SCATTER_CONTRACTS": [
-   "auto",
-   "compensated",
-   "ordered",
-   "plain",
-   "or"
-  ],
+  "UPDATE_OPS": ["store", "add", "min", "max", "and", "or", "xor", "exchange", "compare_exchange"],
+  "UPDATE_OPS_WRITTEN": ["store", "add", "or"],
+  "UPDATE_CONFLICTS": ["unique", "any"],
+  "UPDATE_SUMMATIONS": ["auto", "plain", "compensated"],
+  "UPDATE_ORDERS": ["any", "lane"],
   "CELL_OPS": [
    "sum",
    "max",
    "min"
   ],
-  "KEYED_AUTO": "keyed_auto",
   "PRIMITIVE_KIND": "primitive",
   "REDUCE_KIND": "reduce",
   "SAMPLE_INDEX_KIND": "sample_index",
@@ -92,8 +88,8 @@
   "ROLE_ORDER": [
    "mutable",
    "out",
-   "wide_out",
-   "accum_out",
+   "plane_out",
+   "plane_out",
    "plane_in",
    "wide_in",
    "plane_in",
@@ -1467,8 +1463,8 @@
    "wire": "assign"
   },
   {
-   "name": "wide_write",
-   "class": "WideWrite",
+   "name": "update",
+   "class": "Update",
    "family": "sink",
    "refines": "sink",
    "operands": {
@@ -1477,98 +1473,25 @@
    },
    "refinable": true,
    "slots": [
-    "edge",
-    "axes"
-   ],
-   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, edge: str = 'unchecked', axes: tuple = ()",
-   "assigns": [
-    "kind",
-    "role",
-    "name",
-    "edge",
-    "axes"
-   ],
-   "dedup": [
-    "tup",
-    "f:role",
-    "f:name",
-    "f:edge",
-    "f:axes"
-   ],
-   "state": [
-    "+Sink",
-    "edge",
-    "axes"
-   ],
-   "from": [
-    "@name",
-    "op:0",
-    "ops:1",
-    "ttype",
-    "@edge",
-    "@axes"
-   ],
-   "watch": "all",
-   "ctor": {
-    "steps": [
-     [
-      "call",
-      "node_sink",
-      "'wide_write'",
-      "'wide_out'",
-      "name",
-      "value",
-      "indices",
-      "ttype"
-     ],
-     [
-      "check",
-      "edge not in EDGE_RULES",
-      "wide_write {name!r}: the edge rule {edge!r} is not one of {EDGE_RULES}"
-     ],
-     [
-      "check",
-      "axes_fault(axes) is not None",
-      "wide_write {name!r}: {axes_fault(axes)}"
-     ],
-     [
-      "check",
-      "store_index_fault(name, axes, indices) is not None",
-      "wide_write {name!r}: {store_index_fault(name, axes, indices)}"
-     ]
-    ],
-    "out": [
-     "'wide_write'",
-     "'wide_out'",
-     "name",
-     "edge",
-     "axes"
-    ]
-   },
-   "role": "wide_out",
-   "wire": "wide_write"
-  },
-  {
-   "name": "accum_write",
-   "class": "AccumWrite",
-   "family": "sink",
-   "refines": "sink",
-   "operands": {
-    "min": 1,
-    "max": 9
-   },
-   "slots": [
-    "contract",
+    "op",
+    "conflict",
+    "summation",
+    "order",
+    "returns_old",
     "reduced",
     "edge",
     "axes"
    ],
-   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, contract: str = \"auto\", reduced: Node | None = None, edge: str = 'unchecked', axes: tuple = ()",
+   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, op: str = 'store', conflict: str = 'unique', summation: str = 'auto', order: str = 'any', returns_old: bool = False, reduced: Node | None = None, edge: str = 'unchecked', axes: tuple = ()",
    "assigns": [
     "kind",
     "role",
     "name",
-    "contract",
+    "op",
+    "conflict",
+    "summation",
+    "order",
+    "returns_old",
     "reduced",
     "edge",
     "axes"
@@ -1577,13 +1500,21 @@
     "tup",
     "f:role",
     "f:name",
-    "fx:contract:auto,plain",
+    "f:op",
+    "f:conflict",
+    "fx:summation:auto,plain",
+    "f:order",
+    "f:returns_old",
     "f:edge",
     "f:axes"
    ],
    "state": [
     "+Sink",
-    "contract",
+    "op",
+    "conflict",
+    "summation",
+    "order",
+    "returns_old",
     "edge",
     "axes"
    ],
@@ -1595,7 +1526,11 @@
     "op:0",
     "ops:1",
     "ttype",
-    "@contract",
+    "@op",
+    "@conflict",
+    "@summation",
+    "@order",
+    "@returns_old",
     "edge:reduced",
     "@edge",
     "@axes"
@@ -1607,8 +1542,8 @@
      [
       "call",
       "node_sink",
-      "'accum_write'",
-      "'accum_out'",
+      "'update'",
+      "'plane_out'",
       "name",
       "value",
       "indices",
@@ -1616,35 +1551,81 @@
      ],
      [
       "check",
-      "not (contract in SCATTER_CONTRACTS or contract == 'keyed_auto')",
-      "accum_write {name!r}: contract {contract!r} is not one of {SCATTER_CONTRACTS}"
+      "op not in UPDATE_OPS",
+      "update {name!r}: op {op!r} is not one of {UPDATE_OPS}"
+     ],
+     [
+      "check",
+      "op not in UPDATE_OPS_WRITTEN",
+      "update {name!r}: op {op!r} is not written yet"
+     ],
+     [
+      "check",
+      "conflict not in UPDATE_CONFLICTS",
+      "update {name!r}: conflict {conflict!r} is not one of {UPDATE_CONFLICTS}"
+     ],
+     [
+      "check",
+      "conflict != 'unique'",
+      "update {name!r}: conflict {conflict!r} is not written yet"
+     ],
+     [
+      "check",
+      "summation not in UPDATE_SUMMATIONS",
+      "update {name!r}: summation {summation!r} is not one of {UPDATE_SUMMATIONS}"
+     ],
+     [
+      "check",
+      "summation != 'auto' and op != 'add'",
+      "update {name!r}: a summation applies to an add, not to {op!r}"
+     ],
+     [
+      "check",
+      "order not in UPDATE_ORDERS",
+      "update {name!r}: order {order!r} is not one of {UPDATE_ORDERS}"
+     ],
+     [
+      "check",
+      "order != 'any' and op != 'add'",
+      "update {name!r}: an order {order!r} of {op!r} is not written yet"
+     ],
+     [
+      "check",
+      "returns_old",
+      "update {name!r}: a returned old value is not written yet"
      ],
      [
       "check",
       "edge not in EDGE_RULES",
-      "accum_write {name!r}: the edge rule {edge!r} is not one of {EDGE_RULES}"
+      "update {name!r}: the edge rule {edge!r} is not one of {EDGE_RULES}"
      ],
      [
       "check",
       "axes_fault(axes) is not None",
-      "accum_write {name!r}: {axes_fault(axes)}"
+      "update {name!r}: {axes_fault(axes)}"
      ],
      [
       "check",
       "store_index_fault(name, axes, indices) is not None",
-      "accum_write {name!r}: {store_index_fault(name, axes, indices)}"
+      "update {name!r}: {store_index_fault(name, axes, indices)}"
      ]
     ],
     "out": [
-     "'accum_write'",
-     "'accum_out'",
+     "'update'",
+     "'plane_out'",
      "name",
-     "contract",
+     "op",
+     "conflict",
+     "summation",
+     "order",
+     "returns_old",
      "reduced",
      "edge",
      "axes"
     ]
-   }
+   },
+   "role": "plane_out",
+   "wire": "update"
   },
   {
    "name": "reduce_samples",
@@ -1788,7 +1769,7 @@
       "call",
       "node_sink",
       "'sample_sum'",
-      "'accum_out'",
+      "'plane_out'",
       "name",
       "value",
       "()",
@@ -1812,7 +1793,7 @@
     ],
     "out": [
      "'sample_sum'",
-     "'accum_out'",
+     "'plane_out'",
      "name",
      "cell_",
      "columns",

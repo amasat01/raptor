@@ -3,7 +3,6 @@
 core.json check node_base
 core.json check node_sink
 core.json check refuse_factor_arms
-core.json class AccumWrite
 core.json class Assign
 core.json class At
 core.json class Const
@@ -28,7 +27,6 @@ core.json class Select
 core.json class Sink
 core.json class TapeRead
 core.json class TapeWrite
-core.json class WideWrite
 core.json const AT_ROLES
 core.json const CAST_TARGETS
 core.json const CELL_OPS
@@ -43,7 +41,6 @@ core.json const FACTOR_TAG_PAIRS
 core.json const INT_BINARY
 core.json const INT_PLANE_DTYPES
 core.json const INT_UNARY
-core.json const KEYED_AUTO
 core.json const KIND_FEATHERS
 core.json const LEAF_KINDS
 core.json const LEAF_ROLES
@@ -72,7 +69,6 @@ core.json const REDUCE_KIND
 core.json const ROLE_ORDER
 core.json const SAMPLE_INDEX_KIND
 core.json const SAMPLE_POSITION_KIND
-core.json const SCATTER_CONTRACTS
 core.json const SINK_ROLES
 core.json const TAPE_READ_KIND
 core.json const UNARY_MATH
@@ -101,7 +97,6 @@ core.json const schema.TOP_LEVEL_KEY_ORDER
 core.json const schema.TOP_LEVEL_KEY_ORDER_V2
 core.json feather reduces_samples
 core.json key_text RawBlock
-core.json kind accum_write
 core.json kind assign
 core.json kind at
 core.json kind const
@@ -126,7 +121,6 @@ core.json kind select
 core.json kind sink
 core.json kind tape_read
 core.json kind tape_write
-core.json kind wide_write
 core.json record Access
 core.json record ClassifyUnit
 core.json record DispatchInfo
@@ -243,7 +237,6 @@ raptor.conformance.pytest_rows pytest_itemcollected
 raptor.conformance.pytest_rows pytest_runtest_logreport
 raptor.conformance.pytest_rows unfinished
 raptor.errors RaptorError
-raptor.ir AccumWrite
 raptor.ir Assign
 raptor.ir At
 raptor.ir Const
@@ -421,3 +414,11 @@ raptor.schema.manifest check_team_fields
 # every line below ends with its reason: ' # <word>'
 
 module raptor.protocols.unit # protocol
+core.json class Update # update
+core.json kind update # update
+core.json const UPDATE_OPS # update
+core.json const UPDATE_OPS_WRITTEN # update
+core.json const UPDATE_CONFLICTS # update
+core.json const UPDATE_SUMMATIONS # update
+core.json const UPDATE_ORDERS # update
+raptor.ir Update # update

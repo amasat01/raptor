@@ -32,7 +32,6 @@ from .nodes import Loop
 from .nodes import (
     peel_clamp,
     RAW_KIND,
-    AccumWrite,
     At,
     Const,
     Leaf,
@@ -41,7 +40,7 @@ from .nodes import (
     RoleConst,
     is_param_cell,
     SampleIndex,
-    WideWrite,
+    Update,
 )
 from ..errors import RaptorError
 

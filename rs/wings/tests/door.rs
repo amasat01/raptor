@@ -70,7 +70,7 @@ fn graph() -> G {
         &[exp],
         "((\"kind\", \"assign\"), (\"name\", \"o\"), (\"role\", \"mutable\"))",
     );
-    let acc = make(c, "AccumWrite", "f64", &[], &[exp], "((\"kind\", \"accum_write\"), (\"name\", \"acc\"), (\"role\", \"accum_out\"), (\"contract\", \"compensated\"), (\"reduced\", None))");
+    let acc = make(c, "Update", "f64", &[], &[exp], "((\"kind\", \"update\"), (\"name\", \"acc\"), (\"role\", \"plane_out\"), (\"op\", \"add\"), (\"summation\", \"compensated\"), (\"reduced\", None))");
     let sinks = [o, acc];
     let mut walk = 0;
     let st = rx_canonical(

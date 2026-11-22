@@ -55,9 +55,9 @@ def test_the_former_traits_are_members_of_the_closed_list(name):
 
 def test_a_declared_sink_keeps_operands_beyond_the_value_and_the_index():
     reg = K.Registry()
-    K.declare(reg, {"name": "acme.put", "dialect": "d", "ext": "acme", "family": "sink", "refines": "wide_write", "operands": {"min": 3, "max": 3},
+    K.declare(reg, {"name": "acme.put", "dialect": "d", "ext": "acme", "family": "sink", "refines": "update", "operands": {"min": 3, "max": 3},
                     "result": ["same_as", 0], "feathers": ["commits_value"]})
     key = Leaf("vocab_read", "per_sample", "k", TensorType((), "i32"))
-    node = K.make_kind(reg, "acme.put", F64, (X, key, key), name="p", role="accum_out")
+    node = K.make_kind(reg, "acme.put", F64, (X, key, key), name="p", role="plane_out")
     assert len(node.operands) == 3 and node.operands[2] is key and node.rebuilt(node.operands, {}).operands[2] is key
     assert has_feather(node, "commits_value")

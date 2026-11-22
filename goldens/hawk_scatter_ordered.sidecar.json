@@ -30,20 +30,20 @@
     "x": "float64"
   },
   "wide_inputs": [],
-  "wide_outputs": [
+  "plane_outputs": [
     "tms_acc_k",
     "tms_acc_v"
   ],
-  "accum_outputs": [],
+  "zeroed_outputs": [],
   "dispatch": [],
   "buffers": [],
   "arg_spec": [
     [
-      "wide_out",
+      "plane_out",
       "tms_acc_k"
     ],
     [
-      "wide_out",
+      "plane_out",
       "tms_acc_v"
     ],
     [

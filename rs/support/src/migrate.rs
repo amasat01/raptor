@@ -6,9 +6,14 @@
 //! - a `PlaneExtent` of a plane becomes an `AxisExtent` of axis 0 (a plane without axes has one runtime axis);
 //! - a read `At` (or a `TeamRead`, the read of a team result) keeps its index operand, with the clamp arithmetic it already holds, and states `edge = unchecked`, so that
 //!   the new default `clamp` is not applied on top of it;
-//! - a `WideWrite` or `AccumWrite` states `edge = unchecked`;
+//! - a `WideWrite` states `edge = unchecked` and becomes an `Update` of the operation `store`; an `AccumWrite` states
+//!   `edge = unchecked` and becomes an `Update` of the operation `add` (`or` for the contract `or`) whose summation and order
+//!   are what its contract meant: `plain` is the plain summation, `compensated` and `keyed_auto` the compensated one,
+//!   `ordered` the order `lane`, `auto` the neutral values;
 //! - a role `per_sample`, `vec_in` or `mat_in`, wherever a node, a slot or a wire names one, becomes `plane_in`: the value shape
 //!   of the plane is already recorded beside it, and says what the three names said;
+//! - a role `wide_out` or `accum_out` becomes `plane_out`: whether the runtime zeroes the plane follows from the updates that
+//!   write it, so the old name is only kept, by plane name, for the digests recorded with it;
 //! - no other field changes: the fields the new form added take their neutral values by being absent.
 //!
 //! The form is read from the node itself: a node of a class that always states `edge` in the current form, and does not, is
@@ -24,9 +29,9 @@ pub struct Changed {
     pub extents: usize,
     /// Reads that gained `edge = unchecked`.
     pub reads: usize,
-    /// Stores and accumulates that gained `edge = unchecked`.
+    /// Stores and accumulates that became updates.
     pub stores: usize,
-    /// Roles renamed to `plane_in`.
+    /// Roles renamed to `plane_in` or `plane_out`.
     pub roles: usize,
 }
 
@@ -82,20 +87,42 @@ fn node_parts(doc: &mut J) -> Option<(&str, &mut Vec<(String, J)>)> {
 /// The roles the planes read per sample had before they shared `plane_in`, picked by the rank of the value.
 const OLD_READ_ROLES: [&str; 3] = ["per_sample", "vec_in", "mat_in"];
 
+/// The roles the written planes had before they shared `plane_out`.
+const OLD_WRITE_ROLES: [&str; 2] = ["wide_out", "accum_out"];
+
+/// The role of a written plane no recording named, where the key line states no operation: the accumulates are the planes the
+/// wings build most.
+const DEFAULT_OLD_WRITE_ROLE: &str = "accum_out";
+
+/// The current role an old role name became, when it is one.
+fn current_role(old: &str) -> Option<&'static str> {
+    if OLD_READ_ROLES.contains(&old) {
+        Some("plane_in")
+    } else if OLD_WRITE_ROLES.contains(&old) {
+        Some("plane_out")
+    } else {
+        None
+    }
+}
+
 thread_local! {
     /// The old role each read plane the migration renamed carried, by name; the latest record migrated wins.
     static RECORDED: std::cell::RefCell<HashMap<String, String>> = std::cell::RefCell::default();
+    /// The contract each accumulate plane the migration turned into an update named, by plane name, where the current form
+    /// keeps less than the contract said (`keyed_auto` and `compensated` are one summation); the latest record wins.
+    static RECORDED_CONTRACTS: std::cell::RefCell<HashMap<String, String>> = std::cell::RefCell::default();
 }
 
 /// Forgets the old roles the previous record carried. The replay tools call it before each record they migrate.
 pub fn forget_recorded_roles() {
     RECORDED.with(|state| state.borrow_mut().clear());
+    RECORDED_CONTRACTS.with(|state| state.borrow_mut().clear());
 }
 
-/// The first reason `doc` cannot be expressed in the one read role: two read planes of one name that carry different old
-/// roles, which the single role, keyed by name, would merge into one slot.
+/// The first reason `doc` cannot be expressed in the shared roles: two planes of one name that carry different old roles of
+/// one family (the read roles, or the written ones), which the single role, keyed by name, would merge into one slot.
 pub fn role_conflict(doc: &J) -> Option<String> {
-    fn collect(doc: &J, seen: &mut HashMap<String, String>) -> Option<String> {
+    fn collect(doc: &J, seen: &mut HashMap<(&'static str, String), String>) -> Option<String> {
         let pairs: Vec<(String, String)> = match doc {
             J::Obj(entries) => {
                 entries
@@ -121,16 +148,16 @@ pub fn role_conflict(doc: &J) -> Option<String> {
             _ => None,
         }
         .unwrap_or_default();
-        for (name, role) in pairs
-            .into_iter()
-            .filter(|(_, r)| OLD_READ_ROLES.contains(&r.as_str()))
-        {
+        for (name, role) in pairs {
+            let Some(current) = current_role(&role) else {
+                continue;
+            };
             if let Some(first) = seen
-                .insert(name.clone(), role.clone())
+                .insert((current, name.clone()), role.clone())
                 .filter(|f| *f != role)
             {
                 return Some(format!(
-                    "two read planes named '{name}' carried the roles '{first}' and '{role}', which the one read role keyed by name merges into one slot"
+                    "two planes named '{name}' carried the roles '{first}' and '{role}', which the one role '{current}' keyed by name merges into one slot"
                 ));
             }
         }
@@ -148,21 +175,32 @@ fn note_recorded_role(name: &str, old: &str) {
     RECORDED.with(|state| state.borrow_mut().insert(name.to_string(), old.to_string()));
 }
 
-/// The role of a slot called `name` as a digest recorded before the planes read per sample shared one role took it: the old role
-/// the recording named for that plane when the migration saw it, else the old name of the rank (`per_sample`, `vec_in`,
-/// `mat_in`) for a `plane_in` of rank zero to two; every other role as it is.
-pub fn old_role_name(role: &str, name: &str, rank: usize) -> String {
-    if role != "plane_in" {
+/// The role of a slot called `name` as a digest recorded before the planes shared roles took it: the old role the recording
+/// named for that plane when the migration saw it, else the old name of the rank (`per_sample`, `vec_in`, `mat_in`) for a
+/// `plane_in` of rank zero to two, and for a `plane_out` the role its zeroing says (`accum_out` when the runtime zeroes it,
+/// else `wide_out`); every other role as it is.
+pub fn old_role_name(role: &str, name: &str, rank: usize, zeroed: bool) -> String {
+    if role != "plane_in" && role != "plane_out" {
         return role.to_string();
     }
     let recorded = RECORDED.with(|state| state.borrow().get(name).cloned());
-    recorded.unwrap_or_else(|| OLD_READ_ROLES.get(rank).map_or(role, |old| old).to_string())
+    recorded.unwrap_or_else(|| match role {
+        "plane_out" if zeroed => "accum_out".to_string(),
+        "plane_out" => "wide_out".to_string(),
+        _ => OLD_READ_ROLES.get(rank).map_or(role, |old| old).to_string(),
+    })
 }
 
+/// The list of sink roles a recorded refusal states, in the old and the current form.
+const OLD_SINK_ROLE_LIST: &str = "('mutable', 'out', 'wide_out', 'accum_out')";
+const SINK_ROLE_LIST: &str = "('mutable', 'out', 'plane_out')";
+
 /// A recorded refusal message in the current form: the two spellings of a role it names, `role 'NAME'` and `role='NAME'`, take
-/// the current name when NAME is one of the old read roles. Nothing else in the message changes, so a message that only
-/// contains the word `role` or an old name elsewhere is left as it is.
+/// the current name when NAME is one of the old roles, and the list of sink roles it states is the current list. Nothing else in
+/// the message changes, so a message that only contains the word `role` or an old name elsewhere is left as it is.
 pub fn migrate_message(message: &str) -> String {
+    let message = message.replace(OLD_SINK_ROLE_LIST, SINK_ROLE_LIST);
+    let message = message.as_str();
     let mut out = String::with_capacity(message.len());
     let mut rest = message;
     while let Some(at) = rest.find("role") {
@@ -175,9 +213,9 @@ pub fn migrate_message(message: &str) -> String {
         let Some(close) = after.find('\'') else {
             continue;
         };
-        if OLD_READ_ROLES.contains(&&after[..close]) {
+        if let Some(current) = current_role(&after[..close]) {
             out.push_str(&rest[..quote]);
-            out.push_str("plane_in");
+            out.push_str(current);
             rest = &after[close..];
         }
     }
@@ -185,12 +223,13 @@ pub fn migrate_message(message: &str) -> String {
     out
 }
 
-/// Renames a tagged string `{"s": role}` to `plane_in` when it is one of the old names, and returns the old name.
+/// Renames a tagged string `{"s": role}` to the current role when it is an old name, and returns the old name.
 fn rename_tagged(value: &mut J) -> Option<String> {
     let J::Obj(tagged) = value else { return None };
     match tagged.as_mut_slice() {
-        [(tag, J::Str(role))] if tag == "s" && OLD_READ_ROLES.contains(&role.as_str()) => {
-            Some(std::mem::replace(role, "plane_in".to_string()))
+        [(tag, J::Str(role))] if tag == "s" && current_role(role).is_some() => {
+            let current = current_role(role).map(str::to_string)?;
+            Some(std::mem::replace(role, current))
         }
         _ => None,
     }
@@ -243,6 +282,162 @@ fn rename_roles_of(doc: &mut J) -> usize {
     renamed
 }
 
+/// Renames the class a recorded dialect manifest says a kind refines, and the wire name it states: a kind that refined
+/// `wide_write` refines `update`, which is a store when it states no operation.
+fn rename_refined_class(doc: &mut J) {
+    let J::Obj(entries) = doc else { return };
+    for (key, value) in entries.iter_mut() {
+        if matches!(key.as_str(), "refines" | "wire") && tagged_text(value) == Some("wide_write") {
+            *value = tagged("update");
+        }
+    }
+}
+
+/// Renames the `kind` a recorded node states when it is the wire name of an old write class: a node of a wing kind that
+/// refines the store stated the wire name of the class it refined.
+fn rename_node_kind(doc: &mut J) {
+    let Some((_, fields)) = node_parts(doc) else {
+        return;
+    };
+    for (key, value) in fields.iter_mut() {
+        if key == "kind" && matches!(tagged_text(value), Some("wide_write" | "accum_write")) {
+            *value = tagged("update");
+        }
+    }
+}
+
+/// Gives the recorded node `doc` the class `class`.
+fn rename_class(doc: &mut J, class: &str) {
+    let J::Obj(entries) = doc else {
+        unreachable!("a node is an object")
+    };
+    for (key, value) in entries.iter_mut() {
+        if key == "c" {
+            *value = J::Str(class.into());
+        }
+    }
+}
+
+/// The operation, summation and order the update that replaces an old write states: a store, or an accumulate with the
+/// contract it recorded (`or` is the bit-or operation; the contracts `compensated` and `keyed_auto` are the compensated
+/// summation, `plain` the plain one, `ordered` the order `lane`).
+pub fn update_fields(
+    accumulates: bool,
+    contract: &str,
+) -> (&'static str, &'static str, &'static str) {
+    match (accumulates, contract) {
+        (false, _) => ("store", "auto", "any"),
+        (true, "or") => ("or", "auto", "any"),
+        (true, "plain") => ("add", "plain", "any"),
+        (true, "compensated" | "keyed_auto") => ("add", "compensated", "any"),
+        (true, "ordered") => ("add", "auto", "lane"),
+        (true, _) => ("add", "auto", "any"),
+    }
+}
+
+/// Turns the recorded `WideWrite` or `AccumWrite` `doc` into the `Update` that means the same, with the contract it recorded
+/// restated as the operation, summation and order (`restate_edge` also gives it the migrated `edge = unchecked`, for a
+/// recording that predates the edge rule). Returns whether `doc` was one of the two old classes.
+fn become_update(doc: &mut J, restate_edge: bool) -> bool {
+    let Some((class, fields)) = node_parts(doc) else {
+        return false;
+    };
+    let accumulates = match class {
+        "WideWrite" => false,
+        "AccumWrite" => true,
+        _ => return false,
+    };
+    if restate_edge && !fields.iter().any(|(k, _)| k == "edge") {
+        set_field(fields, "edge", tagged("unchecked"));
+    }
+    let contract = fields
+        .iter()
+        .position(|(k, _)| k == "contract")
+        .map(|at| fields.remove(at).1);
+    let contract = contract.as_ref().and_then(tagged_text).unwrap_or("auto");
+    let (op, summation, order) = update_fields(accumulates, contract);
+    let name = fields
+        .iter()
+        .find(|(k, _)| k == "name")
+        .and_then(|(_, v)| tagged_text(v))
+        .map(str::to_string);
+    if let Some(name) = name.filter(|_| contract == "keyed_auto") {
+        note_recorded_contract(&name, contract);
+    }
+    set_field(fields, "op", tagged(op));
+    set_field(fields, "summation", tagged(summation));
+    set_field(fields, "order", tagged(order));
+    if fields.iter().any(|(k, _)| k == "kind") {
+        set_field(fields, "kind", tagged("update"));
+    }
+    rename_class(doc, "Update");
+    true
+}
+
+/// States `zeroed = true` in a recorded declared `Slot` whose role is `accum_out`: the current form keeps one written-plane role,
+/// and says by this member which of its planes the runtime zeroes. Returns whether it did.
+fn state_zeroing(doc: &mut J) -> bool {
+    let J::Obj(entries) = doc else { return false };
+    let is_slot = entries
+        .iter()
+        .any(|(k, v)| k == "r" && matches!(v, J::Str(class) if class == "Slot"));
+    if !is_slot {
+        return false;
+    }
+    for (key, value) in entries.iter_mut() {
+        let J::Obj(fields) = value else { continue };
+        let accumulated = key == "v"
+            && fields
+                .iter()
+                .any(|(k, v)| k == "role" && tagged_text(v) == Some("accum_out"));
+        if accumulated {
+            set_field(fields, "zeroed", J::Bool(true));
+            return true;
+        }
+    }
+    false
+}
+
+/// States, in a recorded walk (a record with an `arg_spec`), the names of its planes that had the role `accum_out` as
+/// `zeroed_outputs`: the current form keeps one written-plane role, and says by this member which of its planes the runtime
+/// zeroes. Returns whether it did.
+fn state_zeroed_outputs(doc: &mut J) -> bool {
+    let J::Obj(entries) = doc else { return false };
+    let zeroed: Vec<J> = entries
+        .iter()
+        .filter(|(key, _)| key == "arg_spec")
+        .filter_map(|(_, spec)| spec.get("t").or(spec.get("l")))
+        .flat_map(|pairs| pairs.arr().iter())
+        .filter_map(|pair| pair.get("t"))
+        .filter(|pair| pair.arr().len() == 2 && tagged_text(&pair.arr()[0]) == Some("accum_out"))
+        .map(|pair| pair.arr()[1].clone())
+        .collect();
+    if zeroed.is_empty() {
+        return false;
+    }
+    let at = entries
+        .iter()
+        .position(|(k, _)| k.as_str() > "zeroed_outputs")
+        .unwrap_or(entries.len());
+    entries.insert(
+        at,
+        (
+            "zeroed_outputs".into(),
+            J::Obj(vec![("t".into(), J::Arr(zeroed))]),
+        ),
+    );
+    true
+}
+
+/// Notes that the accumulate plane `name` carried the old contract `contract`, which the current form keeps as a summation only.
+pub fn note_recorded_contract(name: &str, contract: &str) {
+    RECORDED_CONTRACTS.with(|state| {
+        state
+            .borrow_mut()
+            .insert(name.to_string(), contract.to_string())
+    });
+}
+
 /// Migrates one node in place when it is in the old form; `Err` names a node the rules cannot express exactly.
 fn migrate_node(doc: &mut J) -> Result<Changed, String> {
     let mut changed = Changed::default();
@@ -265,9 +460,8 @@ fn migrate_node(doc: &mut J) -> Result<Changed, String> {
             set_field(fields, "edge", tagged("unchecked"));
             changed.reads = 1;
         }
-        "WideWrite" | "AccumWrite" if !states_edge => {
-            set_field(fields, "edge", tagged("unchecked"));
-            changed.stores = 1;
+        "WideWrite" | "AccumWrite" => {
+            changed.stores = usize::from(become_update(doc, true));
         }
         "PlaneExtent" => {
             if operands != 1 {
@@ -281,24 +475,22 @@ fn migrate_node(doc: &mut J) -> Result<Changed, String> {
                 J::Obj(vec![("i".to_string(), J::Str("0".into()))]),
             );
             changed.extents = 1;
-            let J::Obj(entries) = doc else {
-                unreachable!("a node is an object")
-            };
-            for (key, value) in entries.iter_mut() {
-                if key == "c" {
-                    *value = J::Str("AxisExtent".into());
-                }
-            }
+            rename_class(doc, "AxisExtent");
         }
         _ => {}
     }
     Ok(changed)
 }
 
-/// Renames the old read roles named anywhere in `doc` and changes nothing else: the form of a recording made after the planes
-/// carried axes and before they shared one role. Returns how many roles it renamed.
+/// Renames the old roles named anywhere in `doc` and turns the old write classes into updates, and changes nothing else: the
+/// form of a recording made after the planes carried axes and before they shared roles. Returns how many it renamed.
 pub fn migrate_roles(doc: &mut J) -> usize {
-    let mut renamed = rename_roles_of(doc);
+    rename_refined_class(doc);
+    rename_node_kind(doc);
+    let mut renamed = usize::from(become_update(doc, false));
+    state_zeroing(doc);
+    state_zeroed_outputs(doc);
+    renamed += rename_roles_of(doc);
     match doc {
         J::Obj(entries) => entries
             .iter_mut()
@@ -322,7 +514,11 @@ pub fn migrate(doc: &mut J) -> Result<Changed, String> {
 
 /// `migrate` over a document known to hold no role conflict, and over each part of it.
 fn migrate_tree(doc: &mut J) -> Result<Changed, String> {
+    rename_refined_class(doc);
+    rename_node_kind(doc);
     let mut changed = migrate_node(doc)?;
+    state_zeroing(doc);
+    state_zeroed_outputs(doc);
     changed.roles = rename_roles_of(doc);
     match doc {
         J::Obj(entries) => {
@@ -464,7 +660,109 @@ pub fn remove_added_fields(line: &str) -> String {
 /// line is returned as it is.
 pub fn old_read_role(line: &str) -> String {
     let (id, rest) = line.split_once('|').unwrap_or(("", line));
-    old_leaf_line(rest).map_or_else(|| line.to_string(), |old| format!("{id}|{old}"))
+    old_leaf_line(rest)
+        .or_else(|| old_update_line(rest))
+        .or_else(|| old_write_role(rest))
+        .map(|old| old_body_sinks(&old))
+        .or_else(|| {
+            rest.contains("('update', 'plane_out', '")
+                .then(|| old_body_sinks(rest))
+        })
+        .map_or_else(|| line.to_string(), |old| format!("{id}|{old}"))
+}
+
+/// The key line of a sink of any class as it read with the old role of the plane it writes, which the recordings named by plane
+/// name; `None` for a line whose tail names no `plane_out` plane. A kind that refines the update and states its own tail still
+/// reads `update` at its head: it is given the class that wrote the plane, as the recording named it.
+fn old_write_role(key: &str) -> Option<String> {
+    let (head, tail) = key.split_once(", ('plane_out', '")?;
+    let plane = &tail[..tail.find('\'')?];
+    let role = recorded_write_role(plane, DEFAULT_OLD_WRITE_ROLE);
+    let head = head.strip_prefix("('update', ").map_or_else(
+        || head.to_string(),
+        |rest| format!("('{}', {rest}", old_write_kind(&role)),
+    );
+    Some(format!("{head}, ('{role}', '{tail}"))
+}
+
+/// The old role the recordings named for the written plane `plane`, else `unrecorded`.
+fn recorded_write_role(plane: &str, unrecorded: &str) -> String {
+    RECORDED
+        .with(|state| state.borrow().get(plane).cloned())
+        .unwrap_or_else(|| unrecorded.to_string())
+}
+
+/// The old write kind of a plane with the old role `role`: the class that wrote it.
+fn old_write_kind(role: &str) -> &'static str {
+    if role == "wide_out" {
+        "wide_write"
+    } else {
+        "accum_write"
+    }
+}
+
+/// A loop key line states each body sink as `(kind, role, name)`: those of the current form as the old kind and role.
+fn old_body_sinks(line: &str) -> String {
+    const OPEN: &str = "('update', 'plane_out', '";
+    let mut out = String::new();
+    let mut rest = line;
+    while let Some(at) = rest.find(OPEN) {
+        let after = &rest[at + OPEN.len()..];
+        let Some(close) = after.find('\'') else { break };
+        let role = recorded_write_role(&after[..close], DEFAULT_OLD_WRITE_ROLE);
+        out.push_str(&rest[..at]);
+        out.push_str(&format!(
+            "('{}', '{role}', '{}",
+            old_write_kind(&role),
+            &after[..close]
+        ));
+        rest = &after[close..];
+    }
+    out.push_str(rest);
+    out
+}
+
+/// The key line of an `update` as it read as a `wide_write` or an `accum_write`: the old class, the old role of its plane and, for
+/// an accumulate, the contract the fields say; `None` for any other line. The current tail is
+/// `(role, name, op, conflict, [compensated,] order, returns_old, edge, axes)`.
+fn old_update_line(key: &str) -> Option<String> {
+    let body = key.strip_prefix("('update', ")?;
+    let (head, tail) = body.split_once(", ('plane_out', ")?;
+    let mut parts = tail.splitn(4, ", ");
+    let (name, op, _conflict) = (parts.next()?, parts.next()?, parts.next()?);
+    let rest = parts.next()?;
+    let (summation, rest) = match rest.strip_prefix("'compensated', ") {
+        Some(after) => ("compensated", after),
+        None => ("auto", rest),
+    };
+    let (order, rest) = rest.split_once(", ")?;
+    let (_returns_old, tail) = rest.split_once(", ")?;
+    let plane = name.trim_matches('\'');
+    let role = recorded_write_role(
+        plane,
+        if op == "'store'" {
+            "wide_out"
+        } else {
+            DEFAULT_OLD_WRITE_ROLE
+        },
+    );
+    if op == "'store'" {
+        return Some(format!("('wide_write', {head}, ('{role}', {name}, {tail}"));
+    }
+    let contract = match (op, summation, order) {
+        ("'or'", ..) => Some("or".to_string()),
+        (_, _, "'lane'") => Some("ordered".to_string()),
+        (_, "compensated", _) => Some(
+            RECORDED_CONTRACTS
+                .with(|state| state.borrow().get(plane).cloned())
+                .unwrap_or_else(|| "compensated".to_string()),
+        ),
+        _ => None,
+    };
+    let stated = contract.map_or(String::new(), |c| format!("'{c}', "));
+    Some(format!(
+        "('accum_write', {head}, ('{role}', {name}, {stated}{tail}"
+    ))
 }
 
 /// The key line of a `plane_in` leaf as it read with the old role of its rank, which the leaf's own shape gives; `None` for any
@@ -608,11 +906,11 @@ mod tests {
     #[test]
     fn the_old_name_of_a_role_follows_the_rank_of_its_value() {
         forget_recorded_roles();
-        assert_eq!(old_role_name("plane_in", "x", 0), "per_sample");
-        assert_eq!(old_role_name("plane_in", "x", 1), "vec_in");
-        assert_eq!(old_role_name("plane_in", "x", 2), "mat_in");
-        assert_eq!(old_role_name("plane_in", "x", 3), "plane_in");
-        assert_eq!(old_role_name("mutable", "x", 1), "mutable");
+        assert_eq!(old_role_name("plane_in", "x", 0, false), "per_sample");
+        assert_eq!(old_role_name("plane_in", "x", 1, false), "vec_in");
+        assert_eq!(old_role_name("plane_in", "x", 2, false), "mat_in");
+        assert_eq!(old_role_name("plane_in", "x", 3, false), "plane_in");
+        assert_eq!(old_role_name("mutable", "x", 1, false), "mutable");
     }
 
     #[test]
@@ -788,6 +1086,29 @@ mod tests {
         std::fs::remove_dir_all(&dir).unwrap();
     }
 
+    /// Oracle: the rule written by hand: a declared slot that had the accumulate role says the runtime zeroes it, one that had
+    /// the store role does not, and both take the one written-plane role.
+    #[test]
+    fn a_declared_slot_states_the_zeroing_its_old_role_meant() {
+        let slot = |role: &str| {
+            format!(r#"{{"r":"Slot","m":"m","v":{{"name":{{"s":"p"}},"role":{{"s":"{role}"}}}}}}"#)
+        };
+        let mut zeroed = parse(&slot("accum_out")).unwrap();
+        assert!(migrate_roles(&mut zeroed) > 0);
+        let text = render(&zeroed, "");
+        assert!(
+            text.contains("plane_out") && text.contains(r#""zeroed":true"#),
+            "{text}"
+        );
+        let mut kept = parse(&slot("wide_out")).unwrap();
+        migrate_roles(&mut kept);
+        let text = render(&kept, "");
+        assert!(
+            text.contains("plane_out") && !text.contains("zeroed"),
+            "{text}"
+        );
+    }
+
     /// Oracle: the two spellings the tools print a role in are renamed; the word alone and other quoted names are not.
     #[test]
     fn a_recorded_message_names_the_current_role_in_its_two_role_forms_only() {
@@ -817,7 +1138,7 @@ mod tests {
         };
         let mut one = parse(&leaf("vec_in")).unwrap();
         assert!(migrate(&mut one).is_ok());
-        assert_eq!(old_role_name("plane_in", "x", 0), "vec_in");
+        assert_eq!(old_role_name("plane_in", "x", 0, false), "vec_in");
         let two = parse(&format!(
             r#"{{"l":[{},{}]}}"#,
             leaf("vec_in"),
@@ -826,7 +1147,7 @@ mod tests {
         .unwrap();
         let why = role_conflict(&two).unwrap();
         assert!(
-            why.contains("two read planes named 'x'") && why.contains("'vec_in' and 'per_sample'"),
+            why.contains("two planes named 'x'") && why.contains("'vec_in' and 'per_sample'"),
             "{why}"
         );
         assert_eq!(
@@ -839,6 +1160,18 @@ mod tests {
                 .unwrap()
             ),
             None
+        );
+    }
+
+    /// Oracle: the key line the recording made of a sink of a kind that refines the store and states its own tail, a
+    /// `wide_write` with a `wide_out` plane, as the stored digests spell it.
+    #[test]
+    fn a_kind_refining_the_store_reads_as_the_old_write_class_of_its_plane() {
+        forget_recorded_roles();
+        note_recorded_role("acc", "wide_out");
+        assert_eq!(
+            old_read_role("8|('update', 'int32', (), None, (2, 7), ('plane_out', 'acc', 'k'))"),
+            "8|('wide_write', 'int32', (), None, (2, 7), ('wide_out', 'acc', 'k'))"
         );
     }
 }

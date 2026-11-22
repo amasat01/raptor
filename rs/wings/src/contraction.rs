@@ -2,8 +2,8 @@
 //! The answer is the old code generator's recogniser (`recognize`) over the context's nodes: the loop's header, how each operand
 //! walks the reduce axis, the shape of the terms, and the lanes that share one slot of a staged operand. The caller tells the
 //! names of the staged planes, which the nodes do not carry.
-use crate::is_a;
 use crate::place::one_index;
+use crate::{is_a, is_update_of};
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
 use std::collections::{HashMap, HashSet};
@@ -532,7 +532,7 @@ pub fn recognize(ctx: &mut Ctx, sinks: &[u32], staged: &[String]) -> R<Option<Co
     if sinks.is_empty()
         || !sinks
             .iter()
-            .all(|&s| is_a(ctx, s, "Assign") || is_a(ctx, s, "WideWrite"))
+            .all(|&s| is_a(ctx, s, "Assign") || is_update_of(ctx, s, "store").unwrap_or(false))
     {
         return Ok(None);
     }

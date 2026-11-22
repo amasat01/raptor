@@ -17,7 +17,7 @@
   "sink": true,
   "at": true,
   "dispatch": true,
-  "wide_write": true,
+  "update": true,
   "leaf": false,
   "const": false,
   "add": false,

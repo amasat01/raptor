@@ -169,8 +169,8 @@ fn declared_checks_have_parity() {
         }
         rx_ctx_free(c);
     }
-    println!("text-equal {a} / 42\ndifferent by design {b}\nunreachable behind the door {cc}\nquantity {q}, type {t}");
-    assert_eq!(a + b + cc, 42);
+    println!("text-equal {a} / 51\ndifferent by design {b}\nunreachable behind the door {cc}\nquantity {q}, type {t}");
+    assert_eq!(a + b + cc, 51);
     assert!(a > 0 && b > 0 && cc > 0 && q == 6 && t == 4);
 }
 

@@ -3,7 +3,7 @@
 //! A unit whose selector can change as the kernel runs keeps each commit only where the selector picks its branch, and records
 //! the class and whether the sample went stale. This module makes the IR of those kernels; the caller takes their walks.
 use crate::planes::{type_parts, NodeType};
-use crate::{is_a, walk_order, R};
+use crate::{is_a, is_update_of, walk_order, R};
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::typed::{put_pairs, text_pair, RxPair};
 use raptor_ir::value::{ttype_val, Val};
@@ -229,7 +229,7 @@ impl Maker<'_> {
             let kept = self.select(mine, value, old, &ty)?;
             return self.assign(&name, kept, &ty);
         }
-        if is_a(self.ctx, sink, "AccumWrite") {
+        if is_update_of(self.ctx, sink, "add")? {
             let scalar = NodeType {
                 dtype: ty.dtype.clone(),
                 shape: vec![],
@@ -251,17 +251,18 @@ impl Maker<'_> {
                     .map(|&i| Val::Node(i))
                     .collect(),
             );
-            let contract = self.ctx.str_field(sink, "contract")?;
             let given = vec![
+                ("op", self.ctx.field(sink, "op")?),
+                ("summation", self.ctx.field(sink, "summation")?),
+                ("order", self.ctx.field(sink, "order")?),
                 ("name", Val::Str(name)),
                 ("value", Val::Node(kept)),
                 ("indices", indices),
                 ("axes", self.ctx.field(sink, "axes")?),
                 ("edge", self.ctx.field(sink, "edge")?),
                 ("ttype", tt),
-                ("contract", Val::Str(contract)),
             ];
-            return self.build("AccumWrite", given);
+            return self.build("Update", given);
         }
         refuse(format!(
             "a segmented unit guards each commit by the selector, and the sink {name} has no old value to keep"

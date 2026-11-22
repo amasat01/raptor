@@ -49,10 +49,10 @@ fn round_trips() {
     // a node reference in a field
     let r = mk(
         c,
-        "AccumWrite",
+        "Update",
         None,
         &[x],
-        &format!("(('name', 'a'), ('contract', 'auto'), ('reduced', #{k1}))"),
+        &format!("(('name', 'a'), ('op', 'add'), ('reduced', #{k1}))"),
     );
     assert_eq!(round(c, &[r]).1, 3);
     // awkward text in a tag and a string field

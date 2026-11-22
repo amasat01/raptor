@@ -40,7 +40,7 @@ from fractions import Fraction
 from typing import Any
 
 from raptor.ir.nodes import Loop, LoopCarry, LoopIndex
-from raptor.ir.nodes import KEYED_AUTO, At, Const, Leaf, Node, Op, SampleIndex, Sink, peel_clamp
+from raptor.ir.nodes import At, Const, Leaf, Node, Op, SampleIndex, Sink, peel_clamp
 
 INVARIANT, AFFINE, QUOTIENT = "invariant", "affine", "quotient"
 DATA_DEPENDENT, NON_AFFINE = "data_dependent", "non_affine"
@@ -534,11 +534,13 @@ def facts(obj: Any, labels: tuple | None = None, group: int = 1) -> LaneFacts:
     reads, sinks = [], []
 
     def contract(s: Any) -> str:
-        declared = getattr(s, "contract", "auto")
-        if declared == KEYED_AUTO:
-            return "compensated"
-        if declared not in ("auto", "plain"):
-            return declared
+        if s.kind == "update":
+            if s.order == "lane":
+                return "ordered"
+            if s.op == "or":
+                return "or"
+            if s.summation == "compensated":
+                return "compensated"
         carries = (comp_on and s.name != companion) or (
             s.kind == "sample_sum" and getattr(s, "op", None) == "sum")
         return "compensated" if carries else "auto"

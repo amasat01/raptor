@@ -35,8 +35,8 @@
     "active_count": "uint32"
   },
   "wide_inputs": [],
-  "wide_outputs": [],
-  "accum_outputs": [],
+  "plane_outputs": [],
+  "zeroed_outputs": [],
   "dispatch": [],
   "buffers": [],
   "arg_spec": [

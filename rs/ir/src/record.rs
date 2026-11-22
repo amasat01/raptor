@@ -43,6 +43,11 @@ pub fn badarg<T>(m: impl Into<String>) -> Result<T, Fault> {
     Err(Fault::BadArg(m.into()))
 }
 
+/// Names the role of a slot as a digest recorded before the planes shared roles took it, from the role, the name, the rank of the
+/// value and whether the runtime zeroes the plane.
+#[cfg(feature = "replay-key-form")]
+pub type RoleForm = fn(&str, &str, usize, bool) -> String;
+
 /// Everything a context owns: the class table, the arena, the last error text.
 pub struct Ctx {
     /// The class table.
@@ -69,7 +74,7 @@ pub struct Ctx {
     /// Names the role of a slot the way a digest recorded before the read planes shared one role took it, from the role, the name
     /// and the rank of the value. Only the replay tools set it, together with `key_form`.
     #[cfg(feature = "replay-key-form")]
-    pub role_form: Option<fn(&str, &str, usize) -> String>,
+    pub role_form: Option<RoleForm>,
 }
 
 impl Ctx {
@@ -101,15 +106,22 @@ impl Ctx {
                 .map_or(key.to_string(), |(_, rest)| rest.to_string()),
         }
     }
-    /// The role of a slot of a value of rank `rank` as the digests take it: rewritten by `role_form` when a replay tool set one.
+    /// The role of a slot of a value of rank `rank`, which the runtime zeroes when `zeroed`, as the digests take it: rewritten by
+    /// `role_form` when a replay tool set one.
     #[cfg(feature = "replay-key-form")]
-    pub(crate) fn digest_role(&self, role: &str, name: &str, rank: usize) -> String {
+    pub(crate) fn digest_role(&self, role: &str, name: &str, rank: usize, zeroed: bool) -> String {
         self.role_form
-            .map_or_else(|| role.to_string(), |form| form(role, name, rank))
+            .map_or_else(|| role.to_string(), |form| form(role, name, rank, zeroed))
     }
     /// The role of a slot as the digests take it: as it is.
     #[cfg(not(feature = "replay-key-form"))]
-    pub(crate) fn digest_role(&self, role: &str, _name: &str, _rank: usize) -> String {
+    pub(crate) fn digest_role(
+        &self,
+        role: &str,
+        _name: &str,
+        _rank: usize,
+        _zeroed: bool,
+    ) -> String {
         role.to_string()
     }
     /// A numbered key line as the digests take it.
@@ -451,6 +463,13 @@ impl Ctx {
             "core" => self.exit_form(h),
             _ => refuse(format!("not in this build: property {name} of {}", c.name)),
         }
+    }
+
+    /// Whether `h` is an update that commits through a companion plane: an add under the compensated summation.
+    pub fn compensates(&self, h: u32) -> Result<bool, Fault> {
+        Ok(self.is_a(h, "Update")
+            && self.str_field(h, "op")? == "add"
+            && self.str_field(h, "summation")? == "compensated")
     }
 
     /// The text a field holds; refuses a field of another kind.

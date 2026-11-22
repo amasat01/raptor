@@ -7,7 +7,7 @@ use crate::blocks::{block_shaped, ordered_case};
 use crate::cells::build;
 use crate::stages::is_ordered_sink;
 use crate::team::{sample_index, Grid, Plane, Step, TeamSpec, Unit, PLANE_PREFIX};
-use crate::{is_a, R};
+use crate::{is_a, is_routable_add, is_update_of, R};
 use raptor_ir::record::Ctx;
 use raptor_ir::value::{ttype_val, Val};
 
@@ -58,17 +58,13 @@ enum Routed {
 /// What the keyed accumulate `sink` becomes when the build routes accumulates to the ordered stages: a sum over the lanes of a key
 /// is then one block sum of its payload, which the team stages of a block add in lane order.
 fn route(ctx: &mut Ctx, sink: u32, max_dim: i64) -> R<Routed> {
-    if !is_a(ctx, sink, "AccumWrite") || ctx.nodes[sink as usize].ops.len() < 2 {
+    if !is_update_of(ctx, sink, "add")? || ctx.nodes[sink as usize].ops.len() < 2 {
         return Ok(Routed::Keep);
     }
     let Val::Node(reduced) = ctx.field(sink, "reduced")? else {
         return Ok(Routed::Keep);
     };
-    let plain = matches!(
-        ctx.str_field(sink, "contract")?.as_str(),
-        "auto" | "compensated" | "keyed_auto"
-    );
-    if !plain || ctx.str_field(reduced, "op")? != "sum" {
+    if !is_routable_add(ctx, sink)? || ctx.str_field(reduced, "op")? != "sum" {
         return Ok(Routed::Keep);
     }
     let payload = ctx.nodes[reduced as usize].ops[0];
@@ -111,19 +107,14 @@ pub fn logged(
     let mut kept = vec![];
     let mut residual = vec![];
     for &sink in sinks {
-        let own = is_a(ctx, sink, "AccumWrite")
-            && matches!(
-                ctx.str_field(sink, "contract")?.as_str(),
-                "compensated" | "keyed_auto"
-            );
+        let own = ctx.compensates(sink)?;
         if routed && own {
             residual.push(format!("{}_c", ctx.str_field(sink, "name")?));
         }
     }
     for &sink in sinks {
-        let dropped = routed
-            && is_a(ctx, sink, "AccumWrite")
-            && residual.contains(&ctx.str_field(sink, "name")?);
+        let dropped =
+            routed && is_a(ctx, sink, "Update") && residual.contains(&ctx.str_field(sink, "name")?);
         if dropped {
             continue;
         }

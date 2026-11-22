@@ -820,7 +820,7 @@ pub fn markers(ctx: &mut Ctx, spec: &TeamSpec) -> R<Vec<u32>> {
         )?;
         out.push(build(
             ctx,
-            "WideWrite",
+            "Update",
             vec![("name", Val::Str(name.clone())), ("value", Val::Node(zero))],
         )?);
     }

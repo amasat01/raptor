@@ -1,7 +1,7 @@
 //! Typed reads of a walk a front end asks beyond the arguments: the type of a bound slot, the planes read at launch start, and
 //! whether a dispatch's selector is static. Owns the C doors `rx_walk_slot_type`, `rx_walk_prior`, `rx_walk_static_selector`, `rx_walk_selector_reads`, `rx_walk_access_class`, `rx_walk_accum_companions`, `rx_walk_quantity_wires` and `rx_walk_quantity_slots`.
 use crate::canon::str_const;
-use crate::consts::{compensates, put_names};
+use crate::consts::put_names;
 use crate::door::{cstr, guard, put};
 use crate::record::{badarg, refuse, Ctx, Fault};
 use crate::typed::{pair_part, put_pairs, rx_type_of_parts, text_pair, RxPair, RxType};
@@ -138,7 +138,7 @@ pub unsafe extern "C" fn rx_walk_accum_companions(
     guard(ctx, |c| {
         let mut pairs: Vec<(String, String)> = vec![];
         for &node in &c.walk(walk)?.order {
-            if c.is_a(node, "AccumWrite") && compensates(&c.str_field(node, "contract")?) {
+            if c.compensates(node)? {
                 let plane = c.str_field(node, "name")?;
                 let comp = format!("{plane}{}", str_const("COMPANION_SUFFIX"));
                 if !pairs.iter().any(|(held, _)| *held == comp) {

@@ -231,9 +231,9 @@
    "check": "role not in SINK_ROLES",
    "today": {
     "exc": "RaptorError",
-    "msg": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'wide_out', 'accum_out')"
+    "msg": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'plane_out')"
    },
-   "raw": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'wide_out', 'accum_out')",
+   "raw": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'plane_out')",
    "expect": "a",
    "bad": {
     "class": "Sink",
@@ -460,29 +460,6 @@
   },
   {
    "group": "check",
-   "id": 15,
-   "kind": "AccumWrite",
-   "check": "not (contract in SCATTER_CONTRACTS or contract == 'keyed_auto')",
-   "today": {
-    "exc": "RaptorError",
-    "msg": "accum_write 'o': contract 'bogus' is not one of ('auto', 'compensated', 'ordered', 'plain', 'or')"
-   },
-   "raw": "accum_write 'o': contract 'bogus' is not one of ('auto', 'compensated', 'ordered', 'plain', 'or')",
-   "expect": "a",
-   "bad": {
-    "class": "AccumWrite",
-    "dtype": "f64",
-    "shape": [],
-    "tag": null,
-    "ops": [
-     "x"
-    ],
-    "fields": "(('kind', 'accum_write'), ('role', 'accum_out'), ('name', 'o'), ('contract', 'bogus'), ('reduced', None))"
-   },
-   "standing": null
-  },
-  {
-   "group": "check",
    "id": 16,
    "kind": "ReduceSamples",
    "check": "op not in CELL_OPS",
@@ -592,7 +569,7 @@
     "ops": [
      "x"
     ],
-    "fields": "(('kind', 'sample_sum'), ('role', 'accum_out'), ('name', 's'), ('cell', 's'), ('columns', 1), ('op', 'bogus'))"
+    "fields": "(('kind', 'sample_sum'), ('role', 'plane_out'), ('name', 's'), ('cell', 's'), ('columns', 1), ('op', 'bogus'))"
    },
    "standing": null
   },
@@ -617,7 +594,7 @@
     "ops": [
      "v3"
     ],
-    "fields": "(('kind', 'sample_sum'), ('role', 'accum_out'), ('name', 's'), ('cell', 's'), ('columns', 1), ('op', 'sum'))"
+    "fields": "(('kind', 'sample_sum'), ('role', 'plane_out'), ('name', 's'), ('cell', 's'), ('columns', 1), ('op', 'sum'))"
    },
    "standing": null
   },
@@ -1321,6 +1298,236 @@
    "standing": {
     "none": "the shape is an int64 array at the door"
    }
+  },
+  {
+   "group": "check",
+   "id": 100,
+   "kind": "Update",
+   "check": "op not in UPDATE_OPS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': op 'bogus' is not one of ('store', 'add', 'min', 'max', 'and', 'or', 'xor', 'exchange', 'compare_exchange')"
+   },
+   "raw": "update 'o': op 'bogus' is not one of ('store', 'add', 'min', 'max', 'and', 'or', 'xor', 'exchange', 'compare_exchange')",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 101,
+   "kind": "Update",
+   "check": "op not in UPDATE_OPS_WRITTEN",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': op 'min' is not written yet"
+   },
+   "raw": "update 'o': op 'min' is not written yet",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'min'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 102,
+   "kind": "Update",
+   "check": "conflict not in UPDATE_CONFLICTS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': conflict 'bogus' is not one of ('unique', 'any')"
+   },
+   "raw": "update 'o': conflict 'bogus' is not one of ('unique', 'any')",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('conflict', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 103,
+   "kind": "Update",
+   "check": "conflict != 'unique'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': conflict 'any' is not written yet"
+   },
+   "raw": "update 'o': conflict 'any' is not written yet",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('conflict', 'any'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 104,
+   "kind": "Update",
+   "check": "summation not in UPDATE_SUMMATIONS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': summation 'bogus' is not one of ('auto', 'plain', 'compensated')"
+   },
+   "raw": "update 'o': summation 'bogus' is not one of ('auto', 'plain', 'compensated')",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'add'), ('summation', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 105,
+   "kind": "Update",
+   "check": "summation != 'auto' and op != 'add'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': a summation applies to an add, not to 'store'"
+   },
+   "raw": "update 'o': a summation applies to an add, not to 'store'",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('summation', 'plain'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 106,
+   "kind": "Update",
+   "check": "order not in UPDATE_ORDERS",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': order 'bogus' is not one of ('any', 'lane')"
+   },
+   "raw": "update 'o': order 'bogus' is not one of ('any', 'lane')",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'add'), ('order', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 107,
+   "kind": "Update",
+   "check": "order != 'any' and op != 'add'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': an order 'lane' of 'store' is not written yet"
+   },
+   "raw": "update 'o': an order 'lane' of 'store' is not written yet",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('order', 'lane'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 108,
+   "kind": "Update",
+   "check": "returns_old",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': a returned old value is not written yet"
+   },
+   "raw": "update 'o': a returned old value is not written yet",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('returns_old', True), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 109,
+   "kind": "Update",
+   "check": "edge not in EDGE_RULES",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': the edge rule 'bogus' is not one of ('clamp', 'wrap', 'zero', 'unchecked')"
+   },
+   "raw": "update 'o': the edge rule 'bogus' is not one of ('clamp', 'wrap', 'zero', 'unchecked')",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('edge', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
   }
  ]
 }

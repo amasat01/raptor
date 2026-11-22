@@ -185,7 +185,7 @@ fn visit(
         "Const" => text("literal"),
         "Leaf" | "Assign" => c.str_field(h, "name").unwrap(),
         "SampleSum" => ["name", "op", "cell", "columns"].map(text).join("|"),
-        "AccumWrite" => ["name", "contract"].map(text).join("|"),
+        "Update" => ["name", "op", "summation", "order"].map(text).join("|"),
         _ => String::new(),
     };
     let shape = Val::Tuple(node.shape.iter().map(|&d| Val::Int(d as i128)).collect());

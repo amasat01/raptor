@@ -19,6 +19,10 @@ int rx_walk_order(rx_ctx* ctx, rx_walk walk, rx_node* buf, size_t cap, size_t* n
 /* Whether the walk binds the slot (role, name): *out is 1 when its argument list holds that pair, else 0. */
 int rx_walk_binds(rx_ctx* ctx, rx_walk walk, const char* role, const char* name, int* out);
 
+/* Whether the runtime zeroes the written plane (role, name) before the run (*out is 0 or 1): some sink on it accumulates, sums
+   samples or is an ordered accumulate. A slot that is not a written plane, or is not bound, answers 0. */
+int rx_walk_zeroed(rx_ctx* ctx, rx_walk walk, const char* role, const char* name, int* out);
+
 /* The walk's argument list as (role, name) pairs in argument order: *count pairs, role then name, each
    NUL-terminated, back to back in buf; *len is the bytes they take with their NULs (the text protocol:
    cap is at least *len + 1). */
@@ -82,9 +86,8 @@ int rx_loop_is_accumulator(rx_ctx* ctx, rx_node loop, int* out);
    addends of one carry are summed left to right in the context. A recurrence is a refusal. */
 int rx_loop_addends(rx_ctx* ctx, rx_node loop, rx_node* buf, size_t cap, size_t* n);
 
-/* Whether an accumulate under the contract commits through a companion plane (*out is 0 or 1): the compensated contract and
-   the one a keyed accumulate takes by default. */
-int rx_compensates(rx_ctx* ctx, const char* contract, int* out);
+/* Whether the update commits through a companion plane (*out is 0 or 1): an add under the compensated summation. */
+int rx_compensates(rx_ctx* ctx, rx_node node, int* out);
 
 /* The read of the named parameter of the type (dtype, shape, tag; tag NULL = none): cell 0 of a one-cell lookup plane, or,
    with per_cell, the cell the sample's param_cell plane names. rx_is_param_cell answers 1 for the first form. */

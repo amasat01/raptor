@@ -32,7 +32,7 @@ from .loops import LoopClass as LoopClass
 from .loops import build_loop as build_loop
 from .loops import classify_loop as classify_loop
 from .nodes import DISPATCH_KIND as DISPATCH_KIND
-from .nodes import AccumWrite, Assign, At, Const, Op
+from .nodes import Assign, At, Const, Op, Update
 from .nodes import Dispatch as Dispatch
 from ..errors import RaptorError as RaptorError
 from .nodes import SamplePosition as SamplePosition
@@ -46,7 +46,6 @@ from .nodes import SampleSum as SampleSum
 from .nodes import Select as Select
 from .nodes import Sink as Sink
 from .nodes import TapeWrite as TapeWrite
-from .nodes import WideWrite as WideWrite
 from .ops import OP_KINDS as OP_KINDS
 from .ops import make
 from .ops import result_type as result_type
@@ -60,5 +59,5 @@ from .walk import canonical_nodes as canonical_nodes
 from .walk import static_selectors as static_selectors
 
 __all__ = [
-    "AccumWrite", "Assign", "At", "Const", "Op", "canonical", "infer", "make",
+    "Assign", "At", "Const", "Op", "Update", "canonical", "infer", "make",
 ]

@@ -79,16 +79,9 @@ impl Kernel {
             );
             value = sum;
         }
-        let fields = "(('kind', 'accum_write'), ('name', 'acc'), ('role', 'accum_out'), ('contract', 'plain'), ('reduced', None))";
+        let fields = "(('kind', 'update'), ('name', 'acc'), ('role', 'plane_out'), ('op', 'add'), ('summation', 'plain'), ('reduced', None))";
         self.c
-            .make(
-                "AccumWrite",
-                "f64",
-                &[],
-                None,
-                &[value.unwrap(), key],
-                fields,
-            )
+            .make("Update", "f64", &[], None, &[value.unwrap(), key], fields)
             .unwrap()
     }
 

@@ -24,11 +24,10 @@ from typing import Any
 from .types import Slot, TensorType
 from . import access as _access
 from .access import Access
-from .nodes import ADJOINT_PREFIX, COMPANION_SUFFIX, NAMESPACE_SEP, AccumWrite, compensates, has_feather, param_cell_names
+from .nodes import ADJOINT_PREFIX, COMPANION_SUFFIX, NAMESPACE_SEP, Update, compensates, has_feather, param_cell_names
 from .compound import Quantity, QuantitySpan
 from .nodes import Loop, LoopCarry, LoopCount, LoopValue, TapeRead
 from .nodes import (
-    WideWrite,
     Assign,
     NAMESPACE_SEP,
     ROLE_ORDER,
@@ -88,7 +87,7 @@ class Walk:
 
     @property
     def sample_sums(self) -> tuple[str, ...]:
-        """The ``accum_out`` planes written one row per 32 samples
+        """The ``plane_out`` planes written one row per 32 samples
         (:class:`~hawk.ir.nodes.SampleSum`), in sink order."""
         return tuple(n.name for n in self.order if isinstance(n, SampleSum))
 
@@ -120,10 +119,10 @@ class Walk:
     @property
     def companions(self) -> dict:
         """The companion planes the runtime owns: ``<plane>_c`` to ``<plane>``
-        for each ``contract="compensated"`` keyed accumulate. The caller never
+        for each compensated keyed accumulate. The caller never
         binds them."""
         return {n.name + COMPANION_SUFFIX: n.name for n in self.order
-                if isinstance(n, AccumWrite) and compensates(n.contract)}
+                if isinstance(n, Update) and compensates(n)}
 
     @property
     def adjoint_like(self) -> dict:
@@ -133,7 +132,7 @@ class Walk:
         reads = {n for r, n in self.arg_spec if r in ("lookup", "wide_in")}
         prefix = ADJOINT_PREFIX + "_"
         return {n: n[len(prefix):] for r, n in self.arg_spec
-                if r == "accum_out" and n.startswith(prefix) and n[len(prefix):] in reads}
+                if r == "plane_out" and n.startswith(prefix) and n[len(prefix):] in reads}
 
     @property
     def gather_mats(self) -> tuple:
@@ -302,7 +301,7 @@ def resink(sink: Node, memo: dict) -> Node:
     new = tuple(memo[id(c)] for c in sink.operands)
     if all(a is b for a, b in zip(new, sink.operands)):
         return sink
-    if isinstance(sink, (SampleSum, Assign, WideWrite, AccumWrite)):
+    if isinstance(sink, (SampleSum, Assign, Update)):
         return sink.rebuilt(new, {})
     return sink                                     # TapeWrite/Finish: untouched
 

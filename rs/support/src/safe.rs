@@ -126,6 +126,17 @@ pub fn rx_walk_binds(
     unsafe { raptor_ir::typed::rx_walk_binds(ctx, w, role, name, out) }
 }
 
+/// `raptor_ir::typed::rx_walk_zeroed` as a safe function.
+pub fn rx_walk_zeroed(
+    ctx: *mut Ctx,
+    w: u32,
+    role: *const c_char,
+    name: *const c_char,
+    out: *mut c_int,
+) -> c_int {
+    unsafe { raptor_ir::typed::rx_walk_zeroed(ctx, w, role, name, out) }
+}
+
 /// `raptor_ir::typed::rx_walk_args` as a safe function.
 pub fn rx_walk_args(
     ctx: *mut Ctx,

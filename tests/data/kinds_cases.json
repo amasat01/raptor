@@ -1864,7 +1864,7 @@
 "name": "n",
 "role": "r"
 },
-"want": "RaptorError: sink 'n': unknown sink role 'r', expected one of ('mutable', 'out', 'wide_out', 'accum_out')"
+"want": "RaptorError: sink 'n': unknown sink role 'r', expected one of ('mutable', 'out', 'plane_out', 'plane_out')"
 },
 {
 "kind": "acme.sc",

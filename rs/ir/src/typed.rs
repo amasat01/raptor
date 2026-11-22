@@ -423,6 +423,29 @@ pub unsafe extern "C" fn rx_walk_binds(
     })
 }
 
+/// Whether the runtime zeroes the written plane (`role`, `name`) before the run (`*out` is 0 or 1): some sink on it accumulates,
+/// sums samples or is an ordered accumulate. A slot that is not a written plane, or is not bound, answers 0. Refuses a walk the
+/// context does not hold.
+///
+/// # Safety
+/// `role` and `name` are NUL-terminated strings; `out` is valid for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_zeroed(
+    ctx: *mut Ctx,
+    walk: u32,
+    role: *const c_char,
+    name: *const c_char,
+    out: *mut c_int,
+) -> c_int {
+    guard(ctx, |c| {
+        let key = (
+            cstr(role, "role")?.to_string(),
+            cstr(name, "name")?.to_string(),
+        );
+        store(out, c.walk(walk)?.zeroed.contains(&key) as c_int)
+    })
+}
+
 /// The walk's argument list: the slots it binds as (role, name) pairs, in argument order. `buf`
 /// holds the texts back to back, each NUL-terminated, role then name for each pair; `*count` is the
 /// number of pairs and `*len` the bytes they take with their NULs (the text protocol: `cap` is at

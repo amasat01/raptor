@@ -136,9 +136,9 @@ def param_cell_names(nodes: Any) -> tuple:
             out.setdefault(node.plane.name, None)
     return tuple(out)
 
-def compensates(contract: str) -> bool:
-    """Whether an accumulate under ``contract`` commits through a companion plane."""
-    return contract in ("compensated", KEYED_AUTO)
+def compensates(update: Any) -> bool:
+    """Whether the update commits through a companion plane: an add under the compensated summation."""
+    return update.op == "add" and update.summation == "compensated"
 
 #: The suffix of a compensated accumulate plane's companion.
 COMPANION_SUFFIX = "_c"

@@ -2,8 +2,8 @@
 //! matrix, keyed accumulates for a reduction over some lane axes) and how a later launch reads the finished value back.
 use crate::planes::type_parts;
 use crate::segment::{strategies, Strategy};
-use crate::{is_a, list_out, name_of, R};
-use raptor_ir::canon::{declared_slots, Key, Tt};
+use crate::{add_fields, is_a, list_out, name_of, R};
+use raptor_ir::canon::{declared_slots, Declared, Key, Tt};
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::typed::{put_pairs, text_pair, RxPair};
@@ -133,10 +133,11 @@ fn stored_keyed(
             ("value", Val::Node(value)),
             ("indices", Val::Tuple(vec![Val::Node(key)])),
             ("ttype", scalar),
-            ("contract", Val::Str(contract.into())),
             ("reduced", Val::Node(reduction)),
         ];
-        return Ok(vec![build(ctx, "AccumWrite", given)?]);
+        let mut given = given;
+        given.extend(add_fields(contract));
+        return Ok(vec![build(ctx, "Update", given)?]);
     }
     let count = count.ok_or_else(|| Fault::Refused("a keyed vector sum without a count".into()))?;
     let mut out = vec![];
@@ -152,9 +153,10 @@ fn stored_keyed(
             ("value", Val::Node(entry)),
             ("indices", Val::Tuple(vec![Val::Node(at)])),
             ("ttype", scalar.clone()),
-            ("contract", Val::Str(contract.into())),
         ];
-        out.push(build(ctx, "AccumWrite", given)?);
+        let mut given = given;
+        given.extend(add_fields(contract));
+        out.push(build(ctx, "Update", given)?);
     }
     Ok(out)
 }
@@ -357,12 +359,16 @@ fn raptor_ir_refs(ctx: &Ctx, lp: u32) -> R<Vec<u32>> {
 pub fn kernel_walk(
     ctx: &mut Ctx,
     sinks: &[u32],
-    declared: &[(Key, Tt)],
+    declared: &Declared,
     force: Option<&str>,
     exempt: &[String],
 ) -> R<u32> {
-    let mut slots = declared.to_vec();
-    slots.extend(companion_slots(ctx, sinks)?);
+    let mut slots = declared.clone();
+    // a compensation plane is folded into its sum by the runtime, which zeroes it like the sum
+    for (key, tt) in companion_slots(ctx, sinks)? {
+        slots.zeroed.insert(key.clone());
+        slots.slots.push((key, tt));
+    }
     let uint32 = Tt {
         dtype: "uint32".into(),
         shape: vec![],
@@ -376,7 +382,7 @@ pub fn kernel_walk(
         vec![]
     };
     let exempt = [&[FUSED_STEPS_PLANE.to_string()], exempt].concat();
-    let all = [slots.clone(), finished.clone()].concat();
+    let all = with_slots(&slots, &finished);
     let found = ctx.canonical(sinks, &all, force, &exempt)? as u32;
     let mixes: Vec<(Key, Tt)> = strategies(ctx, found)?
         .into_iter()
@@ -391,8 +397,15 @@ pub fn kernel_walk(
     if mixes.is_empty() {
         return Ok(found);
     }
-    let all = [slots, mixes, finished].concat();
+    let all = with_slots(&slots, &[mixes, finished].concat());
     Ok(ctx.canonical(sinks, &all, force, &exempt)? as u32)
+}
+
+/// The declared slots with `more` slots, which no sink zeroes, after them.
+fn with_slots(declared: &Declared, more: &[(Key, Tt)]) -> Declared {
+    let mut all = declared.clone();
+    all.slots.extend(more.iter().cloned());
+    all
 }
 
 /// The canonical walk of a kernel's sinks as `kernel_walk` makes it, `declared_kt` the key text of the caller's declared slots

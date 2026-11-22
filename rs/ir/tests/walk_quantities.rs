@@ -59,7 +59,9 @@ fn a_walk_names_its_quantities_with_their_wires_and_slots_in_walk_order() {
             "(('kind', 'assign'), ('name', 'y'), ('role', 'mutable'))",
         )
         .unwrap();
-    let walk = c.canonical(&[sink], &[], None, &[]).unwrap() as u32;
+    let walk = c
+        .canonical(&[sink], &Default::default(), None, &[])
+        .unwrap() as u32;
     let ctx: *mut Ctx = &mut c;
     let rows =
         |read: unsafe extern "C" fn(*mut Ctx, u32, *mut RxPair, usize, *mut usize) -> i32| {

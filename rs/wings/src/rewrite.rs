@@ -19,7 +19,7 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 type Outcome<T> = Result<T, Fault>;
 
 /// The sink classes whose copy over other operands is the placed sink.
-const RESINKED: [&str; 4] = ["SampleSum", "Assign", "WideWrite", "AccumWrite"];
+const RESINKED: [&str; 3] = ["SampleSum", "Assign", "Update"];
 
 /// What a rewrite is told: the planes, which slots are carried or sunk, what to apply to each
 /// rebuilt

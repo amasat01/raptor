@@ -306,7 +306,7 @@ fn max_live(ctx: &Ctx, walk: u32) -> R<i64> {
 
 /// The predicted registers of the segment: the row's base plus the live values, each as wide as a real takes.
 fn estimate(ctx: &mut Ctx, sinks: &[u32], row: &FusionRow, single: bool) -> R<i64> {
-    let walk = ctx.canonical(sinks, &[], None, &[])? as u32;
+    let walk = ctx.canonical(sinks, &Default::default(), None, &[])? as u32;
     let per = if row.regs_base == 0 || single { 1 } else { 2 };
     Ok(row.regs_base + per * max_live(ctx, walk)?)
 }

@@ -107,16 +107,16 @@ fn case_sinks(c: &mut Ctx, name: &str) -> (Vec<u32>, String) {
             vec![sink(c, "Assign", "o", d)]
         }
         "accum_compensated_and_plain" => {
-            let write = |c: &mut Ctx, name: &str, value: u32, contract: &str| {
-                let fields = format!("(('kind', 'accum_write'), ('name', '{name}'), ('role', 'accum_out'), ('contract', '{contract}'), ('reduced', None))");
-                c.make("AccumWrite", "f64", &[], None, &[value], &fields)
+            let write = |c: &mut Ctx, name: &str, value: u32, summation: &str| {
+                let fields = format!("(('kind', 'update'), ('name', '{name}'), ('role', 'plane_out'), ('op', 'add'), ('summation', '{summation}'), ('reduced', None))");
+                c.make("Update", "f64", &[], None, &[value], &fields)
                     .unwrap()
             };
             vec![
                 write(c, "a", x, "compensated"),
                 write(c, "b", y, "auto"),
                 write(c, "a", y, "compensated"),
-                write(c, "c", x, "keyed_auto"),
+                write(c, "c", x, "compensated"),
             ]
         }
         "fused_steps_read" => {
@@ -164,6 +164,7 @@ fn the_kernel_walk_is_the_recorded_one() {
         // the recorded digests name the read planes by the rank of their value
         c.role_form = Some(raptor_support::migrate::old_role_name);
         c.key_form = Some(raptor_support::migrate::old_read_role);
+        raptor_support::migrate::note_recorded_contract("c", "keyed_auto");
         let (sinks, declared) = case_sinks(&mut c, id);
         let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
         let got = kernel_walk(&mut c, &sinks, &declared, None, &[]);
@@ -271,6 +272,7 @@ fn the_typed_reads_of_a_walk_are_the_recorded_members() {
         let id = case.get("id").and_then(J::str).unwrap();
         let mut c = Ctx::new().unwrap();
         declare_kinds(&mut c).unwrap();
+        raptor_support::migrate::note_recorded_contract("c", "keyed_auto");
         let (sinks, declared) = case_sinks(&mut c, id);
         let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
         let w = kernel_walk(&mut c, &sinks, &declared, None, &[]).unwrap();
@@ -507,6 +509,7 @@ fn the_digests_recorded_before_the_axes_are_the_walks_with_the_added_fields_remo
         let id = case.get("id").and_then(J::str).unwrap();
         let mut c = Ctx::new().unwrap();
         declare_kinds(&mut c).unwrap();
+        raptor_support::migrate::note_recorded_contract("c", "keyed_auto");
         let (sinks, declared) = case_sinks(&mut c, id);
         let declared = raptor_ir::canon::declared_slots(Some(&declared)).unwrap();
         let Ok(w) = kernel_walk(&mut c, &sinks, &declared, None, &[]) else {
@@ -521,7 +524,12 @@ fn the_digests_recorded_before_the_axes_are_the_walks_with_the_added_fields_remo
         let (mut tail, mut old_tail) = (String::new(), String::new());
         for ((role, name), tt) in &walk.leaves {
             let ttype = text_val(&ttype_val(&tt.dtype, &tt.shape, tt.tag.as_deref()));
-            let old = raptor_support::migrate::old_role_name(role, name, tt.shape.len());
+            let old = raptor_support::migrate::old_role_name(
+                role,
+                name,
+                tt.shape.len(),
+                walk.zeroed.contains(&(role.clone(), name.clone())),
+            );
             tail.push_str(&format!("leaf|{role}|{name}|{ttype}\n"));
             old_tail.push_str(&format!("leaf|{old}|{name}|{ttype}\n"));
         }
@@ -531,7 +539,9 @@ fn the_digests_recorded_before_the_axes_are_the_walks_with_the_added_fields_remo
             walk.access
         ));
         // the recordings name the read planes by the rank of their value
-        let old_arg_spec = field("arg_spec").replace("'plane_in'", "'per_sample'");
+        let old_arg_spec = field("arg_spec")
+            .replace("'plane_in'", "'per_sample'")
+            .replace("'plane_out'", "'accum_out'");
         old_tail.push_str(&format!(
             "arg_spec|{old_arg_spec}\naccess|{}|None\n",
             walk.access

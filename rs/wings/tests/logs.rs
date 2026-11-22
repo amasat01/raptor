@@ -82,7 +82,7 @@ fn read_int(c: *mut Ctx, name: &str) -> u32 {
 /// The ordered accumulate of `value` into cell `index` of the plane `name`, the gradient of a sum kept over the lane axis `net`.
 fn accumulate(c: *mut Ctx, name: &str, (value, index, key): (u32, u32, u32)) -> u32 {
     let fields = format!(
-        "((\"name\", \"{name}\"), (\"role\", \"accum_out\"), (\"kept\", ((\"net\", None),)))"
+        "((\"name\", \"{name}\"), (\"role\", \"plane_out\"), (\"kept\", ((\"net\", None),)))"
     );
     make(
         c,
@@ -169,7 +169,7 @@ fn an_ordered_accumulate_of_a_vector_is_refused_by_name() {
     let key = read_int(c, "k");
     let fields = "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"v\"), (\"quantity\", None), (\"wire_index\", 0), (\"sorted\", False))";
     let vector = make(c, "Leaf", "f64", &[3], &[], fields);
-    let fields = "((\"name\", \"g\"), (\"role\", \"accum_out\"), (\"kept\", ()))";
+    let fields = "((\"name\", \"g\"), (\"role\", \"plane_out\"), (\"kept\", ()))";
     let sink = make(
         c,
         "OrderedAccumWrite",

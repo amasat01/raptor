@@ -269,11 +269,11 @@ fn every_core_class() {
             "(('kind', 'assign'), ('role', 'mutable'), ('name', 'z'))".into(),
         ),
         ("Assign", vec![i], "(('name', 'a'),)".into()),
-        ("WideWrite", vec![i], "(('name', 'w'),)".into()),
+        ("Update", vec![i], "(('name', 'w'),)".into()),
         (
-            "AccumWrite",
+            "Update",
             vec![i],
-            "(('name', 'acc'), ('contract', 'auto'), ('reduced', None))".into(),
+            "(('name', 'acc'), ('op', 'add'), ('reduced', None))".into(),
         ),
         (
             "ReduceSamples",
@@ -904,12 +904,10 @@ fn constants_by_name() {
         (RX_OK, r#"["int32","uint32"]"#.to_string())
     );
     assert_eq!(get("PARAM_CELL"), (RX_OK, r#""param_cell""#.to_string()));
-    assert_eq!(get("KEYED_AUTO"), (RX_OK, r#""keyed_auto""#.to_string()));
     assert_eq!(get("ir.BODY_KEY_HEX").0, RX_OK);
     for n in [
         "AT_ROLES",
         "CONTRACTS",
-        "SCATTER_CONTRACTS",
         "ROLE_ORDER",
         "ELEMENTWISE_BINARY",
         "UNARY_MATH",
@@ -1070,7 +1068,7 @@ fn the_loop_constructor_computes_its_boundary() {
 fn a_declared_sink_takes_any_listed_role() {
     let c = rx_ctx_new();
     let manifest = r#"{"name":"demo","kinds":[{"name":"demo.ordered","family":"sink",
-        "refines":"wide_write","operands":{"min":3,"max":3},"result":["same_as",0],
+        "refines":"update","operands":{"min":3,"max":3},"result":["same_as",0],
         "fields":[{"name":"kept","type":"tuple"}],"identity":["role","name","kept"]}]}"#;
     let declared = rx_declare_dialect(
         c,
@@ -1094,7 +1092,7 @@ fn a_declared_sink_takes_any_listed_role() {
         items.map(|r| r.trim_matches('"').to_string()).collect()
     };
     let listed = roles(c);
-    assert_eq!(listed, ["mutable", "out", "wide_out", "accum_out"]);
+    assert_eq!(listed, ["mutable", "out", "plane_out"]);
     for role in &listed {
         let fields = format!("(('name', 'bar_W'), ('role', '{role}'), ('kept', ()))");
         assert_eq!(
@@ -1116,16 +1114,16 @@ fn a_declared_sink_takes_any_listed_role() {
     let role = text(c, |c, b, cap, l| {
         rx_field(c, fixed.1, c"role".as_ptr(), b, cap, l)
     });
-    assert_eq!(role, "'wide_out'");
+    assert_eq!(role, "'plane_out'");
     let odd = "(('name', 'w'), ('role', 'nope'), ('kept', ()))";
     let bad = mk(c, "DemoOrdered", "f64", &[], None, &[x, x, x], odd);
     assert_eq!(bad.0, RX_REFUSED);
     assert_eq!(
         err(c),
         "sink 'w': unknown sink role 'nope', expected one of \
-         ('mutable', 'out', 'wide_out', 'accum_out')"
+         ('mutable', 'out', 'plane_out')"
     );
-    // the node with role accum_out dumps and loads again in a context that declares the kind
+    // the node with role plane_out dumps and loads again in a context that declares the kind
     let kept = mk(
         c,
         "DemoOrdered",
@@ -1133,7 +1131,7 @@ fn a_declared_sink_takes_any_listed_role() {
         &[],
         None,
         &[x, x, x],
-        "(('name', 'bar_W'), ('role', 'accum_out'), ('kept', ()))",
+        "(('name', 'bar_W'), ('role', 'plane_out'), ('kept', ()))",
     )
     .1;
     let dump = |c: *mut Ctx, roots: &[u32]| {

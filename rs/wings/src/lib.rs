@@ -75,6 +75,33 @@ pub(crate) fn is_a(c: &Ctx, h: u32, class: &str) -> bool {
     c.table.is_a(c.nodes[h as usize].class, class)
 }
 
+/// Whether the sink is an update of the operation `op`.
+pub(crate) fn is_update_of(c: &Ctx, h: u32, op: &str) -> R<bool> {
+    Ok(is_a(c, h, "Update") && c.str_field(h, "op")? == op)
+}
+
+/// Whether the sink is an add the build may route through the ordered stages: an add in any order whose summation is not the
+/// plain atomic add alone.
+pub(crate) fn is_routable_add(c: &Ctx, h: u32) -> R<bool> {
+    Ok(is_update_of(c, h, "add")?
+        && c.str_field(h, "order")? == "any"
+        && c.str_field(h, "summation")? != "plain")
+}
+
+/// The fields of an add update that stores a reduction under `contract`: the summation and the order the contract states.
+pub(crate) fn add_fields(contract: &str) -> Vec<(&'static str, Val)> {
+    let (summation, order) = match contract {
+        "compensated" => ("compensated", "any"),
+        "ordered" => ("auto", "lane"),
+        _ => ("auto", "any"),
+    };
+    vec![
+        ("op", Val::Str("add".into())),
+        ("summation", Val::Str(summation.into())),
+        ("order", Val::Str(order.into())),
+    ]
+}
+
 /// The kind of an Op node (any refinement of Op), else None.
 pub(crate) fn op_kind(c: &Ctx, h: u32) -> R<Option<String>> {
     c.node(h)?;
@@ -363,11 +390,7 @@ fn companions(c: &Ctx, w: u32) -> R<Vec<u32>> {
     let mut out: Vec<u32> = vec![];
     let mut names: Vec<String> = vec![];
     for n in walk_order(c, w)? {
-        if !is_a(c, n, "AccumWrite") {
-            continue;
-        }
-        let contract = c.str_field(n, "contract")?;
-        if contract == "compensated" || contract == kstr("KEYED_AUTO") {
+        if c.compensates(n)? {
             let name = c.str_field(n, "name")?;
             if !names.contains(&name) {
                 names.push(name);

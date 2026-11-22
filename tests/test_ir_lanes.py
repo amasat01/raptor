@@ -10,7 +10,7 @@ import pytest
 
 from raptor.ir import lanes
 from raptor.ir.lanes import AFFINE, INVARIANT, Eval, LaneFacts, axes_from, axis_forms, divisors, key_facts, nodes_of, varies_along
-from raptor.ir.nodes import AccumWrite, Assign, At, Const, Leaf, SampleIndex
+from raptor.ir.nodes import Assign, At, Const, Leaf, SampleIndex, Update
 from raptor.ir.ops import make
 from raptor.ir.types import TensorType
 
@@ -76,7 +76,7 @@ def test_an_evaluated_index_gives_its_per_axis_forms_exactly():
 
 
 def test_a_constant_key_is_an_invariant_axis_key_with_an_exclusive_bound():
-    facts = lanes.facts(SimpleNamespace(sinks=(AccumWrite("e", Const(1.0, F64), _c(3), F64),)))
+    facts = lanes.facts(SimpleNamespace(sinks=(Update("e", Const(1.0, F64), _c(3), F64, op="add"),)))
     sink = facts.sinks[0]
     assert (sink.keyed, sink.key_origin, sink.key_extent) == (True, "invariant_axis", 4)
     assert key_facts(Eval(facts.axes), _c(3), facts.axes) == ("invariant_axis", 4, None, ())

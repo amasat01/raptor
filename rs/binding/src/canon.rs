@@ -149,9 +149,7 @@ pub fn infer_access(order: Vec<Bound<'_, PyAny>>, exempt: Vec<String>) -> PyResu
         }
         let new = if is_a(n, "At")? {
             1
-        } else if (is_a(n, "WideWrite")? || is_a(n, "AccumWrite")?)
-            && !n.getattr("index")?.is_none()
-        {
+        } else if is_a(n, "Update")? && !n.getattr("index")?.is_none() {
             2
         } else if is_a(n, "Op")? && st(n, "kind")? == "raw_device" {
             let lit = n.getattr("literal")?;

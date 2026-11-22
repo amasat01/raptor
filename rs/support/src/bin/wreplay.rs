@@ -24,11 +24,10 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 use std::ffi::{c_char, CStr, CString};
 use std::io::{BufRead, BufReader};
 
-/// Whether an accumulate under the contract commits through a companion plane (the recorded
-/// function's rule).
+/// Whether an accumulate under the contract commits through a companion plane (the rule of the recorded function, which
+/// took the contract text of the old accumulate class).
 fn compensates(contract: &str) -> bool {
-    contract == "compensated"
-        || raptor_ir::consts::constant("KEYED_AUTO").is_some_and(|k| k == format!("{contract:?}"))
+    contract == "compensated" || contract == "keyed_auto"
 }
 
 /// The recorded functions this tool answers itself.

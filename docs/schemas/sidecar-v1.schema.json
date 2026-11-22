@@ -97,8 +97,11 @@
       "additionalProperties": { "type": "string" }
     },
     "wide_inputs": { "$ref": "#/$defs/names" },
-    "wide_outputs": { "$ref": "#/$defs/names" },
-    "accum_outputs": { "$ref": "#/$defs/names" },
+    "plane_outputs": { "$ref": "#/$defs/names" },
+    "zeroed_outputs": {
+      "$ref": "#/$defs/names",
+      "description": "The written planes among plane_outputs that the run zeroes before it starts (accumulate targets)."
+    },
     "sorted_inputs": { "$ref": "#/$defs/names" },
     "dispatch": {
       "type": "array",
@@ -253,8 +256,7 @@
         "uniform",
         "nsamples",
         "wide_in",
-        "wide_out",
-        "accum_out"
+        "plane_out"
       ]
     },
     "argSpec": {

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .nodes import PARAM_CELL, AccumWrite, Assign, At, Finish, Leaf, Node, RoleConst, SampleSum, has_feather
+from .nodes import PARAM_CELL, Assign, At, Finish, Leaf, Node, RoleConst, SampleSum, Update, has_feather
 from ..errors import RaptorError
 from .types import TensorType
 from .walk import substitute
@@ -35,7 +35,7 @@ def param_cell(name: str, ttype: TensorType, per_cell: bool = False) -> At:
 
 def with_value(sink: Node, value: Node) -> Node:
     """``sink`` committing ``value`` (a Mutable commit, a sample sum, a keyed accumulate, a finish or a sink stating the ``commits_value`` feather)."""
-    if isinstance(sink, (Finish, SampleSum, AccumWrite, Assign)) or has_feather(sink, "commits_value"):
+    if isinstance(sink, (Finish, SampleSum, Update, Assign)) or has_feather(sink, "commits_value"):
         return sink.rebuilt((value, *sink.operands[1:]))
     raise RaptorError(
         f"a promotion rebuilds Mutable commits, sample sums, keyed accumulates and a finish; "

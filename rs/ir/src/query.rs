@@ -117,7 +117,7 @@ impl Ctx {
     /// states the `commits_value` feather.
     pub fn with_value(&mut self, sink: Node, value: Node) -> Fallible<Node> {
         self.node(value)?;
-        let kinds = ["Finish", "SampleSum", "AccumWrite", "Assign"];
+        let kinds = ["Finish", "SampleSum", "Update", "Assign"];
         if !kinds.iter().any(|k| self.is_a(sink, k)) && !self.has_feather(sink, "commits_value")? {
             let name = match self.field(sink, "name") {
                 Ok(Val::Str(s)) => rcore::keytext::py_str(&s),

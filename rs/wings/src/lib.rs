@@ -30,6 +30,7 @@ pub mod split;
 pub mod stages;
 pub mod team;
 pub mod wide;
+mod winner;
 pub mod working_set;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};

@@ -162,7 +162,7 @@ fn stored_keyed(
 }
 
 /// A read of the one-cell plane `plane`, as an `At` of the given index over a `lookup` leaf of the scalar type.
-fn plane_read(ctx: &mut Ctx, plane: &str, index: u32, dtype: &str) -> R<u32> {
+pub(crate) fn plane_read(ctx: &mut Ctx, plane: &str, index: u32, dtype: &str) -> R<u32> {
     let scalar = ttype_val(dtype, &[], None);
     let leaf = vec![
         ("kind", Val::Str("table_read".into())),

@@ -26,6 +26,7 @@ fn facts() -> StageFacts {
         team,
         in_place: true,
         scatter: (256, 32),
+        winners: vec![],
     }
 }
 
@@ -432,5 +433,50 @@ fn an_eigh_in_a_loop_body_keeps_the_per_lane_form() {
         stages(unsafe { &mut *c }, &[looped], &facts).unwrap(),
         Stages::Whole
     );
+    rx_ctx_free(c);
+}
+
+/// Oracle: the design written by hand: a minimum in lane order into a plane that states a winner plane is one launch that folds
+/// and a second that records the winners; the same minimum under any order, or without a stated winner plane, is one launch.
+#[test]
+fn a_minimum_in_lane_order_with_a_winner_plane_is_followed_by_a_launch_that_records_its_winners() {
+    let c = fresh();
+    let x = read(c, "x");
+    let key = make(
+        c,
+        "Leaf",
+        "i32",
+        &[],
+        &[],
+        "((\"kind\", \"vocab_read\"), (\"role\", \"plane_in\"), (\"name\", \"key\"), (\"quantity\", None), (\"wire_index\", 1), (\"sorted\", False))",
+    );
+    let fold = |order: &str| {
+        let fields = format!(
+            "((\"kind\", \"update\"), (\"name\", \"best\"), (\"role\", \"plane_out\"), (\"op\", \"min\"), (\"order\", \"{order}\"), (\"reduced\", None), (\"axes\", ((\"bin\", 4),)))"
+        );
+        make(c, "Update", "f64", &[], &[x, key], &fields)
+    };
+    let (in_lane_order, in_any_order) = (fold("lane"), fold("any"));
+    let mut ranked = facts();
+    ranked.winners = vec![("best_winner".into(), "best".into())];
+    let found = stages(unsafe { &mut *c }, &[in_lane_order], &ranked).unwrap();
+    let Stages::Cut(cut) = found else {
+        panic!("not cut: {found:?}")
+    };
+    assert_eq!(cut.stages.len(), 2);
+    assert_eq!(cut.stages[0].sinks.len(), 1);
+    let record = cut.stages[1].sinks[0];
+    let (name, op) = unsafe {
+        let ctx = &*c;
+        (
+            ctx.str_field(record, "name").unwrap(),
+            ctx.str_field(record, "op").unwrap(),
+        )
+    };
+    assert_eq!((name.as_str(), op.as_str()), ("best_winner", "min"));
+    let found = stages(unsafe { &mut *c }, &[in_any_order], &ranked).unwrap();
+    assert_eq!(found, Stages::Whole);
+    let found = stages(unsafe { &mut *c }, &[in_lane_order], &facts()).unwrap();
+    assert_eq!(found, Stages::Whole);
     rx_ctx_free(c);
 }

@@ -1464,12 +1464,12 @@
    "group": "check",
    "id": 107,
    "kind": "Update",
-   "check": "order != 'any' and op != 'add'",
+   "check": "order != 'any' and op != 'add' and op not in UPDATE_ORDERED_OPS",
    "today": {
     "exc": "RaptorError",
-    "msg": "update 'o': an order 'lane' is written for an add only, not for 'store'"
+    "msg": "update 'o': an order 'lane' is written for an add, a min or a max, not for 'store'"
    },
-   "raw": "update 'o': an order 'lane' is written for an add only, not for 'store'",
+   "raw": "update 'o': an order 'lane' is written for an add, a min or a max, not for 'store'",
    "expect": "a",
    "bad": {
     "class": "Update",

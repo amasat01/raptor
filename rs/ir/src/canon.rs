@@ -21,6 +21,9 @@ pub struct WalkRes {
     /// The counting planes the walk's slots state, each as `(count plane, the appended plane it counts)`, in the caller's
     /// order: the runtime makes the count with the run and hands it back beside its plane.
     pub counts: Vec<(String, String)>,
+    /// The winner planes the walk's slots state, each as `(winner plane, the plane it ranks)`, in the caller's order: the
+    /// runtime makes the winner with the run and hands it back beside its plane.
+    pub winners: Vec<(String, String)>,
     /// The access class of the walk.
     pub access: String,
     /// The name of the finish statement among the sinks, when there is one.
@@ -176,11 +179,14 @@ pub struct Declared {
     pub zeroed: HashSet<Key>,
     /// The counting planes a record states (`counts='<plane>'`), each as `(count plane, the plane it counts)`.
     pub counts: Vec<(String, String)>,
+    /// The winner planes a record states (`winner_of='<plane>'`), each as `(winner plane, the plane it ranks)`.
+    pub winners: Vec<(String, String)>,
 }
 
 /// The declared slots: a tuple of Slot records. A record may state `zeroed=True` for a written plane no sink of the walk writes
-/// by accumulating (a companion plane the runtime folds), and `counts='<plane>'` for a one-element plane that counts the
-/// appends into `<plane>`.
+/// by accumulating (a companion plane the runtime folds), `counts='<plane>'` for a one-element plane that counts the
+/// appends into `<plane>`, and `winner_of='<plane>'` for a plane that records, per element of `<plane>`, the lane whose value a
+/// minimum or maximum kept.
 pub fn declared_slots(text: Option<&str>) -> Result<Declared, Fault> {
     let (Val::Tuple(v) | Val::List(v)) = parse(text.unwrap_or("()")).map_err(Fault::Refused)?
     else {
@@ -204,6 +210,9 @@ pub fn declared_slots(text: Option<&str>) -> Result<Declared, Fault> {
             }
             if let Some(Val::Str(of)) = get("counts") {
                 declared.counts.push((key.1.clone(), of.clone()));
+            }
+            if let Some(Val::Str(of)) = get("winner_of") {
+                declared.winners.push((key.1.clone(), of.clone()));
             }
             declared.slots.push((key, Tt::of(t)?));
         }
@@ -232,6 +241,32 @@ fn check_counts(counts: &[(String, String)], slots: &[(Key, Tt)]) -> Result<(), 
             return refuse(format!(
                 "counts: {count:?} is a count, which the runtime writes: a written plane, not {:?}",
                 counted.0
+            ));
+        }
+    }
+    Ok(())
+}
+/// Refuses a winner plane that ranks a plane the walk does not bind, that is not a written unsigned plane, or that ranks a plane of
+/// vectors (a winner is one lane per element).
+fn check_winners(winners: &[(String, String)], slots: &[(Key, Tt)]) -> Result<(), Fault> {
+    let bound = |name: &str| slots.iter().find(|(key, _)| key.1 == name);
+    for (winner, of) in winners {
+        let (Some((key, tt)), Some((_, ranked))) = (bound(winner), bound(of)) else {
+            return refuse(format!(
+                "winner_of: {winner:?} ranks {of:?}, and the walk binds both planes or neither"
+            ));
+        };
+        if key.0 != "plane_out" || tt.dtype != "uint32" || !tt.shape.is_empty() {
+            return refuse(format!(
+                "winner_of: {winner:?} records lanes, which the runtime writes: a written scalar uint32 plane, not {:?} {}",
+                key.0,
+                tt.text()
+            ));
+        }
+        if !ranked.shape.is_empty() {
+            return refuse(format!(
+                "winner_of: {winner:?} ranks one lane per element, and {of:?} holds {}",
+                ranked.text()
             ));
         }
     }
@@ -278,6 +313,7 @@ impl Ctx {
         let layout = place_slots(&reached, declared_sinks, &bound, sep)?;
         let ordered = order_slots(&layout)?;
         check_counts(&declared.counts, &ordered)?;
+        check_winners(&declared.winners, &ordered)?;
         let (spans, quantities) = quantity_spans(&reached, &ordered, &layout.zeroed, sep)?;
         let watched = self.watched_nodes(&tr);
         let access = self.access_class(&watched, exempt, force)?;
@@ -307,6 +343,7 @@ impl Ctx {
             leaves: ordered,
             zeroed: layout.zeroed,
             counts: declared.counts.clone(),
+            winners: declared.winners.clone(),
             access: access.to_string(),
             finish: match finish {
                 Val::Str(name) => Some(name),
@@ -1076,6 +1113,7 @@ pub unsafe extern "C" fn rx_canonical_like(
             slots: held.leaves.clone(),
             zeroed: held.zeroed.clone(),
             counts: held.counts.clone(),
+            winners: held.winners.clone(),
         };
         let w = c.canonical(slice(sinks, n, "sinks")?, &kept, None, &[])?;
         unsafe { *out = w as u32 }

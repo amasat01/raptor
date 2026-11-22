@@ -27,6 +27,7 @@ fn facts() -> StageFacts {
         team,
         in_place: true,
         scatter: (256, 32),
+        winners: vec![],
     }
 }
 

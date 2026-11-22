@@ -177,6 +177,29 @@ pub unsafe extern "C" fn rx_walk_counts(
     })
 }
 
+/// The winner planes of the walk, each as the pair (winner plane, the plane it ranks), in the order the caller declared them.
+///
+/// # Safety
+/// `buf` is valid for `cap` pairs and `n` for one write.
+#[no_mangle]
+pub unsafe extern "C" fn rx_walk_winners(
+    ctx: *mut Ctx,
+    walk: u32,
+    buf: *mut RxPair,
+    cap: usize,
+    n: *mut usize,
+) -> c_int {
+    guard(ctx, |c| {
+        let pairs = c
+            .walk(walk)?
+            .winners
+            .iter()
+            .map(|(winner, of)| text_pair(winner, Some(of)))
+            .collect::<Result<Vec<_>, _>>()?;
+        put_pairs(&pairs, buf, cap, n)
+    })
+}
+
 /// The wires of the quantities the walk reaches, in walk order, one pair (namespace, slot name of the wire) per wire; the rows of
 /// `rx_walk_quantity_slots` follow the same order.
 ///

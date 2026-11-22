@@ -185,6 +185,10 @@ int rx_walk_accum_companions(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap
 /* The counting planes of the walk as pairs (count plane, the plane it counts), in the order the caller declared them: a Slot record's
    counts member states which plane a one-element count belongs to (the two-call protocol of rx_field_pairs). */
 int rx_walk_counts(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
+/* The winner planes of the walk as pairs (winner plane, the plane it ranks), in the order the caller declared them: a Slot record's
+   winner_of member states which plane a plane of lanes belongs to; each element of it names the lane whose value a minimum or a
+   maximum kept, as an unsigned lane index, all ones for none (the two-call protocol of rx_field_pairs). */
+int rx_walk_winners(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);
 /* The wires of the quantities the walk reaches, in the walk's order, one pair (namespace, slot name of the wire) per wire in declaration
    order, the pairs of a quantity together; the two-call protocol of rx_field_pairs. */
 int rx_walk_quantity_wires(rx_ctx* ctx, rx_walk walk, rx_pair* buf, size_t cap, size_t* n);

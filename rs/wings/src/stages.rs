@@ -10,6 +10,7 @@ use crate::place::{kind_of, Graph};
 use crate::planes::type_parts;
 use crate::scatter;
 use crate::team::{self, Grid, Group, TeamLimits, TeamSpec};
+use crate::winner;
 use crate::{is_a, is_routable_add, is_update_of, R};
 use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::Val;
@@ -71,6 +72,9 @@ pub struct StageFacts {
     /// Whether a reduction's input that is a bare read of an input plane may be read in place by its team stage (an index-set build
     /// compacts its inputs, so it copies).
     pub in_place: bool,
+    /// The winner planes the caller declares, each as (winner plane, the plane it ranks): a minimum or maximum in lane order into
+    /// a ranked plane records its winners there.
+    pub winners: Vec<(String, String)>,
 }
 
 /// The stages of a kernel and the cells and keyed planes between them.
@@ -336,7 +340,13 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
         return Ok(Stages::Refused(why));
     }
     let groups = team::groups(ctx, &order, sinks, &facts.team)?;
-    if cuts.is_empty() && groups.is_empty() && scattered.is_empty() && logs.is_empty() {
+    let ranks = winner::sinks(ctx, sinks, &facts.winners)?;
+    if cuts.is_empty()
+        && groups.is_empty()
+        && scattered.is_empty()
+        && logs.is_empty()
+        && ranks.is_empty()
+    {
         return Ok(Stages::Whole);
     }
     for &cut in cuts.iter().filter(|&&cut| !is_a(ctx, cut, "BlockSum")) {
@@ -353,7 +363,7 @@ pub fn stages(ctx: &mut Ctx, sinks: &[u32], facts: &StageFacts) -> R<Stages> {
         ctx,
         (sinks, &order, &cuts),
         (groups, scattered, logs),
-        facts,
+        (ranks, facts),
     )
     .map(Stages::Cut)
 }
@@ -478,7 +488,7 @@ fn cut_stages(
     ctx: &mut Ctx,
     (given, order, cuts): (&[u32], &[u32], &[u32]),
     (groups, scattered, logs): (Vec<Group>, scatter::Slots, Vec<Log>),
-    facts: &StageFacts,
+    (ranks, facts): (Vec<u32>, &StageFacts),
 ) -> R<Cut> {
     let (cell_of, marks) = name_cells(ctx, given, order, cuts)?;
     let blocks = blockteam::blocks(ctx, given, order, facts.in_place)?;
@@ -560,6 +570,18 @@ fn cut_stages(
                 out.push(team_stage(ctx, spec)?);
             }
         }
+    }
+    if !ranks.is_empty() {
+        let original = order_under(ctx, &ranks, &HashMap::new());
+        structural_keys(ctx, &original, &mut keys);
+        let recomputed = recomputed_kinds(ctx, &original, &ranks, (&keys, &seen_before))?;
+        out.push(Stage {
+            sinks: ranks,
+            cells_in: vec![],
+            cells_out: vec![],
+            recomputed,
+            team: None,
+        });
     }
     for (target, slots) in &scattered {
         scatter_stages(ctx, (target, *slots), facts.scatter, &mut out)?;

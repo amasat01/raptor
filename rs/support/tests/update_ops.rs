@@ -54,3 +54,41 @@ fn every_operation_builds_on_the_types_it_admits() {
         ", ('summation', 'plain'), ('returns_old', True)",
     );
 }
+
+/// Oracle: the forms section 10 lists: a min and a max take the lane order, which fixes their winner; the other operations
+/// that are not an add refuse it by name.
+#[test]
+fn the_lane_order_is_admitted_for_an_add_a_min_and_a_max_only() {
+    let c = rx_ctx_new();
+    let (real, word) = (leaf(c, "f64", "x", 0), leaf(c, "uint32", "u", 3));
+    for op in ["add", "min", "max"] {
+        update(c, "f64", &[real], op, ", ('order', 'lane')");
+    }
+    for (op, dtype, operand) in [("store", "f64", real), ("and", "uint32", word)] {
+        let fields =
+            format!("(('name', 'o'), ('op', '{op}'), ('order', 'lane'), ('reduced', None))");
+        let mut out = u32::MAX;
+        let (class, dtype) = (c"Update", std::ffi::CString::new(dtype).unwrap());
+        let status = rx_make(
+            c,
+            class.as_ptr(),
+            dtype.as_ptr(),
+            std::ptr::null(),
+            0,
+            std::ptr::null(),
+            &operand,
+            1,
+            fields.as_ptr() as *const _,
+            fields.len(),
+            &mut out,
+        );
+        assert_ne!(status, RX_OK, "{op} took the lane order");
+        assert!(
+            err(c).contains(&format!(
+                "is written for an add, a min or a max, not for '{op}'"
+            )),
+            "{}",
+            err(c)
+        );
+    }
+}

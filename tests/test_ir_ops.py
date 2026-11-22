@@ -14,7 +14,7 @@ V3 = TensorType((3,), "f64")
 
 
 def _leaf(t, name="x"):
-    return Leaf("vocab_read", "per_sample", name, t)
+    return Leaf("vocab_read", "plane_in", name, t)
 
 
 def test_the_sets_hold_their_documented_members():
@@ -103,7 +103,7 @@ def test_the_integer_plane_dtypes_never_mix_with_a_float_without_a_cast():
 
 
 def test_the_per_sample_roles_are_leaf_roles():
-    assert types.PER_SAMPLE_ROLES == ("per_sample", "vec_in", "mat_in", "terminated", "mutable", "out")
+    assert types.PER_SAMPLE_ROLES == ("plane_in", "terminated", "mutable", "out")
     assert set(types.PER_SAMPLE_ROLES) - {"out"} <= set(ROLE_ORDER)
 
 

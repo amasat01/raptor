@@ -124,8 +124,8 @@ def peel_clamp(node: Node) -> Node:
 
 def is_param_cell(node: Any) -> bool:
     """Whether ``node`` is the read of a parameter cell."""
-    return (isinstance(node, At) and isinstance(node.index, RoleConst)
-            and node.index.label == PARAM_CELL)
+    return (isinstance(node, At) and isinstance(node.raw_index, RoleConst)
+            and node.raw_index.label == PARAM_CELL)
 
 
 def param_cell_names(nodes: Any) -> tuple:

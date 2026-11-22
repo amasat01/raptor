@@ -7,6 +7,7 @@ use pyo3::types::{PyDict, PyList, PyTuple};
 use rcore::json::{self, J};
 use rcore::keytext::V;
 use rcore::{Dedup, Item, Rec, CLASSES, CONSTS, STR_CONSTS};
+mod access;
 mod canon;
 mod index;
 mod kindcheck;
@@ -153,6 +154,13 @@ const BUILTINS: &[&str] = &[
     "carry_fault",
     "ttype_fault",
     "literal_fault",
+    "index_fault",
+    "sample_fault",
+    "axis_fault",
+    "axes_fault",
+    "store_index_fault",
+    "address_of",
+    "expected_of",
 ];
 const RESERVED: &[&str] = &["_cls", "_t", "_o"];
 const V_CLS: usize = 0;
@@ -873,8 +881,25 @@ fn call<'py>(py: Python<'py>, n: usize, a: &[E], env: &Env<'py>) -> PyResult<Bou
             Some(m) => s(py, &m)?,
             None => py.None().into_bound(py),
         },
+        22 => opt_text(py, access::index_fault(&v[0], &v[1])?)?,
+        23 => opt_text(py, access::sample_fault(&v[0], &v[1], &v[2])?)?,
+        24 => opt_text(py, access::axis_fault(&v[0], &v[1])?)?,
+        25 => opt_text(py, access::axes_fault(&v[0])?)?,
+        26 => opt_text(
+            py,
+            access::store_index_fault(&v[0].extract::<String>()?, &v[1], &v[2])?,
+        )?,
+        27 => access::address_of(py, &v[0], &v[1])?.into_any(),
+        28 => access::expected_of(py, &v[0], &v[1])?.into_any(),
         _ => return Err(he("manifest: unknown function".into())),
     })
+}
+/// A refusal text as a Python value: the text, or None when there is nothing to refuse.
+fn opt_text<'py>(py: Python<'py>, fault: Option<String>) -> PyResult<Bound<'py, PyAny>> {
+    match fault {
+        Some(m) => s(py, &m),
+        None => Ok(py.None().into_bound(py)),
+    }
 }
 /// What is wrong with a type's fields, by field: a dtype outside the vocabulary, a shape that is not a tuple of non-negative ints.
 fn ttype_fault(py: Python<'_>, t: &Bound<'_, PyAny>) -> PyResult<Option<String>> {

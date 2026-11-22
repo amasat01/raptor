@@ -14,7 +14,7 @@ from raptor.ir.types import TensorType
 from raptor.ir.walk import (Walk, dispatch_groups, loop_body_groups, resink, static_selectors, substitute, written_names)
 
 F64, I32 = TensorType((), "f64"), TensorType((), "i32")
-SEL = Leaf("vocab_read", "per_sample", "k", I32)
+SEL = Leaf("vocab_read", "plane_in", "k", I32)
 
 
 def _dispatched(name="y", selector=SEL):
@@ -24,7 +24,7 @@ def _dispatched(name="y", selector=SEL):
 def test_a_walk_is_the_frozen_record_of_its_sinks():
     walk = canonical((_dispatched(),))
     assert isinstance(walk, Walk)
-    assert walk.arg_spec == (("mutable", "y"), ("per_sample", "k"))
+    assert walk.arg_spec == (("mutable", "y"), ("plane_in", "k"))
     assert all(walk.arg_spec[i] == key for key, i in walk.slot_of.items())
     assert walk.access == ("sample_local", None) and "dispatch" in walk.kinds
     assert walk.digest == canonical((_dispatched(),)).digest != canonical((_dispatched("z"),)).digest
@@ -37,7 +37,7 @@ def test_a_top_level_dispatch_is_listed_by_name_and_is_not_inside_a_loop():
     groups = dispatch_groups(walk)
     assert list(groups) == ["dispatch0"] and isinstance(groups["dispatch0"], Dispatch)
     assert loop_body_groups(walk) == frozenset()
-    assert walk.dispatches[0].selector_reads == (("per_sample", "k"),) and walk.dispatches[0].K == 2
+    assert walk.dispatches[0].selector_reads == (("plane_in", "k"),) and walk.dispatches[0].K == 2
 
 
 def test_a_dispatch_in_a_loop_body_is_a_loop_body_group():
@@ -81,7 +81,7 @@ def test_resink_rebuilds_a_sink_over_the_rewritten_operand_and_returns_an_unchan
 def test_a_reached_quantity_is_a_frozen_span_of_its_wires_and_slots():
     from raptor.ir.compound import Quantity, QuantitySpan
     from raptor.ir.types import Wire
-    q = Quantity("body", "a", wires=(Wire("pos", "vec_in", (3,), "f64", None), Wire("mass", "per_sample", (), "f64", None)))
+    q = Quantity("body", "a", wires=(Wire("pos", "plane_in", (3,), "f64", None), Wire("mass", "plane_in", (), "f64", None)))
     pos, _mass = q.read()
     walk = canonical((Assign("y", make("sum", (pos,)), F64),))
     span = walk.quantities["body__a"]

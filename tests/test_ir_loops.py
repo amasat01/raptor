@@ -54,7 +54,7 @@ def test_an_add_chain_is_flattened_and_a_sub_is_one_term():
 def test_the_boundary_is_the_highest_invariant_node_on_each_path():
     table = Leaf("table_read", "lookup", "w", TensorType((8,), "f64"))
     one = Const(1.0, F64)
-    body = make("add", (At(table, IDX, F64), one))
+    body = make("add", (At(table, (IDX,), F64), one))
     assert set(map(id, boundary((body,), frozenset({id(IDX)})))) == {id(table), id(one)}
     inv = make("neg", (one,))
     assert boundary((inv,), frozenset({id(IDX)})) == (inv,)                  # an invariant next is its own boundary value
@@ -63,7 +63,7 @@ def test_the_boundary_is_the_highest_invariant_node_on_each_path():
 
 def test_the_boundary_of_a_built_loop_is_its_free_operands():
     table = Leaf("table_read", "lookup", "w", TensorType((8,), "f64"))
-    loop = _loop(make("add", (CARRY, At(table, IDX, F64))))
+    loop = _loop(make("add", (CARRY, At(table, (IDX,), F64))))
     assert table in loop.free
 
 

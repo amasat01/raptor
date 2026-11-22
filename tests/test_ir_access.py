@@ -154,7 +154,7 @@ from raptor.ir import Assign, Update, canonical, infer
 from raptor.ir.nodes import Leaf
 
 _V3 = TensorType((3,), "f64")
-_X = Leaf("vocab_read", "vec_in", "x", _V3)
+_X = Leaf("vocab_read", "plane_in", "x", _V3)
 _TABLE = Leaf("table_read", "lookup", "grav", _V3)
 
 
@@ -165,14 +165,14 @@ def test_own_column_only_is_sample_local():
 
 
 def test_lookup_read_and_scattered_write_are_cross_sample_and_the_write_wins():
-    read = canonical((Assign("acc", At(_TABLE, c(3), _V3), _V3),))
+    read = canonical((Assign("acc", At(_TABLE, (c(3),), _V3), _V3),))
     assert read.access.cls == "cross_sample_read"
-    scatter = Update("e", Op("norm", (_X,), F64), c(3), F64, op="add")
+    scatter = Update("e", Op("norm", (_X,), F64), (c(3),), F64, op="add")
     assert canonical((scatter,)).access.cls == "cross_sample_write"
-    both = canonical((Assign("acc", At(_TABLE, c(3), _V3), _V3), scatter))
+    both = canonical((Assign("acc", At(_TABLE, (c(3),), _V3), _V3), scatter))
     assert infer(both).cls == "cross_sample_write"
 
 
 def test_an_own_column_accumulate_is_not_a_scatter():
-    walk = canonical((Update("e", Op("norm", (_X,), F64), None, F64, op="add"),))
+    walk = canonical((Update("e", Op("norm", (_X,), F64), (), F64, op="add"),))
     assert infer(walk).cls == "sample_local"

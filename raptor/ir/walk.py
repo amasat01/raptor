@@ -54,12 +54,12 @@ from .. import _core
 globals().update(_gen.records(_gen.parse(_core.manifest()), __name__, 'walk'))
 
 
-@dataclass(frozen=True)
 def _is_matrix_input(leaf: Any) -> bool:
     """Whether ``leaf`` is a per-sample plane holding a rank-two value."""
     return leaf.role == "plane_in" and len(leaf.ttype.shape) == 2
 
 
+@dataclass(frozen=True)
 class Walk:
     """The frozen product of :func:`canonical`, computed once.
 

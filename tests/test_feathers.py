@@ -7,7 +7,7 @@ from raptor.ir.nodes import FEATHERS, OP_FEATHERS, Leaf, ReduceSamples, extent_o
 from raptor.ir.types import TensorType
 
 F64 = TensorType((), "f64")
-X = Leaf("vocab_read", "per_sample", "x", F64)
+X = Leaf("vocab_read", "plane_in", "x", F64)
 
 
 def row(name="acme.thing", **extra):
@@ -57,7 +57,7 @@ def test_a_declared_sink_keeps_operands_beyond_the_value_and_the_index():
     reg = K.Registry()
     K.declare(reg, {"name": "acme.put", "dialect": "d", "ext": "acme", "family": "sink", "refines": "update", "operands": {"min": 3, "max": 3},
                     "result": ["same_as", 0], "feathers": ["commits_value"]})
-    key = Leaf("vocab_read", "per_sample", "k", TensorType((), "i32"))
+    key = Leaf("vocab_read", "plane_in", "k", TensorType((), "i32"))
     node = K.make_kind(reg, "acme.put", F64, (X, key, key), name="p", role="plane_out")
     assert len(node.operands) == 3 and node.operands[2] is key and node.rebuilt(node.operands, {}).operands[2] is key
     assert has_feather(node, "commits_value")

@@ -16,7 +16,6 @@ core.json class LoopIndex
 core.json class LoopValue
 core.json class Node
 core.json class Op
-core.json class PlaneExtent
 core.json class Primitive
 core.json class ReduceSamples
 core.json class RoleConst
@@ -53,7 +52,6 @@ core.json const MATRIX_OPS
 core.json const MINTED_OPS
 core.json const NAMESPACE_SEP
 core.json const PARAM_CELL
-core.json const PLANE_EXTENT_KIND
 core.json const PREDICATE
 core.json const PRIMITIVE_KIND
 core.json const QR_OPS
@@ -110,7 +108,6 @@ core.json kind loop_index
 core.json kind loop_value
 core.json kind node
 core.json kind op
-core.json kind plane_extent
 core.json kind primitive
 core.json kind reduce_samples
 core.json kind role_const
@@ -431,3 +428,6 @@ core.json class Sample # sample
 core.json kind sample # sample
 core.json const SAMPLE_FILTERS # sample
 core.json const SAMPLE_EDGES # sample
+core.json class AxisExtent # axis_extent
+core.json kind axis_extent # axis_extent
+core.json const AXIS_EXTENT_KIND # axis_extent

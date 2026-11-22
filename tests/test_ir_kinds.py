@@ -15,7 +15,7 @@ from raptor.rules.core import zero_like
 F64 = TensorType((), "f64")
 ROW = {"name": "acme.thing", "ext": "acme", "dialect": "d", "family": "expr", "operands": {"min": 1, "max": 1}, "result": ["same_as", 0],
        "fields": [{"name": "k", "type": "int"}], "identity": ["k"]}
-X = Leaf("vocab_read", "per_sample", "x", F64)
+X = Leaf("vocab_read", "plane_in", "x", F64)
 
 
 def test_a_declaration_is_a_frozen_record_of_its_row():

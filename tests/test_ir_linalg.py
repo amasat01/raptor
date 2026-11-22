@@ -13,15 +13,15 @@ from raptor.ir.types import TensorType
 
 
 def _mat(n, dtype="f64", name="A"):
-    return Leaf("vocab_read", "mat_in", name, TensorType((n, n), dtype))
+    return Leaf("vocab_read", "plane_in", name, TensorType((n, n), dtype))
 
 
 def _vec(n, dtype="f64"):
-    return Leaf("vocab_read", "vec_in", "b", TensorType((n,), dtype))
+    return Leaf("vocab_read", "plane_in", "b", TensorType((n,), dtype))
 
 
 def _rhs(n, k, dtype="f64"):
-    return Leaf("vocab_read", "mat_in", "B", TensorType((n, k), dtype))
+    return Leaf("vocab_read", "plane_in", "B", TensorType((n, k), dtype))
 
 
 def _three(n, dtype="f64"):

@@ -28,7 +28,7 @@ def test_a_parameter_read_is_cell_zero_or_the_cell_the_sample_names():
     assert isinstance(own.operands[1], RoleConst) and own.operands[1].literal == 0
     per = cells.param_cell("w", V3, per_cell=True)
     idx = per.operands[1]
-    assert (idx.name, idx.role, idx.ttype) == (cells.CELL_PLANE, "per_sample", TensorType((), "i32"))
+    assert (idx.name, idx.role, idx.ttype) == (cells.CELL_PLANE, "plane_in", TensorType((), "i32"))
     assert cells.CELL_PLANE == "param_cell"
 
 
@@ -58,7 +58,7 @@ def test_a_fold_threshold_is_compared_strictly_and_a_missing_one_is_refused():
 
 
 def test_a_dot_is_rolled_by_form_and_a_threshold_is_read_only_for_auto():
-    v = Leaf("vocab_read", "per_sample", "v", TensorType((8,), "f64"))
+    v = Leaf("vocab_read", "plane_in", "v", TensorType((8,), "f64"))
     node = Op("dot", (v, v), TensorType((), "f64"))
     assert rolled(node, None, "rolled") and not rolled(node, None, "static")
     with pytest.raises(RaptorError, match="fold threshold"):
@@ -68,7 +68,7 @@ def test_a_dot_is_rolled_by_form_and_a_threshold_is_read_only_for_auto():
 
 
 def test_a_quantity_names_its_wires_and_reads_them_as_leaves():
-    wires = (Wire("pos", "vec_in", (3,), "f64", None), Wire("mass", "per_sample", (), "f64", None))
+    wires = (Wire("pos", "plane_in", (3,), "f64", None), Wire("mass", "plane_in", (), "f64", None))
     q = Quantity("body", "a", wires=wires)
     assert q.prefix == "body__a" and Quantity("body", wires=wires).prefix == "body"
     assert q.wire_name(wires[0]) == "body__a__pos"

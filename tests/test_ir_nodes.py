@@ -20,11 +20,12 @@ def test_the_naming_constants_are_the_documented_literals():
 
 def test_only_a_compensated_add_commits_through_a_companion():
     def update(**fields):
-        return Update("g", Const(1.0, F64), None, F64, **fields)
+        return Update("g", Const(1.0, F64), (), F64, **fields)
 
     assert compensates(update(op="add", summation="compensated"))
     assert not compensates(update(op="add")) and not compensates(update(op="add", summation="plain"))
-    assert not compensates(update(op="store")) and not compensates(update(op="or"))
+    assert not compensates(update(op="store"))
+    assert not compensates(Update("g", Const(1, I32), (), I32, op="or"))
 
 
 def test_a_literal_round_trips_through_plain_data_with_tuples_tagged():
@@ -46,14 +47,14 @@ def test_a_parameter_cell_is_recognised_and_listed_in_first_seen_order():
 
 
 def test_peel_clamp_strips_one_clamp_index_and_nothing_else():
-    i, n = Leaf("vocab_read", "per_sample", "i", I32), Const(8, I32)
+    i, n = Leaf("vocab_read", "plane_in", "i", I32), Const(8, I32)
     clamped = ops.make("clamp_index", (i, n))
     assert peel_clamp(clamped) is i and peel_clamp(i) is i
     assert peel_clamp(ops.make("add", (i, n))).kind == "add"
 
 
 def test_same_index_is_one_node_or_equal_kind_literal_and_operands():
-    i = Leaf("vocab_read", "per_sample", "i", I32)
+    i = Leaf("vocab_read", "plane_in", "i", I32)
     a, b = ops.make("add", (i, Const(1, I32))), ops.make("add", (i, Const(1, I32)))
     assert same_index(a, a) and same_index(a, b)
     assert not same_index(a, ops.make("add", (i, Const(2, I32))))

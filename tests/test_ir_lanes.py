@@ -24,8 +24,8 @@ def _c(value):
 
 
 ROW = make("div", (S, _c(6)))                                         # six lanes per row
-READ_ROW = At(TABLE, ROW, F64)                                        # moves with the row only
-READ_LANE = At(TABLE, make("add", (make("mul", (S, _c(2))), _c(1))), F64)   # 2 * lane + 1
+READ_ROW = At(TABLE, (ROW,), F64)                                        # moves with the row only
+READ_LANE = At(TABLE, (make("add", (make("mul", (S, _c(2))), _c(1))),), F64)   # 2 * lane + 1
 KERNEL = SimpleNamespace(sinks=(Assign("y", make("add", (READ_ROW, READ_LANE)), F64),))
 
 
@@ -76,7 +76,7 @@ def test_an_evaluated_index_gives_its_per_axis_forms_exactly():
 
 
 def test_a_constant_key_is_an_invariant_axis_key_with_an_exclusive_bound():
-    facts = lanes.facts(SimpleNamespace(sinks=(Update("e", Const(1.0, F64), _c(3), F64, op="add"),)))
+    facts = lanes.facts(SimpleNamespace(sinks=(Update("e", Const(1.0, F64), (_c(3),), F64, op="add"),)))
     sink = facts.sinks[0]
     assert (sink.keyed, sink.key_origin, sink.key_extent) == (True, "invariant_axis", 4)
     assert key_facts(Eval(facts.axes), _c(3), facts.axes) == ("invariant_axis", 4, None, ())

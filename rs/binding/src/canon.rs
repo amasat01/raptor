@@ -106,7 +106,7 @@ fn step_word<'py>(count: &Bound<'py, PyAny>, exempt: &[String]) -> PyResult<Opti
             let plane = n.getattr("plane")?;
             if st(&plane, "role")? == "lookup"
                 && exempt.contains(&st(&plane, "name")?)
-                && is_a(&n.getattr("index")?, "Const")?
+                && is_a(&n.getattr("raw_index")?, "Const")?
             {
                 return Ok(Some(n.as_ptr() as usize));
             }
@@ -121,7 +121,7 @@ fn param_cell(n: &Bound<'_, PyAny>) -> PyResult<bool> {
     if !is_a(n, "At")? {
         return Ok(false);
     }
-    let i = n.getattr("index")?;
+    let i = n.getattr("raw_index")?;
     Ok(is_a(&i, "RoleConst")? && st(&i, "label")? == str_const("PARAM_CELL"))
 }
 const RANK: [&str; 3] = rcore::facts::ACCESS_RANK;

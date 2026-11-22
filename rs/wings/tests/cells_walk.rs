@@ -521,7 +521,7 @@ fn the_digests_recorded_before_the_axes_are_the_walks_with_the_added_fields_remo
         let (mut tail, mut old_tail) = (String::new(), String::new());
         for ((role, name), tt) in &walk.leaves {
             let ttype = text_val(&ttype_val(&tt.dtype, &tt.shape, tt.tag.as_deref()));
-            let old = raptor_support::migrate::old_role_name(role, tt.shape.len());
+            let old = raptor_support::migrate::old_role_name(role, name, tt.shape.len());
             tail.push_str(&format!("leaf|{role}|{name}|{ttype}\n"));
             old_tail.push_str(&format!("leaf|{old}|{name}|{ttype}\n"));
         }

@@ -719,9 +719,6 @@ pub fn rule_factor<'py>(
         _ => nd(py, t, &mut e),
     }
 }
-/// A rule program: the operands of `n` bound to the names the row lists, its `lets` run in order, then the `vjp` pairs (arg = the cotangent) or
-/// the `jvp` expression (arg = the tangent function).
-#[pyfunction]
 /// Binds the operand names of a rule to the operands of its node. A name written `...rest` takes every operand
 /// the other names leave over, as a list: the element accesses carry one index per axis of their value.
 fn bind_operands<'py>(names: &[String], ops: Vec<Val<'py>>) -> Env<'py> {
@@ -747,6 +744,9 @@ fn bind_operands<'py>(names: &[String], ops: Vec<Val<'py>>) -> Env<'py> {
     out
 }
 
+/// A rule program: the operands of `n` bound to the names the row lists, its `lets` run in order, then the `vjp` pairs (arg = the cotangent) or
+/// the `jvp` expression (arg = the tangent function).
+#[pyfunction]
 pub fn rule_run<'py>(
     py: Python<'py>,
     table: &str,

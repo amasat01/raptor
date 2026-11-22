@@ -15,6 +15,7 @@
 //! old; a `PlaneExtent` exists only in the old form. A node already in the current form is left as it is, so migrating twice,
 //! or migrating a current document, changes nothing.
 use rcore::json::J;
+use std::collections::HashMap;
 
 /// What one migration changed.
 #[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
@@ -81,24 +82,128 @@ fn node_parts(doc: &mut J) -> Option<(&str, &mut Vec<(String, J)>)> {
 /// The roles the planes read per sample had before they shared `plane_in`, picked by the rank of the value.
 const OLD_READ_ROLES: [&str; 3] = ["per_sample", "vec_in", "mat_in"];
 
-/// The role of a slot as a digest recorded before the planes read per sample shared one role took it: the old name of the rank
-/// (`per_sample`, `vec_in`, `mat_in`) for a `plane_in` of rank zero to two, every other role as it is.
-pub fn old_role_name(role: &str, rank: usize) -> String {
-    match OLD_READ_ROLES.get(rank) {
-        Some(old) if role == "plane_in" => (*old).to_string(),
-        _ => role.to_string(),
+thread_local! {
+    /// The old role each read plane the migration renamed carried, by name; the latest record migrated wins.
+    static RECORDED: std::cell::RefCell<HashMap<String, String>> = std::cell::RefCell::default();
+}
+
+/// Forgets the old roles the previous record carried. The replay tools call it before each record they migrate.
+pub fn forget_recorded_roles() {
+    RECORDED.with(|state| state.borrow_mut().clear());
+}
+
+/// The first reason `doc` cannot be expressed in the one read role: two read planes of one name that carry different old
+/// roles, which the single role, keyed by name, would merge into one slot.
+pub fn role_conflict(doc: &J) -> Option<String> {
+    fn collect(doc: &J, seen: &mut HashMap<String, String>) -> Option<String> {
+        let pairs: Vec<(String, String)> = match doc {
+            J::Obj(entries) => {
+                entries
+                    .iter()
+                    .find_map(|(key, value)| match (key.as_str(), value) {
+                        ("v", J::Obj(fields)) => {
+                            let get = |field: &str| {
+                                fields
+                                    .iter()
+                                    .find(|f| f.0 == field)
+                                    .and_then(|f| tagged_text(&f.1))
+                            };
+                            get("role")
+                                .zip(get("name"))
+                                .map(|(role, name)| vec![(name.to_string(), role.to_string())])
+                        }
+                        ("t", J::Arr(pair)) if pair.len() == 2 => tagged_text(&pair[0])
+                            .zip(tagged_text(&pair[1]))
+                            .map(|(role, name)| vec![(name.to_string(), role.to_string())]),
+                        _ => None,
+                    })
+            }
+            _ => None,
+        }
+        .unwrap_or_default();
+        for (name, role) in pairs
+            .into_iter()
+            .filter(|(_, r)| OLD_READ_ROLES.contains(&r.as_str()))
+        {
+            if let Some(first) = seen
+                .insert(name.clone(), role.clone())
+                .filter(|f| *f != role)
+            {
+                return Some(format!(
+                    "two read planes named '{name}' carried the roles '{first}' and '{role}', which the one read role keyed by name merges into one slot"
+                ));
+            }
+        }
+        match doc {
+            J::Obj(entries) => entries.iter().find_map(|(_, v)| collect(v, seen)),
+            J::Arr(items) => items.iter().find_map(|v| collect(v, seen)),
+            _ => None,
+        }
+    }
+    collect(doc, &mut HashMap::new())
+}
+
+/// Notes that the read plane `name` carried the old role `old`.
+fn note_recorded_role(name: &str, old: &str) {
+    RECORDED.with(|state| state.borrow_mut().insert(name.to_string(), old.to_string()));
+}
+
+/// The role of a slot called `name` as a digest recorded before the planes read per sample shared one role took it: the old role
+/// the recording named for that plane when the migration saw it, else the old name of the rank (`per_sample`, `vec_in`,
+/// `mat_in`) for a `plane_in` of rank zero to two; every other role as it is.
+pub fn old_role_name(role: &str, name: &str, rank: usize) -> String {
+    if role != "plane_in" {
+        return role.to_string();
+    }
+    let recorded = RECORDED.with(|state| state.borrow().get(name).cloned());
+    recorded.unwrap_or_else(|| OLD_READ_ROLES.get(rank).map_or(role, |old| old).to_string())
+}
+
+/// A recorded refusal message in the current form: the two spellings of a role it names, `role 'NAME'` and `role='NAME'`, take
+/// the current name when NAME is one of the old read roles. Nothing else in the message changes, so a message that only
+/// contains the word `role` or an old name elsewhere is left as it is.
+pub fn migrate_message(message: &str) -> String {
+    let mut out = String::with_capacity(message.len());
+    let mut rest = message;
+    while let Some(at) = rest.find("role") {
+        let (head, tail) = rest.split_at(at + 4);
+        out.push_str(head);
+        rest = tail;
+        let opened = rest.strip_prefix(" '").or_else(|| rest.strip_prefix("='"));
+        let Some(after) = opened else { continue };
+        let quote = rest.len() - after.len();
+        let Some(close) = after.find('\'') else {
+            continue;
+        };
+        if OLD_READ_ROLES.contains(&&after[..close]) {
+            out.push_str(&rest[..quote]);
+            out.push_str("plane_in");
+            rest = &after[close..];
+        }
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Renames a tagged string `{"s": role}` to `plane_in` when it is one of the old names, and returns the old name.
+fn rename_tagged(value: &mut J) -> Option<String> {
+    let J::Obj(tagged) = value else { return None };
+    match tagged.as_mut_slice() {
+        [(tag, J::Str(role))] if tag == "s" && OLD_READ_ROLES.contains(&role.as_str()) => {
+            Some(std::mem::replace(role, "plane_in".to_string()))
+        }
+        _ => None,
     }
 }
 
-/// Renames a tagged string `{"s": role}` to `plane_in` when it is one of the old names; whether it did.
-fn rename_tagged(value: &mut J) -> bool {
-    let J::Obj(tagged) = value else { return false };
-    match tagged.as_mut_slice() {
-        [(tag, J::Str(role))] if tag == "s" && OLD_READ_ROLES.contains(&role.as_str()) => {
-            *role = "plane_in".to_string();
-            true
-        }
-        _ => false,
+/// The text of a tagged string `{"s": text}`.
+fn tagged_text(value: &J) -> Option<&str> {
+    match value {
+        J::Obj(tagged) => match tagged.as_slice() {
+            [(tag, J::Str(text))] if tag == "s" => Some(text),
+            _ => None,
+        },
+        _ => None,
     }
 }
 
@@ -110,15 +215,27 @@ fn rename_roles_of(doc: &mut J) -> usize {
     for (key, value) in entries.iter_mut() {
         match (key.as_str(), value) {
             ("v", J::Obj(fields)) => {
+                let name = fields
+                    .iter()
+                    .find(|(field, _)| field == "name")
+                    .and_then(|(_, value)| tagged_text(value))
+                    .map(str::to_string);
                 for (field, value) in fields.iter_mut() {
-                    renamed += usize::from(field == "role" && rename_tagged(value));
+                    if let (true, Some(old)) = (field == "role", rename_tagged(value)) {
+                        name.iter().for_each(|name| note_recorded_role(name, &old));
+                        renamed += 1;
+                    }
                 }
             }
             ("t", J::Arr(pair))
                 if pair.len() == 2
                     && matches!(&pair[1], J::Obj(n) if n.len() == 1 && n[0].0 == "s") =>
             {
-                renamed += usize::from(rename_tagged(&mut pair[0]));
+                let name = tagged_text(&pair[1]).map(str::to_string);
+                if let Some(old) = rename_tagged(&mut pair[0]) {
+                    name.iter().for_each(|name| note_recorded_role(name, &old));
+                    renamed += 1;
+                }
             }
             _ => {}
         }
@@ -197,17 +314,25 @@ pub fn migrate_roles(doc: &mut J) -> usize {
 /// Returns what changed, or the reason of the first node that cannot be expressed exactly; the document is then left
 /// partly migrated and must be discarded by the caller.
 pub fn migrate(doc: &mut J) -> Result<Changed, String> {
+    if let Some(why) = role_conflict(doc) {
+        return Err(why);
+    }
+    migrate_tree(doc)
+}
+
+/// `migrate` over a document known to hold no role conflict, and over each part of it.
+fn migrate_tree(doc: &mut J) -> Result<Changed, String> {
     let mut changed = migrate_node(doc)?;
     changed.roles = rename_roles_of(doc);
     match doc {
         J::Obj(entries) => {
             for (_, value) in entries.iter_mut() {
-                changed.add(migrate(value)?);
+                changed.add(migrate_tree(value)?);
             }
         }
         J::Arr(items) => {
             for value in items.iter_mut() {
-                changed.add(migrate(value)?);
+                changed.add(migrate_tree(value)?);
             }
         }
         _ => {}
@@ -354,7 +479,10 @@ fn old_leaf_line(key: &str) -> Option<String> {
         .split(',')
         .filter(|e| !e.trim().is_empty())
         .count();
-    let old = OLD_READ_ROLES.get(rank)?;
+    let old = match RECORDED.with(|state| state.borrow().get(name.trim_matches('\'')).cloned()) {
+        Some(recorded) => recorded,
+        None => (*OLD_READ_ROLES.get(rank)?).to_string(),
+    };
     Some(format!("('leaf', '{old}', {name})"))
 }
 
@@ -479,11 +607,12 @@ mod tests {
 
     #[test]
     fn the_old_name_of_a_role_follows_the_rank_of_its_value() {
-        assert_eq!(old_role_name("plane_in", 0), "per_sample");
-        assert_eq!(old_role_name("plane_in", 1), "vec_in");
-        assert_eq!(old_role_name("plane_in", 2), "mat_in");
-        assert_eq!(old_role_name("plane_in", 3), "plane_in");
-        assert_eq!(old_role_name("mutable", 1), "mutable");
+        forget_recorded_roles();
+        assert_eq!(old_role_name("plane_in", "x", 0), "per_sample");
+        assert_eq!(old_role_name("plane_in", "x", 1), "vec_in");
+        assert_eq!(old_role_name("plane_in", "x", 2), "mat_in");
+        assert_eq!(old_role_name("plane_in", "x", 3), "plane_in");
+        assert_eq!(old_role_name("mutable", "x", 1), "mutable");
     }
 
     #[test]
@@ -657,5 +786,59 @@ mod tests {
         let again = migrate_file(&path).unwrap();
         assert_eq!(again.changed, 0);
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// Oracle: the two spellings the tools print a role in are renamed; the word alone and other quoted names are not.
+    #[test]
+    fn a_recorded_message_names_the_current_role_in_its_two_role_forms_only() {
+        assert_eq!(
+            migrate_message("wire 'q' (role 'vec_in') is bound with no owning quantity"),
+            "wire 'q' (role 'plane_in') is bound with no owning quantity"
+        );
+        assert_eq!(
+            migrate_message(
+                "collision on (role='per_sample', name='x') and (role='mat_in', name='y')"
+            ),
+            "collision on (role='plane_in', name='x') and (role='plane_in', name='y')"
+        );
+        let unchanged =
+            "the role of 'vec_in' is a name, role 'mutable' stays, a role is here, name='vec_in'";
+        assert_eq!(migrate_message(unchanged), unchanged);
+    }
+
+    /// Oracle: the recording's own old role is carried, not derived from the rank (a rank-0 plane that was `vec_in`), and two old
+    /// roles under one name cannot be expressed.
+    #[test]
+    fn the_old_role_of_a_plane_is_the_recorded_one_and_two_under_one_name_cannot_be_expressed() {
+        use rcore::json::parse;
+        forget_recorded_roles();
+        let leaf = |role: &str| {
+            format!(r#"{{"c":"Leaf","m":"m","v":{{"name":{{"s":"x"}},"role":{{"s":"{role}"}}}}}}"#)
+        };
+        let mut one = parse(&leaf("vec_in")).unwrap();
+        assert!(migrate(&mut one).is_ok());
+        assert_eq!(old_role_name("plane_in", "x", 0), "vec_in");
+        let two = parse(&format!(
+            r#"{{"l":[{},{}]}}"#,
+            leaf("vec_in"),
+            leaf("per_sample")
+        ))
+        .unwrap();
+        let why = role_conflict(&two).unwrap();
+        assert!(
+            why.contains("two read planes named 'x'") && why.contains("'vec_in' and 'per_sample'"),
+            "{why}"
+        );
+        assert_eq!(
+            role_conflict(
+                &parse(&format!(
+                    r#"{{"l":[{},{}]}}"#,
+                    leaf("vec_in"),
+                    leaf("vec_in")
+                ))
+                .unwrap()
+            ),
+            None
+        );
     }
 }

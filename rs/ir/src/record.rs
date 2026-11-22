@@ -66,10 +66,10 @@ pub struct Ctx {
     /// to compare a walk with a digest recorded before a field was added to a node: the rewrite removes that field.
     #[cfg(feature = "replay-key-form")]
     pub key_form: Option<fn(&str) -> String>,
-    /// Names the role of a slot the way a digest recorded before the read planes shared one role took it, from the role and the
-    /// rank of the value. Only the replay tools set it, together with `key_form`.
+    /// Names the role of a slot the way a digest recorded before the read planes shared one role took it, from the role, the name
+    /// and the rank of the value. Only the replay tools set it, together with `key_form`.
     #[cfg(feature = "replay-key-form")]
-    pub role_form: Option<fn(&str, usize) -> String>,
+    pub role_form: Option<fn(&str, &str, usize) -> String>,
 }
 
 impl Ctx {
@@ -103,13 +103,13 @@ impl Ctx {
     }
     /// The role of a slot of a value of rank `rank` as the digests take it: rewritten by `role_form` when a replay tool set one.
     #[cfg(feature = "replay-key-form")]
-    pub(crate) fn digest_role(&self, role: &str, rank: usize) -> String {
+    pub(crate) fn digest_role(&self, role: &str, name: &str, rank: usize) -> String {
         self.role_form
-            .map_or_else(|| role.to_string(), |form| form(role, rank))
+            .map_or_else(|| role.to_string(), |form| form(role, name, rank))
     }
     /// The role of a slot as the digests take it: as it is.
     #[cfg(not(feature = "replay-key-form"))]
-    pub(crate) fn digest_role(&self, role: &str, _rank: usize) -> String {
+    pub(crate) fn digest_role(&self, role: &str, _name: &str, _rank: usize) -> String {
         role.to_string()
     }
     /// A numbered key line as the digests take it.

@@ -244,7 +244,7 @@ impl Ctx {
         let pre = tr.walk.pre.as_str();
         let taken_roles: Vec<String> = ordered
             .iter()
-            .map(|((role, _), tt)| self.digest_role(role, tt.shape.len()))
+            .map(|((role, name), tt)| self.digest_role(role, name, tt.shape.len()))
             .collect();
         let keys = DigestKeys {
             pre: &pre,

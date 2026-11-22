@@ -2197,6 +2197,7 @@ fn main() {
         lines += 1;
         let text = String::from_utf8_lossy(&raw);
         // the recorded calls are read again, one at a time, where they are answered; only the closure calls the warp check needs stay
+        raptor_support::migrate::forget_recorded_roles();
         let Ok(mut rec) = json::parse_keeping(&text, "analyses", &warp_uniform_call) else {
             bad += 1;
             continue;
@@ -2280,8 +2281,12 @@ fn main() {
             rec.get("target").and_then(J::str).unwrap_or("").to_string(),
         );
         let mut cache = HashMap::new();
-        let _ = json::each_in(&text, "analyses", &mut |call| {
+        let _ = json::each_in(&text, "analyses", &mut |mut call| {
             if !is_mine(&call) {
+                return true;
+            }
+            // a recorded call is as old as its record: it takes the current form before it is answered
+            if raptor_support::migrate::migrate(&mut call).is_err() {
                 return true;
             }
             let call = &call;

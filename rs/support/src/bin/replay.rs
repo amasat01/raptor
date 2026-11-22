@@ -79,8 +79,12 @@ fn replay(
     rt: &mut [usize; 2],
     vals: &mut Vals,
 ) -> Outcome {
+    raptor_support::migrate::forget_recorded_roles();
     let mut named = rec.clone();
     raptor_support::migrate::migrate_roles(&mut named);
+    if let Some(why) = raptor_support::migrate::role_conflict(rec) {
+        return Outcome::Skip(why);
+    }
     let current = replay_in_form(&named, counts, roundtrip, rt, vals, false);
     let retry = match &current {
         Outcome::Mismatch(m) => m.contains("digest"),
@@ -372,7 +376,9 @@ fn main() {
         u += 1;
         let want_err = match rec.get("error") {
             None | Some(J::Null) => None,
-            Some(e) => Some(e.get("msg").and_then(J::str).unwrap_or("").to_string()),
+            Some(e) => Some(raptor_support::migrate::migrate_message(
+                e.get("msg").and_then(J::str).unwrap_or(""),
+            )),
         };
         for f in holds(rec.get("inputs").unwrap()) {
             *holding.entry(f).or_default() += 1

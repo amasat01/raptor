@@ -65,7 +65,7 @@ fn probe_digest() {
             &tt.shape,
             tt.tag.as_deref(),
         ));
-        let old = raptor_support::migrate::old_role_name(role, tt.shape.len());
+        let old = raptor_support::migrate::old_role_name(role, name, tt.shape.len());
         tail.push_str(&format!("leaf|{old}|{name}|{ttype}\n"));
     }
     // a recording of that time names the read planes by the rank of their value

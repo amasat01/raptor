@@ -230,7 +230,7 @@ fn stores(ctx: &mut Ctx, sink: u32, (width, slot): (i64, &Slot)) -> R<[u32; 2]> 
 /// The one cell of the target plane that the index list `indices` of the ordered accumulate `sink` names: the position in storage
 /// order, last axis fastest, so `(i, j)` over the axes `(m, n)` is `i * n + j`. The extent of the first axis is never needed; the
 /// others must be stated, since the log holds a single number for the cell.
-fn cell_of(ctx: &mut Ctx, sink: u32, indices: &[u32]) -> R<u32> {
+pub(crate) fn cell_of(ctx: &mut Ctx, sink: u32, indices: &[u32]) -> R<u32> {
     let Val::Tuple(axes) = ctx.field(sink, "axes")? else {
         return refuse("an ordered accumulate states no axes");
     };

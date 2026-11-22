@@ -5,6 +5,7 @@
 //! same bits on every launch.
 use crate::blocks::{block_shaped, ordered_case};
 use crate::cells::build;
+use crate::logs::cell_of;
 use crate::stages::is_ordered_sink;
 use crate::team::{sample_index, Grid, Plane, Step, TeamSpec, Unit, PLANE_PREFIX};
 use crate::{is_a, is_routable_add, is_update_of, R};
@@ -164,10 +165,11 @@ pub fn logged(
         );
         let scaled = ctx.make_op("mul", &[lane, stride], &Val::None)?;
         let at = ctx.make_op("add", &[scaled, offset], &Val::None)?;
-        let (value, index) = (
-            ctx.nodes[sink as usize].ops[0],
-            ctx.nodes[sink as usize].ops[1],
-        );
+        let (value, indices) = {
+            let ops = &ctx.nodes[sink as usize].ops;
+            (ops[0], ops[1..].to_vec())
+        };
+        let index = cell_of(ctx, sink, &indices)?;
         let key = match ctx.nodes[index as usize].dtype.as_str() {
             "int32" => index,
             _ => ctx.make_op("cast", &[index], &Val::Str("int32".into()))?,

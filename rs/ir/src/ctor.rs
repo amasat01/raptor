@@ -139,6 +139,8 @@ const BUILTINS: &[&str] = &[
     "axis_fault",
     "axes_fault",
     "store_index_fault",
+    "address_of",
+    "expected_of",
     "ttype_fault",
     "literal_fault",
 ];
@@ -716,6 +718,14 @@ fn truthy(v: &Val) -> bool {
         _ => true,
     }
 }
+/// The operands of an `Update` after its value, split into the expected value (a `compare_exchange` takes one right after the
+/// value) and the index list.
+fn update_operands<'a>(op: &Val, rest: &'a Val) -> R<(&'a [Val], &'a [Val])> {
+    let rest = seq(rest)?;
+    let taken =
+        usize::from(matches!(op, Val::Str(s) if s == "compare_exchange") && !rest.is_empty());
+    Ok(rest.split_at(taken))
+}
 /// The elements of a tuple or list value; refuses another value.
 fn seq(v: &Val) -> R<&[Val]> {
     match v {
@@ -1034,6 +1044,8 @@ impl Ev<'_> {
                     Val::Tuple(vec![v[0].clone()])
                 }
             }
+            "address_of" => Val::Tuple(update_operands(&v[0], &v[1])?.1.to_vec()),
+            "expected_of" => Val::Tuple(update_operands(&v[0], &v[1])?.0.to_vec()),
             "head" => {
                 let Val::Str(t) = &v[0] else {
                     return Err("head: a string".into());

@@ -69,7 +69,12 @@
    "ordered"
   ],
   "UPDATE_OPS": ["store", "add", "min", "max", "and", "or", "xor", "exchange", "compare_exchange"],
-  "UPDATE_OPS_WRITTEN": ["store", "add", "or"],
+  "UPDATE_BIT_OPS": ["and", "or", "xor"],
+  "UPDATE_BIT_DTYPES": ["i32", "i64", "int32", "uint32"],
+  "UPDATE_ORDERED_OPS": ["min", "max"],
+  "UPDATE_ORDERED_DTYPES": ["f64", "f32", "i32", "i64", "int32", "uint32"],
+  "UPDATE_SCALAR_OPS": ["and", "or", "xor", "exchange", "compare_exchange"],
+  "UPDATE_OPS_RETURNING": ["add", "exchange", "compare_exchange"],
   "UPDATE_CONFLICTS": ["unique", "any"],
   "UPDATE_SUMMATIONS": ["auto", "plain", "compensated"],
   "UPDATE_ORDERS": ["any", "lane"],
@@ -1659,18 +1664,13 @@
      ],
      [
       "check",
-      "op not in UPDATE_OPS_WRITTEN",
-      "update {name!r}: op {op!r} is not written yet"
-     ],
-     [
-      "check",
       "conflict not in UPDATE_CONFLICTS",
       "update {name!r}: conflict {conflict!r} is not one of {UPDATE_CONFLICTS}"
      ],
      [
       "check",
-      "conflict != 'unique'",
-      "update {name!r}: conflict {conflict!r} is not written yet"
+      "conflict != 'unique' and op != 'store'",
+      "update {name!r}: a conflict rule applies to a store; {op!r} resolves its conflicts itself"
      ],
      [
       "check",
@@ -1690,12 +1690,47 @@
      [
       "check",
       "order != 'any' and op != 'add'",
-      "update {name!r}: an order {order!r} of {op!r} is not written yet"
+      "update {name!r}: an order {order!r} is written for an add only, not for {op!r}"
      ],
      [
       "check",
-      "returns_old",
-      "update {name!r}: a returned old value is not written yet"
+      "returns_old and op not in UPDATE_OPS_RETURNING",
+      "update {name!r}: only {UPDATE_OPS_RETURNING} return the old value, not {op!r}"
+     ],
+     [
+      "check",
+      "returns_old and order != 'any'",
+      "update {name!r}: a returned old value depends on the order lanes arrive in, so it cannot be taken in lane order"
+     ],
+     [
+      "check",
+      "returns_old and summation == 'compensated'",
+      "update {name!r}: a returned old value is the plain atomic add's, not a compensated one's"
+     ],
+     [
+      "check",
+      "op in UPDATE_BIT_OPS and coalesce(ttype, value.ttype).dtype not in UPDATE_BIT_DTYPES",
+      "update {name!r}: {op!r} acts on the bits of an integer plane, not on {coalesce(ttype, value.ttype).dtype}"
+     ],
+     [
+      "check",
+      "op in UPDATE_ORDERED_OPS and coalesce(ttype, value.ttype).dtype not in UPDATE_ORDERED_DTYPES",
+      "update {name!r}: {op!r} needs an ordered type (an integer or a real), not {coalesce(ttype, value.ttype).dtype}"
+     ],
+     [
+      "check",
+      "op in UPDATE_SCALAR_OPS and coalesce(ttype, value.ttype).shape != ()",
+      "update {name!r}: {op!r} acts on one scalar element; a store, an add, a min or a max take a value of any shape and act per component"
+     ],
+     [
+      "check",
+      "op == 'compare_exchange' and len(indices) == 0",
+      "update {name!r}: compare_exchange takes the expected value as the operand after the new value"
+     ],
+     [
+      "check",
+      "op == 'compare_exchange' and first_ne_ttype(cat((value,), expected_of(op, indices))) is not None",
+      "update {name!r}: compare_exchange compares an expected value that has another type than the new value"
      ],
      [
       "check",
@@ -1709,8 +1744,8 @@
      ],
      [
       "check",
-      "store_index_fault(name, axes, indices) is not None",
-      "update {name!r}: {store_index_fault(name, axes, indices)}"
+      "store_index_fault(name, axes, address_of(op, indices)) is not None",
+      "update {name!r}: {store_index_fault(name, axes, address_of(op, indices))}"
      ]
     ],
     "out": [

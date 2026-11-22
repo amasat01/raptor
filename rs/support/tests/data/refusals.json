@@ -1326,12 +1326,12 @@
    "group": "check",
    "id": 101,
    "kind": "Update",
-   "check": "op not in UPDATE_OPS_WRITTEN",
+   "check": "op in UPDATE_BIT_OPS and coalesce(ttype, value.ttype).dtype not in UPDATE_BIT_DTYPES",
    "today": {
     "exc": "RaptorError",
-    "msg": "update 'o': op 'min' is not written yet"
+    "msg": "update 'o': 'and' acts on the bits of an integer plane, not on f64"
    },
-   "raw": "update 'o': op 'min' is not written yet",
+   "raw": "update 'o': 'and' acts on the bits of an integer plane, not on f64",
    "expect": "a",
    "bad": {
     "class": "Update",
@@ -1341,7 +1341,7 @@
     "ops": [
      "x"
     ],
-    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'min'), ('reduced', None))"
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'and'), ('reduced', None))"
    },
    "standing": null
   },
@@ -1372,12 +1372,12 @@
    "group": "check",
    "id": 103,
    "kind": "Update",
-   "check": "conflict != 'unique'",
+   "check": "conflict != 'unique' and op != 'store'",
    "today": {
     "exc": "RaptorError",
-    "msg": "update 'o': conflict 'any' is not written yet"
+    "msg": "update 'o': a conflict rule applies to a store; 'add' resolves its conflicts itself"
    },
-   "raw": "update 'o': conflict 'any' is not written yet",
+   "raw": "update 'o': a conflict rule applies to a store; 'add' resolves its conflicts itself",
    "expect": "a",
    "bad": {
     "class": "Update",
@@ -1387,7 +1387,7 @@
     "ops": [
      "x"
     ],
-    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('conflict', 'any'), ('reduced', None))"
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'add'), ('conflict', 'any'), ('reduced', None))"
    },
    "standing": null
   },
@@ -1467,9 +1467,9 @@
    "check": "order != 'any' and op != 'add'",
    "today": {
     "exc": "RaptorError",
-    "msg": "update 'o': an order 'lane' of 'store' is not written yet"
+    "msg": "update 'o': an order 'lane' is written for an add only, not for 'store'"
    },
-   "raw": "update 'o': an order 'lane' of 'store' is not written yet",
+   "raw": "update 'o': an order 'lane' is written for an add only, not for 'store'",
    "expect": "a",
    "bad": {
     "class": "Update",
@@ -1487,12 +1487,12 @@
    "group": "check",
    "id": 108,
    "kind": "Update",
-   "check": "returns_old",
+   "check": "returns_old and op not in UPDATE_OPS_RETURNING",
    "today": {
     "exc": "RaptorError",
-    "msg": "update 'o': a returned old value is not written yet"
+    "msg": "update 'o': only ('add', 'exchange', 'compare_exchange') return the old value, not 'store'"
    },
-   "raw": "update 'o': a returned old value is not written yet",
+   "raw": "update 'o': only ('add', 'exchange', 'compare_exchange') return the old value, not 'store'",
    "expect": "a",
    "bad": {
     "class": "Update",
@@ -1526,6 +1526,147 @@
      "x"
     ],
     "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('edge', 'bogus'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 110,
+   "kind": "Update",
+   "check": "returns_old and order != 'any'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': a returned old value depends on the order lanes arrive in, so it cannot be taken in lane order"
+   },
+   "raw": "update 'o': a returned old value depends on the order lanes arrive in, so it cannot be taken in lane order",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'add'), ('order', 'lane'), ('returns_old', True), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 111,
+   "kind": "Update",
+   "check": "returns_old and summation == 'compensated'",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': a returned old value is the plain atomic add's, not a compensated one's"
+   },
+   "raw": "update 'o': a returned old value is the plain atomic add's, not a compensated one's",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'add'), ('summation', 'compensated'), ('returns_old', True), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 112,
+   "kind": "Update",
+   "check": "op in UPDATE_ORDERED_OPS and coalesce(ttype, value.ttype).dtype not in UPDATE_ORDERED_DTYPES",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': 'min' needs an ordered type (an integer or a real), not bool"
+   },
+   "raw": "update 'o': 'min' needs an ordered type (an integer or a real), not bool",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "bool",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "cb"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'min'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 113,
+   "kind": "Update",
+   "check": "op in UPDATE_SCALAR_OPS and coalesce(ttype, value.ttype).shape != ()",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': 'exchange' acts on one scalar element; a store, an add, a min or a max take a value of any shape and act per component"
+   },
+   "raw": "update 'o': 'exchange' acts on one scalar element; a store, an add, a min or a max take a value of any shape and act per component",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [
+     3
+    ],
+    "tag": null,
+    "ops": [
+     "v3"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'exchange'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 114,
+   "kind": "Update",
+   "check": "op == 'compare_exchange' and len(indices) == 0",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': compare_exchange takes the expected value as the operand after the new value"
+   },
+   "raw": "update 'o': compare_exchange takes the expected value as the operand after the new value",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'compare_exchange'), ('reduced', None))"
+   },
+   "standing": null
+  },
+  {
+   "group": "check",
+   "id": 115,
+   "kind": "Update",
+   "check": "op == 'compare_exchange' and first_ne_ttype(cat((value,), expected_of(op, indices))) is not None",
+   "today": {
+    "exc": "RaptorError",
+    "msg": "update 'o': compare_exchange compares an expected value that has another type than the new value"
+   },
+   "raw": "update 'o': compare_exchange compares an expected value that has another type than the new value",
+   "expect": "a",
+   "bad": {
+    "class": "Update",
+    "dtype": "f64",
+    "shape": [],
+    "tag": null,
+    "ops": [
+     "x",
+     "ci"
+    ],
+    "fields": "(('kind', 'update'), ('role', 'plane_out'), ('name', 'o'), ('op', 'compare_exchange'), ('reduced', None))"
    },
    "standing": null
   }

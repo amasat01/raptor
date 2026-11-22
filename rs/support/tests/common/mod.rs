@@ -5,9 +5,20 @@ use raptor_support::safe::*;
 use std::ffi::{c_char, CStr, CString};
 
 pub fn mk(c: *mut Ctx, cls: &str, tag: Option<&str>, ops: &[u32], fields: &str) -> u32 {
+    mk_of(c, cls, "f64", tag, ops, fields)
+}
+/// `mk` for a node of the dtype `dtype`.
+pub fn mk_of(
+    c: *mut Ctx,
+    cls: &str,
+    dtype: &str,
+    tag: Option<&str>,
+    ops: &[u32],
+    fields: &str,
+) -> u32 {
     let (cls, dtype, tag) = (
         CString::new(cls).unwrap(),
-        CString::new("f64").unwrap(),
+        CString::new(dtype).unwrap(),
         tag.map(|t| CString::new(t).unwrap()),
     );
     let mut out = u32::MAX;

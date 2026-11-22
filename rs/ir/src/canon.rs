@@ -376,8 +376,9 @@ impl Ctx {
         &self.table.classes[self.nodes[tr.objs[i as usize] as usize].class]
     }
 
-    /// Whether the node, a sink on a `plane_out` plane, is a write the runtime zeroes the plane for: an update that is not a
-    /// store, a sample sum or an ordered accumulate.
+    /// Whether the node, a sink on a `plane_out` plane, is a write the runtime zeroes the plane for: an add or an or (their
+    /// fold starts from zero), a sample sum or an ordered accumulate. The other updates fold into or replace the value the
+    /// caller gave the plane, so it is kept.
     fn zeroes_plane(&self, node: u32, role: &str) -> Result<bool, Fault> {
         if role != "plane_out" {
             return Ok(false);
@@ -386,7 +387,8 @@ impl Ctx {
         if self.is_a(node, "SampleSum") || self.is_a(node, "OrderedAccumWrite") {
             return Ok(true);
         }
-        Ok(self.is_a(node, "Update") && self.str_field(node, "op")? != "store")
+        Ok(self.is_a(node, "Update")
+            && matches!(self.str_field(node, "op")?.as_str(), "add" | "or"))
     }
 
     /// The total merge of the bindings, in visit order; a canonical node is the first of its key. Refuses two nodes that

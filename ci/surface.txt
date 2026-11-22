@@ -417,7 +417,12 @@ module raptor.protocols.unit # protocol
 core.json class Update # update
 core.json kind update # update
 core.json const UPDATE_OPS # update
-core.json const UPDATE_OPS_WRITTEN # update
+core.json const UPDATE_BIT_OPS # update
+core.json const UPDATE_BIT_DTYPES # update
+core.json const UPDATE_ORDERED_OPS # update
+core.json const UPDATE_ORDERED_DTYPES # update
+core.json const UPDATE_SCALAR_OPS # update
+core.json const UPDATE_OPS_RETURNING # update
 core.json const UPDATE_CONFLICTS # update
 core.json const UPDATE_SUMMATIONS # update
 core.json const UPDATE_ORDERS # update

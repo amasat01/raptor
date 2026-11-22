@@ -4,7 +4,8 @@ use common::*;
 use raptor_support::safe::*;
 use std::ffi::CString;
 
-/// The walk over sinks that write `plane_out` planes through the updates `(name, op)`, a leaf `x` read per sample as the value.
+/// The walk over sinks that write `plane_out` planes through the updates `(name, op)`, a leaf `x` read per sample as the value
+/// (an integer leaf `b` for an operation on bits).
 fn walk_of(updates: &[(&str, &str)]) -> (*mut raptor_ir::record::Ctx, u32) {
     let c = rx_ctx_new();
     let x = mk(
@@ -14,11 +15,24 @@ fn walk_of(updates: &[(&str, &str)]) -> (*mut raptor_ir::record::Ctx, u32) {
         &[],
         "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False))",
     );
+    let bits = mk_of(
+        c,
+        "Leaf",
+        "i32",
+        None,
+        &[],
+        "(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'b'), ('quantity', None), ('wire_index', 1), ('sorted', False))",
+    );
     let sinks: Vec<u32> = updates
         .iter()
         .map(|(name, op)| {
             let fields = format!("(('name', '{name}'), ('op', '{op}'), ('reduced', None))");
-            mk(c, "Update", None, &[x], &fields)
+            let (value, dtype) = if matches!(*op, "and" | "or" | "xor") {
+                (bits, "i32")
+            } else {
+                (x, "f64")
+            };
+            mk_of(c, "Update", dtype, None, &[value], &fields)
         })
         .collect();
     let mut walk = 0;
@@ -42,7 +56,8 @@ fn zeroed(c: *mut raptor_ir::record::Ctx, walk: u32, name: &str) -> i32 {
 }
 
 /// Oracle: the rule written by hand: a store leaves its plane as the caller gave it, an add or a bit-or makes it an
-/// accumulate target the runtime zeroes; a name the walk does not bind is not zeroed.
+/// accumulate target the runtime zeroes, and the other folds (min, max, and, xor) and the exchanges keep the initial value
+/// the caller gave, which is part of their result; a name the walk does not bind is not zeroed.
 #[test]
 fn only_a_plane_an_accumulating_update_writes_is_zeroed() {
     let (c, walk) = walk_of(&[("kept", "store"), ("summed", "add"), ("bits", "or")]);
@@ -50,6 +65,22 @@ fn only_a_plane_an_accumulating_update_writes_is_zeroed() {
     assert_eq!(zeroed(c, walk, "summed"), 1);
     assert_eq!(zeroed(c, walk, "bits"), 1);
     assert_eq!(zeroed(c, walk, "absent"), 0);
+}
+
+/// Oracle: the rule written by hand, as above: a fold or an exchange of another operation than add and or starts from the
+/// caller's value.
+#[test]
+fn a_plane_a_min_max_and_xor_or_exchange_writes_keeps_the_callers_value() {
+    let (c, walk) = walk_of(&[
+        ("lo", "min"),
+        ("hi", "max"),
+        ("both", "and"),
+        ("flip", "xor"),
+        ("swap", "exchange"),
+    ]);
+    for name in ["lo", "hi", "both", "flip", "swap"] {
+        assert_eq!(zeroed(c, walk, name), 0, "{name}");
+    }
 }
 
 /// Oracle: the order the unit lists its slots in, written by hand: the planes the runtime leaves as given come before the planes

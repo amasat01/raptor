@@ -5,3 +5,4 @@ rs/core/src/pjson.rs:repr:8 # key text writers and validator messages; the valid
 rs/ir/src/typed.rs:repr:3 # the three `#[repr(C)]` structs of the typed reads (a type, a pair part, a pair), key text writers and validator messages; the validator messages wait for the old binding to retire
 rs/wings/src/lib.rs:repr:2 # key text writers and validator messages; the validator messages wait for the old binding to retire
 rs/wings/src/split.rs:repr:1 # key text writers and validator messages; the validator messages wait for the old binding to retire
+rs/wings/src/wide.rs:repr:1 # the `#[repr(C)]` struct of the wide gather answer read through the door

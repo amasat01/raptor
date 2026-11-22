@@ -412,7 +412,11 @@ impl Slicer<'_> {
         };
         let first = self.ctx.nodes[node as usize].ops[0];
         let first_type = type_parts(self.ctx, first);
-        let index_type = type_parts(self.ctx, self.ctx.nodes[first as usize].ops[1]);
+        let running = *self.ctx.nodes[first as usize]
+            .ops
+            .last()
+            .expect("a read has an index");
+        let index_type = type_parts(self.ctx, running);
         let base = match run.base {
             Some(base) => {
                 let (held, was) = self.of(base)?;
@@ -444,7 +448,7 @@ impl Slicer<'_> {
                 &first_type.dtype,
                 &first_type.shape,
                 first_type.tag.as_deref(),
-                &[run.plane, at],
+                &[&[run.plane][..], &run.lead, &[at]].concat(),
                 &fields,
             )?);
         }

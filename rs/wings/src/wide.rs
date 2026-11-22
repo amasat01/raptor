@@ -140,15 +140,17 @@ fn split_index(ctx: &Ctx, node: u32) -> Outcome<(Option<u32>, i128)> {
     Ok((Some(node), 0))
 }
 
-/// A vector whose element `k` is the read `plane[base + start + k * step]`.
+/// A vector whose element `k` is the read `plane[lead.., base + start + k * step]`: the running index is the last one.
 pub struct Gather {
     /// The plane read.
     pub plane: u32,
-    /// The run-time part of the index, when there is one.
+    /// The index nodes ahead of the running one, shared by every read of the run (none for a plane read at one index).
+    pub lead: Vec<u32>,
+    /// The run-time part of the running index, when there is one.
     pub base: Option<u32>,
-    /// The index of the first element, without the run-time part.
+    /// The running index of the first element, without the run-time part.
     pub start: i128,
-    /// The distance between the indices of neighbouring elements.
+    /// The distance between the running indices of neighbouring elements.
     pub step: i128,
     /// Whether the reads keep the clamp of the original index.
     pub clamped: bool,
@@ -166,7 +168,22 @@ fn scalar_read(ctx: &Ctx, node: u32) -> Outcome<Option<(String, String)>> {
     )))
 }
 
-/// The gather a `vec` of reads of one plane at an arithmetic run of indices is, else None.
+/// The lead indices and the running index of a read: every index operand but the last, and the last. A read at one index carries
+/// the clamp of an old-form read as an operation, so its run is of the index before it.
+fn split_read(ctx: &Ctx, read: u32) -> Option<(Vec<u32>, u32)> {
+    let (&last, lead) = ctx.nodes[read as usize].ops[1..].split_last()?;
+    Some((
+        lead.to_vec(),
+        if lead.is_empty() {
+            unclamped(ctx, last)
+        } else {
+            last
+        },
+    ))
+}
+
+/// The gather a `vec` of reads of one plane at an arithmetic run of the last index is, else None. Reads at several indices are a
+/// run only when every read has the same lead indices and the same edge rule.
 pub(crate) fn gather(ctx: &Ctx, node: u32) -> Outcome<Option<Gather>> {
     ctx.node(node)?;
     let parts = ctx.nodes[node as usize].ops.clone();
@@ -177,16 +194,10 @@ pub(crate) fn gather(ctx: &Ctx, node: u32) -> Outcome<Option<Gather>> {
     let Some(plane_id) = scalar_read(ctx, first)? else {
         return Ok(None);
     };
-    // a gather is an arithmetic run of one flat index: a read with an index per axis of several axes is not one
-    let sole_index = |read: u32| match ctx.nodes[read as usize].ops[..] {
-        [_, index] => Some(index),
-        _ => None,
-    };
-    // the index of an old-form read carries its clamp as an operation: the run is of the index before it
-    let raw_index = |read: u32| sole_index(read).map(|index| unclamped(ctx, index));
-    let Some(first_index) = raw_index(first) else {
+    let Some((lead0, first_index)) = split_read(ctx, first) else {
         return Ok(None);
     };
+    let edge = ctx.str_field(first, "edge")?;
     let (base0, start) = split_index(ctx, first_index)?;
     let mut step = 0;
     let mut seen = HashMap::new();
@@ -194,9 +205,20 @@ pub(crate) fn gather(ctx: &Ctx, node: u32) -> Outcome<Option<Gather>> {
         if scalar_read(ctx, part)? != Some(plane_id.clone()) {
             return Ok(None);
         }
-        let Some(index) = raw_index(part) else {
+        let Some((lead, index)) = split_read(ctx, part) else {
             return Ok(None);
         };
+        if lead.len() != lead0.len() {
+            return Ok(None);
+        }
+        for (&a, &b) in lead.iter().zip(&lead0) {
+            if !ctx.same_index(a, b, &mut seen)? {
+                return Ok(None);
+            }
+        }
+        if !lead0.is_empty() && ctx.str_field(part, "edge")? != edge {
+            return Ok(None);
+        }
         let (base, offset) = split_index(ctx, index)?;
         let same_base = match (base, base0) {
             (None, None) => true,
@@ -214,17 +236,20 @@ pub(crate) fn gather(ctx: &Ctx, node: u32) -> Outcome<Option<Gather>> {
         }
     }
     // a run is spelled as clamped or unchecked reads: another edge rule keeps its reads one by one
-    let edge = ctx.str_field(first, "edge")?;
     if !matches!(edge.as_str(), "clamp" | "unchecked") {
         return Ok(None);
     }
-    let clamped = edge == "clamp" || sole_index(first) != raw_index(first);
+    let last = *ctx.nodes[first as usize]
+        .ops
+        .last()
+        .expect("a read has an index");
     Ok(Some(Gather {
         plane: ctx.nodes[first as usize].ops[0],
+        lead: lead0,
         base: base0,
         start,
         step,
-        clamped,
+        clamped: edge == "clamp" || last != first_index,
     }))
 }
 
@@ -269,48 +294,57 @@ pub unsafe extern "C" fn rw_wide_element_kind(ctx: *mut Ctx, node: u32, kind: *m
     })
 }
 
-/// The gather a vector of reads is; `*found` is 0 when it is none. `*base` is `UINT32_MAX` when
-/// the index has no runtime part. See `raptor_wings.h`.
+/// The most index operands ahead of the running one that the gather answer holds: a plane has at most eight axes.
+pub const GATHER_LEAD_MAX: usize = 8;
+
+/// The answer of `rw_wide_gather`, as `raptor_wings_front.h` states it (`found` 0: no run).
+#[repr(C)]
+#[derive(Default)]
+pub struct GatherAnswer {
+    /// Whether the vector is a run of reads (0 or 1).
+    pub found: c_int,
+    /// The plane read.
+    pub plane: u32,
+    /// The run-time part of the running index, `u32::MAX` when it has none.
+    pub base: u32,
+    /// The running index of the first element, without its run-time part.
+    pub start: i64,
+    /// The distance between the running indices of neighbouring elements.
+    pub step: i64,
+    /// Whether the reads keep the clamp of the original index.
+    pub clamped: c_int,
+    /// How many lead index nodes `lead` holds.
+    pub nlead: usize,
+    /// The index nodes ahead of the running index, shared by every read of the run.
+    pub lead: [u32; GATHER_LEAD_MAX],
+}
+
+/// The gather a vector of reads is; see `raptor_wings.h`.
 ///
 /// # Safety
-/// `ctx` is a live context from the IR door, or null (then the call refuses); every other pointer is valid for the reads and writes `raptor_wings.h` gives it, and a list or text buffer holds `cap` elements.
+/// `ctx` is a live context from the IR door, or null (then the call refuses); `out` is valid for one write.
 #[no_mangle]
-pub unsafe extern "C" fn rw_wide_gather(
-    ctx: *mut Ctx,
-    node: u32,
-    found: *mut c_int,
-    plane: *mut u32,
-    base: *mut u32,
-    start: *mut i64,
-    step: *mut i64,
-    clamped: *mut c_int,
-) -> c_int {
+pub unsafe extern "C" fn rw_wide_gather(ctx: *mut Ctx, node: u32, out: *mut GatherAnswer) -> c_int {
     guard(ctx, |ctx| {
-        if [
-            found as usize,
-            plane as usize,
-            base as usize,
-            start as usize,
-            step as usize,
-            clamped as usize,
-        ]
-        .contains(&0)
-        {
-            return Err(Fault::BadArg("an output pointer is NULL".into()));
+        if out.is_null() {
+            return Err(Fault::BadArg("out is NULL".into()));
         }
-        let answer = gather(ctx, node)?;
-        unsafe {
-            *found = answer.is_some() as c_int;
-            if let Some(g) = answer {
-                (*plane, *base, *start, *step, *clamped) = (
-                    g.plane,
-                    g.base.unwrap_or(u32::MAX),
-                    g.start as i64,
-                    g.step as i64,
-                    g.clamped as c_int,
-                );
+        let mut answer = GatherAnswer::default();
+        if let Some(g) = gather(ctx, node)? {
+            if g.lead.len() > GATHER_LEAD_MAX {
+                return Err(Fault::BadArg(
+                    "a run over more axes than a plane has".into(),
+                ));
             }
+            answer.found = 1;
+            answer.plane = g.plane;
+            answer.base = g.base.unwrap_or(u32::MAX);
+            (answer.start, answer.step) = (g.start as i64, g.step as i64);
+            answer.clamped = g.clamped as c_int;
+            answer.nlead = g.lead.len();
+            answer.lead[..g.lead.len()].copy_from_slice(&g.lead);
         }
+        unsafe { *out = answer };
         Ok(())
     })
 }

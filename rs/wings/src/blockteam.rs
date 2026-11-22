@@ -69,7 +69,7 @@ fn plane_reads(
     for (role, factor) in [("u", Some(u)), ("v", v)] {
         let Some(factor) = factor else { continue };
         let bare = is_a(ctx, factor, "Leaf")
-            && ctx.str_field(factor, "role")? == "per_sample"
+            && ctx.str_field(factor, "role")? == "plane_in"
             && ctx.nodes[factor as usize].shape.is_empty();
         if bare {
             found.push((role, factor));

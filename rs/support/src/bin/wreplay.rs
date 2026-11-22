@@ -780,28 +780,32 @@ fn gather(c: *mut Ctx, args: &[J], recorded: Result<&J, &J>, h: &[u32]) -> Resul
         Ok(r) => r,
         Err(_) => return skip("recorded error"),
     };
-    let (mut found, mut plane, mut base, mut start, mut step, mut clamped) =
-        (0, 0u32, 0u32, 0i64, 0i64, 0);
-    let st = unsafe {
-        rw_wide_gather(
-            c,
-            n,
-            &mut found,
-            &mut plane,
-            &mut base,
-            &mut start,
-            &mut step,
-            &mut clamped,
-        )
-    };
+    let mut answer = GatherAnswer::default();
+    let st = unsafe { rw_wide_gather(c, n, &mut answer) };
     if st != 0 {
         return same(args, h, false, format!("status {st}"), texts(r, h));
     }
+    let GatherAnswer {
+        found,
+        plane,
+        base,
+        start,
+        step,
+        clamped,
+        nlead,
+        lead,
+    } = answer;
     let got = if found == 0 {
         "none".to_string()
     } else {
+        // a run over the last axis of a plane with several states its lead nodes too; the recorded runs have none
+        let lead = if nlead == 0 {
+            String::new()
+        } else {
+            format!(" lead {:?}", &lead[..nlead])
+        };
         format!(
-            "plane {plane} base {} start {start} step {step} clamped {clamped}",
+            "plane {plane} base {} start {start} step {step} clamped {clamped}{lead}",
             if base == u32::MAX {
                 "-".into()
             } else {

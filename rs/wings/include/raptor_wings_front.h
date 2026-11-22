@@ -103,8 +103,11 @@ int rw_wide_is_prior(rx_ctx* ctx, rx_node node, int* out);
 /* How element k of a rank-1 node is read. */
 enum { RW_ELEMENT_NONE = 0, RW_ELEMENT_PROXY = 1, RW_ELEMENT_INPUT = 2, RW_ELEMENT_PARTS = 3, RW_ELEMENT_SPLAT = 4, RW_ELEMENT_ELEMENTWISE = 5 };
 int rw_wide_element_kind(rx_ctx* ctx, rx_node node, int* kind);
-/* Whether a vector is reads of one plane at base + start + k * step: *found is 0 or 1; *base is UINT32_MAX when the index has no runtime part. */
-int rw_wide_gather(rx_ctx* ctx, rx_node node, int* found, rx_node* plane, rx_node* base, int64_t* start, int64_t* step, int* clamped);
+/* Whether a vector is reads of one plane at lead.., base + start + k * step: the running index is the last one of each read and lead[0..nlead] holds the
+   index nodes ahead of it, shared by every read of the run (none for a plane read at one index; a plane has at most eight axes). found is 0 or 1;
+   base is UINT32_MAX when the running index has no runtime part. Reads at several indices are a run only with the same lead nodes and the same edge rule. */
+typedef struct { int found; rx_node plane; rx_node base; int64_t start; int64_t step; int clamped; size_t nlead; rx_node lead[8]; } rw_gather;
+int rw_wide_gather(rx_ctx* ctx, rx_node node, rw_gather* out);
 /* The sinks with each wide value that needs a plane placed in one: a `resident` op over the value and a leaf naming the plane, made in ctx;
    a vector of scaled reads first becomes a scaled run. A kernel the pass leaves alone (thread_form != 0, no sinks, nothing needing a plane)
    comes back as given and *changed is 0. The target's facts: runtime_min (nruntime = 5) five numbers (read, slot_read, rotate, write, accum): the widest vector

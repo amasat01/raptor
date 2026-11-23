@@ -92,7 +92,8 @@ typedef struct { rx_node plane; int layout; int64_t width; } rw_plane_row;
 int rw_wide_record(rx_ctx* ctx, const rx_node* order, size_t n, rw_plane_row* rows, size_t cap, size_t* count);
 /* Whether the node is spelled as its runtime twin; fold_min is NULL when the facts name no threshold, form is "auto", "rolled" or "static" (*out is 0 or 1). */
 int rw_fold_rolled(rx_ctx* ctx, rx_node node, const int64_t* fold_min /* NULL */, const char* form, int* out);
-/* The key run of one keyed sink of the kernel with the given sinks: found is 0 for none; run_max and block_run are the target's lane numbers. */
+/* The key run of one keyed sink of the kernel with the given sinks: found is 0 for none; run_max and block_run are the target's lane numbers.
+   A store with several indices (one per axis of the plane written) has a run only when every index is invariant along the run axes, so the lanes of a run write one element; its form is always RW_KEY_PROVEN. */
 enum { RW_KEY_PROVEN = 1, RW_KEY_SORTED = 2, RW_KEY_TESTED = 3 };
 typedef struct { int found; int form; int64_t width; int block; } rw_key_run;
 int rw_lanes_key_run_in_kernel(rx_ctx* ctx, const rx_node* sinks, size_t nsinks, rx_node sink, int64_t run_max, int64_t block_run, rw_key_run* out);

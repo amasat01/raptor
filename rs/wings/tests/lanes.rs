@@ -56,6 +56,25 @@ impl Kernel {
     /// An accumulate into plane `acc` at `key` of a value that also divides the lane by `divisors`, as the real kernels'
     /// bodies do; it keeps those divisors in the kernel without touching the key.
     fn accumulate(&mut self, key: u32, divisors: &[i64]) -> u32 {
+        let value = self.addend(divisors);
+        let fields = "(('kind', 'update'), ('name', 'acc'), ('role', 'plane_out'), ('op', 'add'), ('summation', 'plain'), ('reduced', None))";
+        self.c
+            .make("Update", "f64", &[], None, &[value, key], fields)
+            .unwrap()
+    }
+
+    /// A scattered accumulate into the plane `acc` of axes `net` and `p` at the two indices `net_at` and `p_at`: no `reduced`
+    /// edge, one index per axis of the plane. The divisors are kept in the kernel as for `accumulate`.
+    fn scatter(&mut self, net_at: u32, p_at: u32, divisors: &[i64]) -> u32 {
+        let value = self.addend(divisors);
+        let fields = "(('kind', 'update'), ('name', 'acc'), ('role', 'plane_out'), ('op', 'add'), ('summation', 'plain'), ('reduced', None), ('axes', (('net', None), ('p', 8))))";
+        self.c
+            .make("Update", "f64", &[], None, &[value, net_at, p_at], fields)
+            .unwrap()
+    }
+
+    /// The value a kernel adds: one that also divides the lane by each of `divisors`.
+    fn addend(&mut self, divisors: &[i64]) -> u32 {
         let mut value = self
             .c
             .make("Const", "f64", &[], None, &[], "(('literal', 1.0),)");
@@ -79,10 +98,7 @@ impl Kernel {
             );
             value = sum;
         }
-        let fields = "(('kind', 'update'), ('name', 'acc'), ('role', 'plane_out'), ('op', 'add'), ('summation', 'plain'), ('reduced', None))";
-        self.c
-            .make("Update", "f64", &[], None, &[value.unwrap(), key], fields)
-            .unwrap()
+        value.unwrap()
     }
 
     /// The key run of `sink` with a run of up to 32 lanes, the width of a warp.
@@ -289,4 +305,66 @@ fn a_kernel_with_one_lane_axis_has_no_box() {
         k.c.make("Assign", "i32", &[], None, &[read], fields)
             .unwrap();
     assert!(choose_box(&k.c, &[out], 1, 4).unwrap().is_none());
+}
+
+// a store with several indices has the run its indices share
+
+/// The two-index store `acc[net_at, p_at]` of a lane space of rows of `row` lanes (the divisor keeps the axes in the kernel).
+fn scattered_run(
+    row: i64,
+    net_at: impl Fn(&mut Kernel) -> u32,
+    p_at: impl Fn(&mut Kernel) -> u32,
+) -> Option<KeyRun> {
+    let mut k = Kernel::new();
+    let (net, p) = (net_at(&mut k), p_at(&mut k));
+    let sink = k.scatter(net, p, &[row]);
+    k.run(sink)
+}
+
+#[test]
+fn a_store_whose_indices_are_all_constant_along_the_samples_has_the_run_of_its_net_alone() {
+    // lane = net * 64 + sample, a warp of 32 stays inside one net; the reference is the flat key `net` of the same geometry
+    let reference = quotient_key_run(64).unwrap();
+    let run = scattered_run(64, |k| k.quotient(64), |k| k.int(3)).unwrap();
+    assert_eq!((reference.form, reference.width), ("proven", 32));
+    assert_eq!(
+        (run.form, run.width, run.block),
+        (reference.form, reference.width, reference.block)
+    );
+    assert_eq!(run.forms.len(), reference.forms.len());
+}
+
+#[test]
+fn a_store_with_an_index_that_moves_along_the_samples_has_no_run() {
+    // the second index is the sample's own position: the lanes of a warp write different elements
+    assert_eq!(
+        scattered_run(64, |k| k.quotient(64), |k| k.remainder(64)),
+        None
+    );
+    // the same when it is the first index that moves
+    assert_eq!(scattered_run(64, |k| k.remainder(64), |k| k.int(3)), None);
+}
+
+#[test]
+fn a_store_aligned_only_to_sixteen_has_the_run_the_flat_key_of_that_geometry_has() {
+    // rows of 48 lanes: a warp of 32 straddles two nets, 16 divides 48
+    let reference = quotient_key_run(48).unwrap();
+    let run = scattered_run(48, |k| k.quotient(48), |k| k.int(3)).unwrap();
+    assert_eq!((reference.form, reference.width), ("proven", 16));
+    assert_eq!((run.form, run.width), (reference.form, reference.width));
+}
+
+#[test]
+fn a_store_with_several_indices_is_proven_only_never_sorted_or_tested() {
+    // a flat key read from a sorted plane is a sorted run; the same plane as one of two indices gives none
+    let mut k = Kernel::new();
+    let net = k.leaf("net", "plane_in", true);
+    let p = k.int(3);
+    let sink = k.scatter(net, p, &[64]);
+    assert_eq!(k.run(sink), None);
+    // divisors that are not a chain leave one flat axis: a flat key is tested at run time, two indices are not
+    let mut k = Kernel::new();
+    let (net, p) = (k.quotient(4), k.int(3));
+    let sink = k.scatter(net, p, &[6]);
+    assert_eq!(k.run(sink), None);
 }

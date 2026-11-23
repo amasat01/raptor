@@ -777,8 +777,15 @@ pub(crate) fn box_candidate(c: &Ctx, sinks: &[u32]) -> R<Option<BoxCandidate>> {
     }))
 }
 
-/// The key run of one keyed sink of the kernel whose sinks are `sinks`; None for an own-column sink, a sink with several
-/// indices or a key with no run.
+/// The key run of one keyed sink of the kernel whose sinks are `sinks`; None for an own-column sink or a key with no run.
+///
+/// A sink with one index, or a sum over some lane axes that states its key on its `reduced` edge, has the run of that flat key.
+/// A scattered store with several indices (one per axis of the plane written, no `reduced` edge) has a run along a lane axis
+/// exactly when EVERY index is invariant along it, so that the lanes of the run write one element. Each index is read by the
+/// same per-axis forms as a flat key; the forms of the store are the forms of its indices combined (an axis is invariant only when
+/// every index is, otherwise it takes the form of the first index that moves), and the run is the flat key's proof over those
+/// combined forms: the width is the largest the run axes allow, which is the smallest any one index allows. Only the `proven`
+/// form is given to a store with several indices: the `sorted` and `tested` forms read one key plane or one runtime key.
 pub fn key_run(
     c: &Ctx,
     sinks: &[u32],
@@ -787,20 +794,20 @@ pub fn key_run(
     block_run: i128,
 ) -> R<Option<KeyRun>> {
     c.node(sink)?;
-    // The run reasoning is about one flat key. A sum over some lane axes states it on its `reduced` edge; a store with several
-    // indices and no such edge has none.
     let flat = match c.field(sink, "reduced") {
         Ok(Val::Node(sum)) => c.field(sum, "key").ok(),
         _ => None,
     };
-    if flat.is_none() && c.nodes[sink as usize].ops.len() > 2 {
-        return Ok(None);
-    }
-    let key = match flat.map_or_else(|| c.field(sink, "index"), Ok) {
-        Ok(Val::Node(k)) => k,
-        Ok(Val::None) => return Ok(None),
-        Ok(_) => return refuse("a sink's index is not a node"),
-        Err(e) => return Err(e),
+    let several = flat.is_none() && c.nodes[sink as usize].ops.len() > 2;
+    let keys: Vec<u32> = if several {
+        c.nodes[sink as usize].ops[1..].to_vec()
+    } else {
+        match flat.map_or_else(|| c.field(sink, "index"), Ok) {
+            Ok(Val::Node(k)) => vec![k],
+            Ok(Val::None) => return Ok(None),
+            Ok(_) => return refuse("a sink's index is not a node"),
+            Err(e) => return Err(e),
+        }
     };
     let axes = axes_of(c, sinks)?;
     let n = axes.len();
@@ -811,9 +818,18 @@ pub fn key_run(
         memo: HashMap::new(),
         all: (1u64 << n) - 1,
     };
-    let v = ev.value(key)?;
-    let forms = axis_forms(&v, n);
-    if ev.key_origin_sorted(key)? {
+    let mut forms: Vec<Form> = vec![(INVARIANT, None); n];
+    let mut data_bound = false;
+    for &key in &keys {
+        let v = ev.value(key)?;
+        data_bound |= v.dbad != 0 || (v.data && v.varies() != 0);
+        for (axis, form) in axis_forms(&v, n).into_iter().enumerate() {
+            if forms[axis].0 == INVARIANT {
+                forms[axis] = form;
+            }
+        }
+    }
+    if !several && ev.key_origin_sorted(keys[0])? {
         return Ok(Some(KeyRun {
             form: "sorted",
             width: run_max,
@@ -821,7 +837,7 @@ pub fn key_run(
             block: false,
         }));
     }
-    if v.dbad != 0 || (v.data && v.varies() != 0) {
+    if data_bound {
         return Ok(None);
     }
     let run_axes = |w: i128| (0..n).filter(|&i| strides[i] % w != 0).collect::<Vec<_>>();
@@ -839,16 +855,18 @@ pub fn key_run(
         }
         width /= 2;
     }
-    Ok(if matches!(forms[n - 1].0, INVARIANT | QUOTIENT) {
-        Some(KeyRun {
-            form: "tested",
-            width: run_max,
-            forms,
-            block: false,
-        })
-    } else {
-        None
-    })
+    Ok(
+        if !several && matches!(forms[n - 1].0, INVARIANT | QUOTIENT) {
+            Some(KeyRun {
+                form: "tested",
+                width: run_max,
+                forms,
+                block: false,
+            })
+        } else {
+            None
+        },
+    )
 }
 
 pub mod slice;

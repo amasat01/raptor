@@ -17,6 +17,23 @@ const GROUP_ONLY: [&str; 5] = [
     "Barrier",
 ];
 
+/// The sinks whose meaning belongs to the whole launch, with why a group body does not hold them. Every other sink of a kernel
+/// (an `Assign`, a plain sink on the roles `mutable`, `out` or `plane_out`, an `Update`) is committed from a body like any other.
+const LAUNCH_SINKS: [(&str, &str); 3] = [
+    (
+        "SampleSum",
+        "it folds the samples of the whole launch, and a group sees only its own lanes",
+    ),
+    (
+        "Finish",
+        "it ends a sample through the one mask of the launch; state it outside the group",
+    ),
+    (
+        "TapeWrite",
+        "it commits the rows of the tape of the loop it sits in, not of a group",
+    ),
+];
+
 /// The facts of a `Group` as its constructor states them, read by `Ctx::group_fault`.
 pub struct GroupFacts<'a> {
     /// `count`, `axes` or `key`.
@@ -284,7 +301,35 @@ impl Ctx {
                 format!("the body holds a {class}, which is neither a sink nor a barrier")
             });
         }
+        if let Some(fault) = g.body.iter().find_map(|&s| self.launch_sink_fault(s)) {
+            return Some(fault);
+        }
         self.phase_fault(g)
+    }
+
+    /// Whether `sink` is a keyed `Update` in the lane order (`order` = `lane`) or an ordered accumulate: the contract the wings
+    /// lower through a derived stage over the launch (the ordered scatter, the record of winners).
+    fn is_ordered_keyed_update(&self, sink: u32) -> bool {
+        let keyed = self.is_a(sink, "Update") && self.nodes[sink as usize].ops.len() > 1;
+        let lane_order = self.text_of(sink, "order").as_deref() == Some("lane");
+        (keyed && lane_order) || self.is_a(sink, "OrderedAccumWrite")
+    }
+
+    /// Why a body sink is refused when its meaning belongs to the whole launch, if it is one of those.
+    fn launch_sink_fault(&self, sink: u32) -> Option<String> {
+        if self.is_ordered_keyed_update(sink) {
+            return Some(format!(
+                "an ordered keyed update inside a group body is not written; the lane order of the launch needs a derived stage of its own, which becomes a group by key. Write the update outside the group, or use the plain or compensated contract (sink '{}')",
+                self.plane_name(sink)
+            ));
+        }
+        let (class, reason) = LAUNCH_SINKS
+            .iter()
+            .find(|(class, _)| self.is_a(sink, class))?;
+        Some(format!(
+            "a {class} inside a group body is not written; {reason} (sink '{}')",
+            self.plane_name(sink)
+        ))
     }
 
     /// The membership rules; the size bound of one group (None: not known at build) when the facts agree.

@@ -824,17 +824,17 @@ fn pair(role: &str, name: &str) -> (String, String) {
 fn the_fixtures_canonicalise_with_the_planes_they_read_and_write_as_slots_and_no_scratch() {
     // oracle: the manifest's role order (outputs, then inputs) and, inside a run, names in order
     let want = [
-        ("tile", vec![pair("plane_out", "y"), pair("plane_in", "x")]),
+        ("tile", vec![pair("mutable", "y"), pair("plane_in", "x")]),
         (
             "rows",
             vec![
-                pair("plane_out", "least"),
-                pair("plane_out", "place"),
-                pair("plane_out", "total"),
+                pair("mutable", "least"),
+                pair("mutable", "place"),
+                pair("mutable", "total"),
                 pair("plane_in", "x"),
             ],
         ),
-        ("ring", vec![pair("plane_out", "y"), pair("plane_in", "x")]),
+        ("ring", vec![pair("mutable", "y"), pair("plane_in", "x")]),
     ];
     for ((name, make, _), (want_name, expected)) in FIXTURES.into_iter().zip(want) {
         assert_eq!(name, want_name);
@@ -871,7 +871,7 @@ fn ordinary_sinks_sit_beside_a_group_and_two_groups_are_refused() {
     let beside = g::commit(&mut c, "z", x).unwrap();
     let (status, w) = canon(&mut c, &[tile, beside]);
     assert_eq!(status, RX_OK);
-    assert!(slots(&mut c, w).contains(&pair("plane_out", "z")));
+    assert!(slots(&mut c, w).contains(&pair("mutable", "z")));
     let other = g::ring(&mut c).unwrap().group;
     let (status, _) = canon(&mut c, &[tile, other]);
     assert_eq!(status, RX_REFUSED);
@@ -945,7 +945,7 @@ fn loaded_root(c: &mut Ctx, text: &str) -> u32 {
 fn an_update_without_a_role_is_the_update_on_plane_out_in_the_dump_and_the_digest() {
     let mut c = ctx();
     let x = g::plane_in(&mut c, "x", "f64").unwrap();
-    let bare = g::commit(&mut c, "y", x).unwrap();
+    let bare = g::commit_wide(&mut c, "y", x).unwrap();
     let given = [
         ("name", Val::Str("y".into())),
         ("value", Val::Node(x)),
@@ -963,4 +963,279 @@ fn an_update_without_a_role_is_the_update_on_plane_out_in_the_dump_and_the_diges
         .collect();
     assert_eq!(digests[0], digests[1]);
     assert!(dump(&mut c as *mut Ctx, &[bare]).contains("('role', 'plane_out')"));
+}
+
+// an ordinary per-lane output committed from a group body
+
+/// The reference kernels that commit an ordinary per-lane output, with their stored documents.
+const LANE_FIXTURES: [(&str, Make, &str); 2] = [
+    (
+        "lane_out",
+        g::lane_out,
+        include_str!("data/groups/lane_out.dump"),
+    ),
+    (
+        "lane_vector_out",
+        g::lane_vector_out,
+        include_str!("data/groups/lane_vector_out.dump"),
+    ),
+];
+
+#[test]
+fn the_per_lane_output_kernels_equal_their_stored_documents_and_load_again() {
+    for (name, make, stored) in LANE_FIXTURES {
+        let c = rx_ctx_new();
+        let fixture = make(unsafe { &mut *c }).unwrap();
+        assert_eq!(dump(c, &[fixture.group]), stored, "{name}");
+        let d = rx_ctx_new();
+        let (status, roots) = load(d, stored);
+        assert_eq!(status, RX_OK, "{name}: {}", err(d));
+        assert_eq!(dump(d, &roots), stored, "{name}");
+        assert_eq!(
+            phases_at_door(d, roots[0]),
+            (vec![1], "2".to_string()),
+            "{name}"
+        );
+        rx_ctx_free(c);
+        rx_ctx_free(d);
+    }
+}
+
+#[test]
+fn a_per_lane_output_binds_a_mutable_slot_of_the_shape_it_has_outside_a_group() {
+    // oracle: the role order puts the mutable outputs first, and inside plane_in the planes of rank one or more before scalars
+    let want = [
+        (
+            "lane_out",
+            vec![pair("mutable", "share"), pair("plane_in", "x")],
+            vec![],
+        ),
+        (
+            "lane_vector_out",
+            vec![
+                pair("mutable", "scaled"),
+                pair("plane_in", "v"),
+                pair("plane_in", "x"),
+            ],
+            vec![3],
+        ),
+    ];
+    for ((name, make, _), (want_name, expected, shape)) in LANE_FIXTURES.into_iter().zip(want) {
+        assert_eq!(name, want_name);
+        let mut c = ctx();
+        let group = make(&mut c).unwrap().group;
+        let (status, w) = canon(&mut c, &[group]);
+        assert_eq!(status, RX_OK, "{name}");
+        assert_eq!(slots(&mut c, w), expected, "{name}");
+        let role = CString::new("mutable").unwrap();
+        let out = CString::new(expected[0].1.clone()).unwrap();
+        let mut kind: raptor_ir::typed::RxType = unsafe { std::mem::zeroed() };
+        let status = unsafe {
+            raptor_ir::walkreads::rx_walk_slot_type(
+                &mut c as *mut Ctx,
+                w,
+                role.as_ptr(),
+                out.as_ptr(),
+                &mut kind,
+            )
+        };
+        assert_eq!(status, RX_OK, "{name}");
+        assert_eq!(kind.dims[..kind.rank as usize], shape[..], "{name}");
+    }
+}
+
+#[test]
+fn a_plain_sink_on_any_output_role_is_committed_from_a_body_like_outside() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let index = c.table.find("Sink").unwrap();
+    for role in ["mutable", "out", "plane_out"] {
+        let given = [
+            ("kind", Val::Str("sink".into())),
+            ("role", Val::Str(role.into())),
+            ("name", Val::Str(format!("o_{role}"))),
+            ("value", Val::Node(x)),
+        ];
+        let given: Vec<(String, Val)> =
+            given.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+        let sink = c.new_from(index, &given).unwrap();
+        let group = g::group(&mut c, &Membership::count(4), &[], &[sink]).unwrap();
+        let (status, w) = canon(&mut c, &[group]);
+        assert_eq!(status, RX_OK, "{role}");
+        assert!(
+            slots(&mut c, w).contains(&pair(role, &format!("o_{role}"))),
+            "{role}"
+        );
+    }
+}
+
+/// The node of `class` built from the constructor parameters `given`.
+fn made(c: &mut Ctx, class: &str, given: Vec<(&str, Val)>) -> u32 {
+    let index = c.table.find(class).unwrap();
+    let given: Vec<(String, Val)> = given.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
+    c.new_from(index, &given).unwrap()
+}
+
+#[test]
+fn a_sink_that_belongs_to_the_whole_launch_is_refused_in_a_body_by_name() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let flag = g::apply(&mut c, "gt", &[x, x]).unwrap();
+    let row = g::whole(&mut c, "i32", 0).unwrap();
+    let sum = made(
+        &mut c,
+        "SampleSum",
+        vec![("name", Val::Str("s".into())), ("value", Val::Node(x))],
+    );
+    let done = made(
+        &mut c,
+        "Finish",
+        vec![("name", Val::Str("f".into())), ("value", Val::Node(flag))],
+    );
+    let tape = made(
+        &mut c,
+        "TapeWrite",
+        vec![
+            ("name", Val::Str("w".into())),
+            ("row", Val::Node(row)),
+            ("on", Val::Node(flag)),
+            ("values", Val::Tuple(vec![Val::Node(x)])),
+            ("ttype", raptor_ir::value::ttype_val("f64", &[4], None)),
+        ],
+    );
+    for (class, sink) in [("SampleSum", sum), ("Finish", done), ("TapeWrite", tape)] {
+        let m = refused(g::group(&mut c, &Membership::count(4), &[], &[sink]));
+        assert!(
+            m.contains(&format!("a {class} inside a group body is not written;")),
+            "{class}: {m}"
+        );
+    }
+}
+
+// the structural key of a node that reaches a scratch
+
+#[test]
+fn the_structural_keys_of_reads_of_a_scratch_are_equal_for_one_plane_and_one_index() {
+    let mut c = ctx();
+    let t = g::scratch(&mut c, "t", "f64", 8).unwrap();
+    let other = g::scratch(&mut c, "u", "f64", 8).unwrap();
+    let place = g::rank(&mut c).unwrap();
+    let reads: Vec<u32> = [t, t, other]
+        .iter()
+        .map(|&plane| g::read(&mut c, plane, place, "clamp").unwrap())
+        .collect();
+    let order = [t, other, place, reads[0], reads[1], reads[2]];
+    let keys = c.structural_keys(&order).unwrap();
+    assert_eq!(keys[3], keys[4]);
+    assert_ne!(keys[3], keys[5]);
+    assert_ne!(keys[0], keys[1]);
+}
+
+#[test]
+fn a_walk_lists_the_body_of_a_group_before_it_and_the_sinks_beside_it_in_root_order() {
+    let mut c = ctx();
+    let tile = g::tile(&mut c).unwrap().group;
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let beside = g::commit(&mut c, "z", x).unwrap();
+    let position_in = |c: &mut Ctx, roots: &[u32], node: u32| {
+        let (status, w) = canon(c, roots);
+        assert_eq!(status, RX_OK);
+        let mut at = u32::MAX;
+        assert_eq!(rx_walk_position(c as *mut Ctx, w, node, &mut at), RX_OK);
+        at
+    };
+    let body = {
+        let mut found = [0u32; 8];
+        let mut n = 0usize;
+        let p = &mut c as *mut Ctx;
+        let status = unsafe {
+            raptor_ir::typed::rx_field_node_list(
+                p,
+                tile,
+                c"body_sinks".as_ptr(),
+                found.as_mut_ptr(),
+                8,
+                &mut n,
+            )
+        };
+        assert_eq!(status, RX_OK);
+        found[..n].to_vec()
+    };
+    for roots in [[tile, beside], [beside, tile]] {
+        let group_at = position_in(&mut c, &roots, tile);
+        let beside_at = position_in(&mut c, &roots, beside);
+        for &sink in &body {
+            assert!(position_in(&mut c, &roots, sink) < group_at);
+        }
+        // a root comes in the order it is given; the body sinks are the group's `body_sinks` field, every other root is outside
+        assert_eq!(beside_at < group_at, roots[0] == beside);
+    }
+}
+
+#[test]
+fn a_wide_plane_is_still_written_from_a_body_by_an_update_on_plane_out() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let wide = g::commit_wide(&mut c, "w", x).unwrap();
+    let group = g::group(&mut c, &Membership::count(4), &[], &[wide]).unwrap();
+    let (status, w) = canon(&mut c, &[group]);
+    assert_eq!(status, RX_OK);
+    assert_eq!(
+        slots(&mut c, w),
+        vec![pair("plane_out", "w"), pair("plane_in", "x")]
+    );
+}
+
+// a keyed update that needs a derived stage of the launch
+
+/// A keyed update of `op` into the plane `bins` of nine cells at the key `j`, with the extra constructor parameters `extra`.
+fn keyed(c: &mut Ctx, op: &str, extra: Vec<(&str, Val)>) -> u32 {
+    let x = g::plane_in(c, "x", "f64").unwrap();
+    let key = g::plane_in(c, "j", "i32").unwrap();
+    let mut given = vec![
+        ("name", Val::Str("bins".into())),
+        ("value", Val::Node(x)),
+        ("indices", Val::Tuple(vec![Val::Node(key)])),
+        ("op", Val::Str(op.into())),
+        ("axes", g::axes(&[("bin", Some(9))])),
+    ];
+    given.extend(extra);
+    made(c, "Update", given)
+}
+
+#[test]
+fn an_ordered_keyed_update_is_refused_in_a_body_by_name() {
+    let lane = || vec![("order", Val::Str("lane".into()))];
+    for op in ["add", "min", "max"] {
+        let mut c = ctx();
+        let sink = keyed(&mut c, op, lane());
+        let m = refused(g::group(&mut c, &Membership::count(4), &[], &[sink]));
+        assert!(
+            m.contains("an ordered keyed update inside a group body is not written;"),
+            "{op}: {m}"
+        );
+        assert!(
+            m.contains("outside the group, or use the plain or compensated contract"),
+            "{op}: {m}"
+        );
+    }
+}
+
+#[test]
+fn plain_and_compensated_adds_a_min_without_the_lane_order_and_a_store_under_a_conflict_rule_stay_legal_in_a_body(
+) {
+    let say = |k: &'static str, v: &str| (k, Val::Str(v.into()));
+    let cases: Vec<(&str, Vec<(&str, Val)>)> = vec![
+        ("add", vec![say("summation", "plain")]),
+        ("add", vec![say("summation", "compensated")]),
+        ("add", vec![]),
+        ("min", vec![]),
+        ("max", vec![say("order", "any")]),
+        ("store", vec![say("conflict", "any")]),
+    ];
+    for (op, extra) in cases {
+        let mut c = ctx();
+        let sink = keyed(&mut c, op, extra);
+        g::group(&mut c, &Membership::count(4), &[], &[sink]).unwrap();
+    }
 }

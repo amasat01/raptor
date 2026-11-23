@@ -48,11 +48,21 @@ fn type_of(ctx: &Ctx, node: u32) -> Val {
 
 /// A per-lane input plane `name` of element type `dtype`.
 pub fn plane_in(ctx: &mut Ctx, name: &str, dtype: &str) -> Result<u32, String> {
+    plane_in_shaped(ctx, name, dtype, &[])
+}
+
+/// A per-lane input plane `name` whose value per lane has the shape `shape`.
+pub fn plane_in_shaped(
+    ctx: &mut Ctx,
+    name: &str,
+    dtype: &str,
+    shape: &[i64],
+) -> Result<u32, String> {
     let given = vec![
         ("kind", text("vocab_read")),
         ("role", text("plane_in")),
         ("name", text(name)),
-        ("ttype", ttype_val(dtype, &[], None)),
+        ("ttype", ttype_val(dtype, shape, None)),
     ];
     build(ctx, "Leaf", given)
 }
@@ -126,8 +136,19 @@ pub fn store(
     build(ctx, "Update", given)
 }
 
-/// A store of `value` into the lane's own element of the output plane `name`.
+/// An ordinary per-lane output: an `Assign` of `value` to the plane `name` (role `mutable`), one value per lane, element-major.
+/// This is how a kernel commits a result outside a group, and so how the body of a group does.
 pub fn commit(ctx: &mut Ctx, name: &str, value: u32) -> Result<u32, String> {
+    build(
+        ctx,
+        "Assign",
+        vec![("name", text(name)), ("value", Val::Node(value))],
+    )
+}
+
+/// A store of `value` into the lane's own element of the wide output plane `name` (an `Update` on the role `plane_out`, laid out
+/// component-major for a value of rank above zero).
+pub fn commit_wide(ctx: &mut Ctx, name: &str, value: u32) -> Result<u32, String> {
     build(
         ctx,
         "Update",
@@ -217,8 +238,8 @@ pub struct Fixture {
 }
 
 /// `tile`: lanes in groups of 8; input `x`. Phase 0 stores sqrt(x) into the scratch `t` at the lane's rank and sums `t[rank]`
-/// over the group with the fixed tree; the sum ends the phase. Phase 1 commits `y = t[rank] / s`.
-/// Phases of the body (store, commit): [0, 1].
+/// over the group with the fixed tree; the sum ends the phase. Phase 1 assigns the ordinary output `y = t[rank] / s`.
+/// Phases of the body (store, assign): [0, 1]. Slots of the walk, in order: `mutable y`, `plane_in x`.
 pub fn tile(ctx: &mut Ctx) -> Result<Fixture, String> {
     let x = plane_in(ctx, "x", "f64")?;
     let t = scratch(ctx, "t", "f64", 8)?;
@@ -239,8 +260,9 @@ pub fn tile(ctx: &mut Ctx) -> Result<Fixture, String> {
 }
 
 /// `rows`: lanes on a grid `row` (run-time extent) by `col` (4); a group is one row (membership by the axis `col`); input `x`.
-/// Outputs per lane: `total` (sum in rank order), `least` (minimum) and `place` (the lane's rank). No scratch.
+/// Ordinary outputs per lane: `total` (sum in rank order), `least` (minimum) and `place` (the lane's rank). No scratch.
 /// Phases of the body (total, least, place): [1, 1, 1]; the two reductions are independent and share phase 0.
+/// Slots of the walk, in order: `mutable least`, `mutable place`, `mutable total`, `plane_in x`.
 pub fn rows(ctx: &mut Ctx) -> Result<Fixture, String> {
     let x = plane_in(ctx, "x", "f64")?;
     let sum = reduce(ctx, "sum", "lane", x)?;
@@ -265,8 +287,8 @@ pub fn rows(ctx: &mut Ctx) -> Result<Fixture, String> {
 }
 
 /// `ring`: lanes in groups of 8; input `x`. Phase 0 stores x into the scratch `t` at the lane's rank; a barrier; phase 1
-/// commits `y = t[rank] + t[rank + 1]` with the edge rule `wrap`, a neighbour read of another lane's element.
-/// Phases of the body (store, barrier, commit): [0, 0, 1].
+/// assigns the ordinary output `y = t[rank] + t[rank + 1]` with the edge rule `wrap`, a neighbour read of another lane's element.
+/// Phases of the body (store, barrier, assign): [0, 0, 1]. Slots of the walk, in order: `mutable y`, `plane_in x`.
 pub fn ring(ctx: &mut Ctx) -> Result<Fixture, String> {
     ring_with(ctx, true)
 }
@@ -294,5 +316,38 @@ pub fn ring_with(ctx: &mut Ctx, with_barrier: bool) -> Result<Fixture, String> {
         inputs: &["x"],
         scratch: &["t"],
         outputs: &["y"],
+    })
+}
+
+/// `lane_out`: lanes in groups of 4; input `x`. Phase 0 sums `x` over the group; phase 1 assigns the ordinary per-lane output
+/// `share = x / sum` (an `Assign`, role `mutable`). No scratch. Phases of the body (assign): [1].
+pub fn lane_out(ctx: &mut Ctx) -> Result<Fixture, String> {
+    let x = plane_in(ctx, "x", "f64")?;
+    let total = reduce(ctx, "sum", "tree", x)?;
+    let share = apply(ctx, "div", &[x, total])?;
+    let out = commit(ctx, "share", share)?;
+    let group = group(ctx, &Membership::count(4), &[], &[out])?;
+    Ok(Fixture {
+        group,
+        inputs: &["x"],
+        scratch: &[],
+        outputs: &["share"],
+    })
+}
+
+/// `lane_vector_out`: lanes in groups of 4; inputs `x` and a 3-vector `v` per lane. Phase 1 assigns the per-lane 3-vector output
+/// `scaled = v * sum(x)` (an `Assign`, role `mutable`, laid out one vector per lane). No scratch. Phases of the body: [1].
+pub fn lane_vector_out(ctx: &mut Ctx) -> Result<Fixture, String> {
+    let x = plane_in(ctx, "x", "f64")?;
+    let v = plane_in_shaped(ctx, "v", "f64", &[3])?;
+    let total = reduce(ctx, "sum", "tree", x)?;
+    let scaled = apply(ctx, "mul", &[v, total])?;
+    let out = commit(ctx, "scaled", scaled)?;
+    let group = group(ctx, &Membership::count(4), &[], &[out])?;
+    Ok(Fixture {
+        group,
+        inputs: &["x", "v"],
+        scratch: &[],
+        outputs: &["scaled"],
     })
 }

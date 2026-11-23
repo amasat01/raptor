@@ -170,11 +170,25 @@ impl Table {
                 binds: sp.binds,
                 watch: sp.watch == 1 || sp.watch == 2,
                 decl: None,
-                state_fields: sp.state.iter().map(|f| (*f).to_string()).collect(),
+                state_fields: t.state_of(sp.state),
                 defaults: vec![],
             });
         }
         Ok(t)
+    }
+    /// The identity state a manifest row lists: `+Class` stands for the state fields of that class, which an earlier row declared.
+    fn state_of(&self, listed: &[&str]) -> Vec<String> {
+        let mut fields = vec![];
+        for field in listed {
+            match field
+                .strip_prefix('+')
+                .and_then(|base| self.by_name.get(base))
+            {
+                Some(&base) => fields.extend(self.classes[base].state_fields.iter().cloned()),
+                None => fields.push((*field).to_string()),
+            }
+        }
+        fields
     }
     /// The index of the class named `name`.
     pub fn find(&self, name: &str) -> Option<usize> {

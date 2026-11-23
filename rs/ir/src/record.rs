@@ -382,6 +382,9 @@ impl Ctx {
             )),
             "tag" => Ok(n.tag.clone().map_or(Val::None, Val::Str)),
             "text" | "language" => self.raw_part(h, name),
+            "phases" | "phase_count" | "scratch_decls" if self.table.is_a(n.class, "Group") => {
+                self.group_fact(h, name)
+            }
             _ => self.prop(h, name),
         }
     }

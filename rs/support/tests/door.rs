@@ -1092,7 +1092,7 @@ fn a_declared_sink_takes_any_listed_role() {
         items.map(|r| r.trim_matches('"').to_string()).collect()
     };
     let listed = roles(c);
-    assert_eq!(listed, ["mutable", "out", "plane_out"]);
+    assert_eq!(listed, ["mutable", "out", "plane_out", "scratch"]);
     for role in &listed {
         let fields = format!("(('name', 'bar_W'), ('role', '{role}'), ('kept', ()))");
         assert_eq!(
@@ -1121,7 +1121,7 @@ fn a_declared_sink_takes_any_listed_role() {
     assert_eq!(
         err(c),
         "sink 'w': unknown sink role 'nope', expected one of \
-         ('mutable', 'out', 'plane_out')"
+         ('mutable', 'out', 'plane_out', 'scratch')"
     );
     // the node with role plane_out dumps and loads again in a context that declares the kind
     let kept = mk(

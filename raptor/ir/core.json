@@ -13,7 +13,8 @@
    "table_read",
    "terminated",
    "nsamples",
-   "prior_read"
+   "prior_read",
+   "scratch"
   ],
   "LEAF_ROLES": [
    "plane_in",
@@ -22,12 +23,14 @@
    "terminated",
    "uniform",
    "nsamples",
-   "mutable"
+   "mutable",
+   "scratch"
   ],
   "SINK_ROLES": [
    "mutable",
    "out",
-   "plane_out"
+   "plane_out",
+   "scratch"
   ],
   "QUAT_OPS": [
    "quat_mul",
@@ -55,7 +58,8 @@
   "AT_ROLES": [
    "lookup",
    "wide_in",
-   "plane_in"
+   "plane_in",
+   "scratch"
   ],
   "FACTOR_TAGS": [
    "lu_factor",
@@ -78,6 +82,11 @@
   "UPDATE_CONFLICTS": ["unique", "any"],
   "UPDATE_SUMMATIONS": ["auto", "plain", "compensated"],
   "UPDATE_ORDERS": ["any", "lane"],
+  "UPDATE_ROLES": ["plane_out", "scratch"],
+  "GROUP_MEMBERSHIPS": ["count", "axes", "key"],
+  "GROUP_REDUCE_OPS": ["sum", "min", "max", "any", "all"],
+  "GROUP_REDUCE_ORDERS": ["tree", "lane", "any"],
+  "GROUP_SCAN_OPS": ["sum"],
   "CELL_OPS": [
    "sum",
    "max",
@@ -778,6 +787,11 @@
       "check",
       "role not in LEAF_ROLES",
       "leaf {name!r}: unknown leaf role {role!r}, expected one of {LEAF_ROLES}"
+     ],
+     [
+      "check",
+      "kind == 'scratch' and role != 'scratch' or kind != 'scratch' and role == 'scratch'",
+      "leaf {name!r}: the kind 'scratch' and the role 'scratch' go together"
      ],
      [
       "check",
@@ -1590,7 +1604,7 @@
     "edge",
     "axes"
    ],
-   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, op: str = 'store', conflict: str = 'unique', summation: str = 'auto', order: str = 'any', returns_old: bool = False, reduced: Node | None = None, edge: str = 'unchecked', axes: tuple = ()",
+   "params": "name: str, value: Node, indices: Sequence[Node] = (), ttype: TensorType | None = None, op: str = 'store', conflict: str = 'unique', summation: str = 'auto', order: str = 'any', returns_old: bool = False, reduced: Node | None = None, edge: str = 'unchecked', axes: tuple = (), role: str = 'plane_out'",
    "assigns": [
     "kind",
     "role",
@@ -1641,7 +1655,8 @@
     "@returns_old",
     "edge:reduced",
     "@edge",
-    "@axes"
+    "@axes",
+    "@role"
    ],
    "from_edges": true,
    "watch": "all",
@@ -1651,11 +1666,16 @@
       "call",
       "node_sink",
       "'update'",
-      "'plane_out'",
+      "role",
       "name",
       "value",
       "indices",
       "ttype"
+     ],
+     [
+      "check",
+      "role not in UPDATE_ROLES",
+      "update {name!r}: the role {role!r} is not one of {UPDATE_ROLES}"
      ],
      [
       "check",
@@ -1750,7 +1770,7 @@
     ],
     "out": [
      "'update'",
-     "'plane_out'",
+     "role",
      "name",
      "op",
      "conflict",
@@ -2352,6 +2372,11 @@
      ],
      [
       "check",
+      "loop_group_fault(body_sinks, cat(nexts, exit_values, opt(exit_cond))) is not None",
+      "Loop: {loop_group_fault(body_sinks, cat(nexts, exit_values, opt(exit_cond)))}"
+     ],
+     [
+      "check",
       "exit_cond is None and len(exit_values) > 0",
       "Loop: exit values without an exit condition"
      ],
@@ -2621,6 +2646,407 @@
    "slots": [
     "slot"
    ]
+  },
+  {
+   "name": "scratch",
+   "class": "Scratch",
+   "family": "expr",
+   "refines": "leaf",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "params": "name: str, ttype: TensorType, *, axes: tuple",
+   "assigns": [
+    "kind",
+    "role",
+    "name",
+    "quantity",
+    "wire_index",
+    "sorted",
+    "axes"
+   ],
+   "state": [
+    "+Leaf"
+   ],
+   "from": [
+    "@name",
+    "ttype",
+    "axes=@axes"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "ttype",
+      "()"
+     ],
+     [
+      "check",
+      "axes_fault(axes) is not None",
+      "scratch {name!r}: {axes_fault(axes)}"
+     ]
+    ],
+    "out": [
+     "'scratch'",
+     "'scratch'",
+     "name",
+     "None",
+     "0",
+     "False",
+     "axes"
+    ]
+   }
+  },
+  {
+   "name": "group",
+   "class": "Group",
+   "family": "sink",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 1
+   },
+   "slots": [
+    "membership",
+    "count",
+    "grid",
+    "axes",
+    "max_size",
+    "scratch",
+    "body_sinks"
+   ],
+   "wire_attr": "group",
+   "params": "membership: str, body_sinks: Sequence[Node], *, key: Node | None = None, count: int | None = None, grid: tuple = (), axes: tuple = (), max_size: int | None = None, scratch: Sequence[Leaf] = ()",
+   "assigns": [
+    "membership",
+    "count",
+    "grid",
+    "axes",
+    "max_size",
+    "scratch",
+    "body_sinks"
+   ],
+   "dedup": [
+    "tup",
+    "s:group",
+    "f:membership",
+    "f:count",
+    "f:grid",
+    "f:axes",
+    "f:max_size",
+    "f:scratch_decls"
+   ],
+   "state": [
+    "membership",
+    "count",
+    "grid",
+    "axes",
+    "max_size"
+   ],
+   "edges": [
+    "scratch",
+    "body_sinks"
+   ],
+   "from_edges": true,
+   "from": [
+    "@membership",
+    "edge:body_sinks",
+    "key=opq:0",
+    "count=@count",
+    "grid=@grid",
+    "axes=@axes",
+    "max_size=@max_size",
+    "scratch=edge:scratch"
+   ],
+   "props": [
+    [
+     "key",
+     "opq",
+     "0"
+    ]
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "membership not in GROUP_MEMBERSHIPS",
+      "Group: membership {membership!r} is not one of {GROUP_MEMBERSHIPS}"
+     ],
+     [
+      "let",
+      "scratch",
+      "tuple(scratch)"
+     ],
+     [
+      "let",
+      "body_sinks",
+      "tuple(body_sinks)"
+     ],
+     [
+      "check",
+      "group_fault(membership, count, grid, axes, max_size, opt(key), scratch, body_sinks) is not None",
+      "Group: {group_fault(membership, count, grid, axes, max_size, opt(key), scratch, body_sinks)}"
+     ],
+     [
+      "node",
+      "tt('bool')",
+      "opt(key)"
+     ]
+    ],
+    "out": [
+     "membership",
+     "count",
+     "tuple(grid)",
+     "tuple(axes)",
+     "max_size",
+     "scratch",
+     "body_sinks"
+    ]
+   }
+  },
+  {
+   "name": "barrier",
+   "class": "Barrier",
+   "family": "sink",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "wire_attr": "barrier",
+   "params": "",
+   "assigns": [],
+   "dedup": [
+    "none"
+   ],
+   "from": [],
+   "ctor": {
+    "steps": [
+     [
+      "node",
+      "tt('bool')",
+      "()"
+     ]
+    ],
+    "out": []
+   }
+  },
+  {
+   "name": "group_rank",
+   "class": "GroupRank",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "wire_attr": "group_rank",
+   "params": "ttype: TensorType | None = None",
+   "assigns": [],
+   "dedup": [
+    "none"
+   ],
+   "from": [
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "tt",
+      "orelse(ttype, tt('i32'))"
+     ],
+     [
+      "node",
+      "tt",
+      "()"
+     ]
+    ],
+    "out": []
+   }
+  },
+  {
+   "name": "group_size",
+   "class": "GroupSize",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "wire_attr": "group_size",
+   "params": "ttype: TensorType | None = None",
+   "assigns": [],
+   "dedup": [
+    "none"
+   ],
+   "from": [
+    "ttype"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "tt",
+      "orelse(ttype, tt('i32'))"
+     ],
+     [
+      "node",
+      "tt",
+      "()"
+     ]
+    ],
+    "out": []
+   }
+  },
+  {
+   "name": "group_reduce",
+   "class": "GroupReduce",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "result": [
+    "same_as",
+    0
+   ],
+   "slots": [
+    "op",
+    "order"
+   ],
+   "wire_attr": "group_reduce",
+   "params": "op: str, value: Node, order: str = 'tree'",
+   "assigns": [
+    "op",
+    "order"
+   ],
+   "dedup": [
+    "tup",
+    "s:group_reduce",
+    "f:op",
+    "f:order"
+   ],
+   "state": [
+    "op",
+    "order"
+   ],
+   "from": [
+    "@op",
+    "op:0",
+    "@order"
+   ],
+   "props": [
+    [
+     "value",
+     "op",
+     "0"
+    ]
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "op not in GROUP_REDUCE_OPS",
+      "GroupReduce: op {op!r} is not one of {GROUP_REDUCE_OPS}"
+     ],
+     [
+      "check",
+      "order not in GROUP_REDUCE_ORDERS",
+      "GroupReduce: order {order!r} is not one of {GROUP_REDUCE_ORDERS}"
+     ],
+     [
+      "check",
+      "order != 'tree' and op != 'sum'",
+      "GroupReduce: order {order!r} states how a sum is added; {op!r} is order-free, leave it at 'tree'"
+     ],
+     [
+      "check",
+      "reduce_fault(op, value) is not None",
+      "GroupReduce: {reduce_fault(op, value)}"
+     ],
+     [
+      "node",
+      "value.ttype",
+      "(value,)"
+     ]
+    ],
+    "out": [
+     "op",
+     "order"
+    ]
+   }
+  },
+  {
+   "name": "group_scan",
+   "class": "GroupScan",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 1,
+    "max": 1
+   },
+   "result": [
+    "same_as",
+    0
+   ],
+   "slots": [
+    "op",
+    "inclusive"
+   ],
+   "wire_attr": "group_scan",
+   "params": "op: str, value: Node, inclusive: bool = True",
+   "assigns": [
+    "op",
+    "inclusive"
+   ],
+   "dedup": [
+    "tup",
+    "s:group_scan",
+    "f:op",
+    "f:inclusive"
+   ],
+   "state": [
+    "op",
+    "inclusive"
+   ],
+   "from": [
+    "@op",
+    "op:0",
+    "@inclusive"
+   ],
+   "props": [
+    [
+     "value",
+     "op",
+     "0"
+    ]
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "op not in GROUP_SCAN_OPS",
+      "GroupScan: op {op!r} is not one of {GROUP_SCAN_OPS}"
+     ],
+     [
+      "check",
+      "reduce_fault(op, value) is not None",
+      "GroupScan: {reduce_fault(op, value)}"
+     ],
+     [
+      "node",
+      "value.ttype",
+      "(value,)"
+     ]
+    ],
+    "out": [
+     "op",
+     "bool(inclusive)"
+    ]
+   }
   }
  ],
  "rules": {

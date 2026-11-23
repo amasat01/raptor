@@ -193,7 +193,7 @@ pub fn old_role_name(role: &str, name: &str, rank: usize, zeroed: bool) -> Strin
 
 /// The list of sink roles a recorded refusal states, in the old and the current form.
 const OLD_SINK_ROLE_LIST: &str = "('mutable', 'out', 'wide_out', 'accum_out')";
-const SINK_ROLE_LIST: &str = "('mutable', 'out', 'plane_out')";
+const SINK_ROLE_LIST: &str = "('mutable', 'out', 'plane_out', 'scratch')";
 
 /// A recorded refusal message in the current form: the two spellings of a role it names, `role 'NAME'` and `role='NAME'`, take
 /// the current name when NAME is one of the old roles, and the list of sink roles it states is the current list. Nothing else in

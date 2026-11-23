@@ -1,0 +1,10 @@
+raptor.ir.dump/1
+n|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'x'), ('quantity', None), ('wire_index', 0), ('sorted', False), ('axes', ()))
+n|GroupReduce|f64|()|None|(#0,)|(('op', 'sum'), ('order', 'lane'))
+n|Update|f64|()|None|(#1,)|(('kind', 'update'), ('role', 'plane_out'), ('name', 'total'), ('op', 'store'), ('conflict', 'unique'), ('summation', 'auto'), ('order', 'any'), ('returns_old', False), ('reduced', None), ('edge', 'unchecked'), ('axes', ()))
+n|GroupReduce|f64|()|None|(#0,)|(('op', 'min'), ('order', 'tree'))
+n|Update|f64|()|None|(#3,)|(('kind', 'update'), ('role', 'plane_out'), ('name', 'least'), ('op', 'store'), ('conflict', 'unique'), ('summation', 'auto'), ('order', 'any'), ('returns_old', False), ('reduced', None), ('edge', 'unchecked'), ('axes', ()))
+n|GroupRank|i32|()|None|()|()
+n|Update|i32|()|None|(#5,)|(('kind', 'update'), ('role', 'plane_out'), ('name', 'place'), ('op', 'store'), ('conflict', 'unique'), ('summation', 'auto'), ('order', 'any'), ('returns_old', False), ('reduced', None), ('edge', 'unchecked'), ('axes', ()))
+n|Group|bool|()|None|()|(('membership', 'axes'), ('count', None), ('grid', (('row', None), ('col', 4))), ('axes', ('col',)), ('max_size', None), ('scratch', ()), ('body_sinks', (#2, #4, #6)))
+root|#7

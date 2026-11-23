@@ -136,6 +136,9 @@ const BUILTINS: &[&str] = &[
     "carry_fault",
     "index_fault",
     "sample_fault",
+    "group_fault",
+    "reduce_fault",
+    "loop_group_fault",
     "axis_fault",
     "axes_fault",
     "store_index_fault",
@@ -774,7 +777,7 @@ fn literal_fault(v: &Val) -> Option<String> {
 }
 /// Why `axes` is not an axis list: a tuple of at most eight (label, extent) pairs, each label a distinct non-empty text and each
 /// extent a positive whole number or none (an extent known at run time).
-fn axes_fault(axes: &Val) -> Option<String> {
+pub(crate) fn axes_fault(axes: &Val) -> Option<String> {
     let Val::Tuple(list) = axes else {
         return Some("axes is a tuple of (label, extent) pairs".into());
     };
@@ -997,8 +1000,10 @@ impl Ev<'_> {
         let v = a.iter().map(|x| self.eval(x, env)).collect::<R<Vec<_>>>()?;
         match n {
             "width_of" | "first_ne_ttype" | "first_mismatch" | "first_not_instance"
-            | "carry_fault" | "index_fault" | "sample_fault" | "axis_fault"
-            | "store_index_fault" => self.call_over_nodes(n, &v),
+            | "carry_fault" | "index_fault" | "sample_fault" | "group_fault" | "reduce_fault"
+            | "loop_group_fault" | "axis_fault" | "store_index_fault" => {
+                self.call_over_nodes(n, &v)
+            }
             _ => self.call_plain(n, &v),
         }
     }
@@ -1145,6 +1150,37 @@ impl Ev<'_> {
                     node_list(&v[1])?,
                 );
                 self.sample_fault(plane, &coordinates, &v[2])?
+                    .map_or(Val::None, Val::Str)
+            }
+            "group_fault" => {
+                let Val::Str(membership) = &v[0] else {
+                    return Err("group_fault: a membership name".into());
+                };
+                let key = node_list(&v[5])?;
+                let (scratch, body) = (node_list(&v[6])?, node_list(&v[7])?);
+                let facts = crate::groups::GroupFacts {
+                    membership,
+                    count: &v[1],
+                    grid: &v[2],
+                    axes: &v[3],
+                    max_size: &v[4],
+                    key: key.first().copied(),
+                    scratch: &scratch,
+                    body: &body,
+                };
+                self.c.group_fault(&facts).map_or(Val::None, Val::Str)
+            }
+            "reduce_fault" => {
+                let operand = node_list(&Val::Tuple(vec![v[1].clone()]))?;
+                let (Val::Str(op), [value]) = (&v[0], operand.as_slice()) else {
+                    return Err("reduce_fault: an op name and one value".into());
+                };
+                self.c.reduce_fault(op, *value).map_or(Val::None, Val::Str)
+            }
+            "loop_group_fault" => {
+                let (body, values) = (node_list(&v[0])?, node_list(&v[1])?);
+                self.c
+                    .loop_group_fault(&body, &values)
                     .map_or(Val::None, Val::Str)
             }
             "store_index_fault" => {

@@ -379,12 +379,23 @@ impl Ctx {
                 }
                 continue;
             }
+            if self.is_a(h, "Group") {
+                continue;
+            }
+            if let Some(fault) = self.outside_group_fault(h) {
+                return refuse(format!("canonical(): {fault}"));
+            }
             if !self.is_a(h, "Sink") {
                 return refuse(format!(
                     "canonical(): a {} is not a sink; the root set is sinks only",
                     self.table.classes[self.nodes[h as usize].class].name
                 ));
             }
+        }
+        if sinks.iter().filter(|&&h| self.is_a(h, "Group")).count() > 1 {
+            return refuse(
+                "canonical(): a kernel holds one Group; two groups in one walk are not written",
+            );
         }
         Ok(())
     }
@@ -418,15 +429,19 @@ impl Ctx {
             if ids.contains_key(&h) {
                 continue;
             }
-            let n = self.node(h)?;
+            self.node(h)?;
             ids.insert(h, objs.len() as u32);
-            let r = self.rec_of(h)?;
-            stack.extend(n.ops.iter().copied());
+            let mut r = self.rec_of(h)?;
+            let reads = self.walked_operands(h)?;
+            stack.extend(reads.iter().copied());
+            if self.is_a(h, "Group") {
+                r.rule = None; // its body sinks are walked as operands beyond the key the rule counts
+            }
             objs.push(h);
             recs.push(r);
         }
         for (i, &h) in objs.iter().enumerate() {
-            recs[i].ops = self.nodes[h as usize].ops.iter().map(|o| ids[o]).collect()
+            recs[i].ops = self.walked_operands(h)?.iter().map(|o| ids[o]).collect()
         }
         let roots: Vec<u32> = sinks.iter().map(|h| ids[h]).collect();
         let w = rcore::walk_full(&recs, &roots).map_err(Fault::Refused)?;
@@ -435,6 +450,16 @@ impl Ctx {
             recs,
             walk: w,
         })
+    }
+
+    /// The nodes the walk reads from `h`: its operands, and for a Group its body sinks after the key, so that the planes the body
+    /// reads and writes are bound like any others and the body is part of the identity of the group.
+    fn walked_operands(&self, h: u32) -> Result<Vec<u32>, Fault> {
+        let mut reads = self.nodes[h as usize].ops.clone();
+        if self.is_a(h, "Group") {
+            reads.extend(self.refs(h, "body_sinks")?);
+        }
+        Ok(reads)
     }
 
     /// The class of the node a traversal index stands for.
@@ -471,7 +496,7 @@ impl Ctx {
                 objs[v as usize],
                 objs[w.order[w.pos[v as usize] as usize] as usize],
             );
-            if class_of(v).binds {
+            if class_of(v).binds && !self.is_scratch_leaf(node) && !self.is_scratch_sink(node) {
                 pairs.push((node, canon))
             }
             if self.is_a(node, "Loop") {
@@ -596,7 +621,9 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
                 let i = self.nodes[h as usize].ops[1];
                 self.is_a(i, "RoleConst") && self.field(i, "label")? == s(str_const("PARAM_CELL"))
             };
-            if seam.contains(&h) || param_cell {
+            let scratch = self.is_scratch_sink(h)
+                || (self.is_a(h, "At") && self.is_scratch_leaf(self.nodes[h as usize].ops[0]));
+            if seam.contains(&h) || param_cell || scratch {
                 continue;
             }
             let new = if self.is_a(h, "Op") && self.str_field(h, "kind")? == "raw_device" {

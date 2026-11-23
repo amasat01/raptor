@@ -231,9 +231,9 @@
    "check": "role not in SINK_ROLES",
    "today": {
     "exc": "RaptorError",
-    "msg": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'plane_out')"
+    "msg": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'plane_out', 'scratch')"
    },
-   "raw": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'plane_out')",
+   "raw": "sink 'y': unknown sink role 'bogus', expected one of ('mutable', 'out', 'plane_out', 'scratch')",
    "expect": "a",
    "bad": {
     "class": "Sink",
@@ -254,9 +254,9 @@
    "check": "kind not in LEAF_KINDS",
    "today": {
     "exc": "RaptorError",
-    "msg": "leaf 'l': unknown leaf kind 'bogus', expected one of ('vocab_read', 'uniform', 'table_read', 'terminated', 'nsamples', 'prior_read')"
+    "msg": "leaf 'l': unknown leaf kind 'bogus', expected one of ('vocab_read', 'uniform', 'table_read', 'terminated', 'nsamples', 'prior_read', 'scratch')"
    },
-   "raw": "leaf 'l': unknown leaf kind 'bogus', expected one of ('vocab_read', 'uniform', 'table_read', 'terminated', 'nsamples', 'prior_read')",
+   "raw": "leaf 'l': unknown leaf kind 'bogus', expected one of ('vocab_read', 'uniform', 'table_read', 'terminated', 'nsamples', 'prior_read', 'scratch')",
    "expect": "a",
    "bad": {
     "class": "Leaf",
@@ -275,9 +275,9 @@
    "check": "role not in LEAF_ROLES",
    "today": {
     "exc": "RaptorError",
-    "msg": "leaf 'l': unknown leaf role 'bogus', expected one of ('plane_in', 'wide_in', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')"
+    "msg": "leaf 'l': unknown leaf role 'bogus', expected one of ('plane_in', 'wide_in', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable', 'scratch')"
    },
-   "raw": "leaf 'l': unknown leaf role 'bogus', expected one of ('plane_in', 'wide_in', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable')",
+   "raw": "leaf 'l': unknown leaf role 'bogus', expected one of ('plane_in', 'wide_in', 'lookup', 'terminated', 'uniform', 'nsamples', 'mutable', 'scratch')",
    "expect": "a",
    "bad": {
     "class": "Leaf",
@@ -367,9 +367,9 @@
    "check": "not (isinstance(plane, Leaf) and plane.role in AT_ROLES)",
    "today": {
     "exc": "RaptorError",
-    "msg": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'plane_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>"
+    "msg": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'plane_in', 'scratch'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>"
    },
-   "raw": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'plane_in'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>",
+   "raw": "at(): the indexed plane must be a leaf in one of the roles ('lookup', 'wide_in', 'plane_in', 'scratch'), got <Leaf vocab_read TensorType(shape=(), dtype='f64', tag=None)>",
    "expect": "b",
    "bad": {
     "class": "At",

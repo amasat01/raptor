@@ -385,6 +385,11 @@ impl Ctx {
                 self.group_fact(h, name)
             }
             "native" if self.table.is_a(n.class, "Call") => self.call_is_native(h).map(Val::Bool),
+            "callee" if self.table.is_a(n.class, "Call") => {
+                self.called_function(h).map(Val::Node).ok_or_else(|| {
+                    Fault::Refused("a call of a function that the table does not hold".into())
+                })
+            }
             "digest" if self.table.is_a(n.class, "Function") => {
                 self.function_digest(h).map(Val::Str)
             }

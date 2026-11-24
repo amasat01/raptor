@@ -193,6 +193,16 @@ fn a_native_function_is_called_with_the_type_it_declares() {
     assert_eq!(c.node(call).unwrap().dtype, "f64");
 }
 
+#[test]
+fn a_call_answers_the_function_it_names() {
+    let mut c = ctx();
+    let fixture = f::native_with_rules(&mut c).unwrap();
+    let a = g::plane_in(&mut c, "a", "f64").unwrap();
+    let call = f::call(&mut c, fixture.function, &[a, a]).unwrap();
+    assert!(matches!(c.field(call, "callee"), Ok(Val::Node(h)) if h == fixture.function));
+    assert!(c.field(a, "callee").is_err());
+}
+
 // the typing of a declaration
 
 #[test]

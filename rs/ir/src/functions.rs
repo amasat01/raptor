@@ -339,7 +339,7 @@ impl Ctx {
     }
 
     /// Why the traced body `body` is not pure: it reads a plane, holds an update or another sink, a group or a sample reduction,
-    /// reaches a parameter of another function, calls a group function from a lane function, or has another type than the result.
+    /// the index or a carry of a loop it is not in, reaches a parameter of another function, calls a group function from a lane function, or has another type than the result.
     fn body_fault(
         &self,
         who: &str,
@@ -355,12 +355,25 @@ impl Ctx {
             ));
         }
         let (mut stack, mut seen) = (vec![body], HashSet::new());
+        // the index and the carries of the loops the body holds: a placeholder is the body's own only through its loop
+        let mut own = HashSet::new();
         while let Some(h) = stack.pop() {
             if !seen.insert(h) {
                 continue;
             }
+            if self.is_a(h, "Loop") {
+                for field in ["index", "carries"] {
+                    own.extend(self.refs(h, field).unwrap_or_default());
+                }
+            }
             let class = self.class_name(h);
-            let held = if self.is_a(h, "Param") {
+            let held = if self.is_a(h, "LoopIndex") || self.is_a(h, "LoopCarry") {
+                if own.contains(&h) {
+                    stack.extend(self.reached_from(h));
+                    continue;
+                }
+                "the index or a carry of a loop it is not in".to_string()
+            } else if self.is_a(h, "Param") {
                 if !f.params.contains(&h) {
                     return Some(format!(
                         "{who}: the body reaches the parameter '{}', which the function does not declare",

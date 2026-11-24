@@ -375,6 +375,37 @@ fn a_traced_body_that_reads_a_plane_holds_an_update_a_group_or_a_sample_reductio
     assert!(m.contains("a ReduceSamples, a sample reduction"), "{m}");
 }
 
+/// A loop placeholder of the class `kind` over `f64`, with the fields `fields`.
+fn placeholder(c: &mut Ctx, kind: &str, fields: &str) -> u32 {
+    c.make(kind, "f64", &[], None, &[], fields).unwrap()
+}
+
+#[test]
+fn a_traced_body_that_holds_the_index_or_a_carry_of_a_loop_it_is_not_in_is_refused_by_name() {
+    let mut c = ctx();
+    let x = f::param(&mut c, "x", "f64").unwrap();
+    let index = placeholder(
+        &mut c,
+        "LoopIndex",
+        "(('depth', 0), ('name', 'i'), ('bounds', None))",
+    );
+    let carry = placeholder(
+        &mut c,
+        "LoopCarry",
+        "(('depth', 0), ('slot', 0), ('name', 'c'))",
+    );
+    for held in [index, carry] {
+        let body = g::apply(&mut c, "add", &[x, held]).unwrap();
+        let m = impure(&mut c, x, body, "f64");
+        assert!(
+            m.contains(
+                "function 'impure': a traced body is pure and its body holds the index or a carry of a loop it is not in"
+            ),
+            "{m}"
+        );
+    }
+}
+
 #[test]
 fn a_traced_body_with_another_type_than_the_result_or_a_foreign_parameter_is_refused_by_name() {
     let mut c = ctx();

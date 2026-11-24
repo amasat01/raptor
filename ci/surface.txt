@@ -459,3 +459,11 @@ core.json const GROUP_MEMBERSHIPS # group
 core.json const GROUP_REDUCE_OPS # group
 core.json const GROUP_REDUCE_ORDERS # group
 core.json const GROUP_SCAN_OPS # group
+core.json class Param # function
+core.json kind param # function
+core.json class Function # function
+core.json kind function # function
+core.json class Call # function
+core.json kind call # function
+core.json const FUNCTION_SCOPES # function
+core.json const FUNCTION_ACCESS # function

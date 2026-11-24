@@ -385,6 +385,9 @@ impl Ctx {
             "phases" | "phase_count" | "scratch_decls" if self.table.is_a(n.class, "Group") => {
                 self.group_fact(h, name)
             }
+            "digest" if self.table.is_a(n.class, "Function") => {
+                self.function_digest(h).map(Val::Str)
+            }
             _ => self.prop(h, name),
         }
     }

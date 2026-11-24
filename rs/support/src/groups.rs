@@ -5,7 +5,7 @@ use raptor_ir::record::{Ctx, Fault};
 use raptor_ir::value::{ttype_val, Val};
 
 /// The text of a refusal, or of any other fault.
-fn message(fault: Fault) -> String {
+pub(crate) fn message(fault: Fault) -> String {
     match fault {
         Fault::Refused(m) | Fault::BadArg(m) => m,
         other => format!("{other:?}"),
@@ -13,19 +13,19 @@ fn message(fault: Fault) -> String {
 }
 
 /// The node of class `class` built from constructor parameters, or the refusal text.
-fn build(ctx: &mut Ctx, class: &str, given: Vec<(&str, Val)>) -> Result<u32, String> {
+pub(crate) fn build(ctx: &mut Ctx, class: &str, given: Vec<(&str, Val)>) -> Result<u32, String> {
     let index = ctx.table.find(class).ok_or(format!("no class {class}"))?;
     let given: Vec<(String, Val)> = given.into_iter().map(|(k, v)| (k.to_string(), v)).collect();
     ctx.new_from(index, &given).map_err(message)
 }
 
 /// A text value.
-fn text(s: &str) -> Val {
+pub(crate) fn text(s: &str) -> Val {
     Val::Str(s.to_string())
 }
 
 /// A tuple of node references.
-fn nodes(list: &[u32]) -> Val {
+pub(crate) fn nodes(list: &[u32]) -> Val {
     Val::Tuple(list.iter().map(|&n| Val::Node(n)).collect())
 }
 
@@ -41,7 +41,7 @@ pub fn axes(list: &[(&str, Option<i128>)]) -> Val {
 }
 
 /// The type value of a node.
-fn type_of(ctx: &Ctx, node: u32) -> Val {
+pub(crate) fn type_of(ctx: &Ctx, node: u32) -> Val {
     let n = ctx.node(node).expect("a node of this context");
     ttype_val(&n.dtype, &n.shape, n.tag.as_deref())
 }

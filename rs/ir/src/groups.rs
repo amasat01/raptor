@@ -9,7 +9,7 @@ use crate::value::{text_val, Val};
 use std::collections::{HashMap, HashSet};
 
 /// The class names that exist only inside the body of a group.
-const GROUP_ONLY: [&str; 5] = [
+pub(crate) const GROUP_ONLY: [&str; 5] = [
     "GroupRank",
     "GroupSize",
     "GroupReduce",
@@ -71,12 +71,12 @@ impl PhasePlan {
 
 impl Ctx {
     /// The class name of a node.
-    fn class_name(&self, h: u32) -> &str {
+    pub(crate) fn class_name(&self, h: u32) -> &str {
         &self.table.classes[self.nodes[h as usize].class].name
     }
 
     /// The operands of a node and every node its fields hold (the body of a loop, a reduced value).
-    fn reached_from(&self, h: u32) -> Vec<u32> {
+    pub(crate) fn reached_from(&self, h: u32) -> Vec<u32> {
         let node = &self.nodes[h as usize];
         let mut all = node.ops.clone();
         node.fields.iter().for_each(|f| refs(f, &mut all));
@@ -84,7 +84,7 @@ impl Ctx {
     }
 
     /// The text of a text field, if the node has one.
-    fn text_of(&self, h: u32, field: &str) -> Option<String> {
+    pub(crate) fn text_of(&self, h: u32, field: &str) -> Option<String> {
         match self.field(h, field) {
             Ok(Val::Str(s)) => Some(s),
             _ => None,
@@ -102,7 +102,7 @@ impl Ctx {
     }
 
     /// The name of a plane node or sink; empty when it states none.
-    fn plane_name(&self, h: u32) -> String {
+    pub(crate) fn plane_name(&self, h: u32) -> String {
         self.text_of(h, "name").unwrap_or_default()
     }
 
@@ -152,6 +152,11 @@ impl Ctx {
         while let Some(h) = stack.pop() {
             if !seen.insert(h) {
                 continue;
+            }
+            if let Some(name) = self.called_group_function(h) {
+                return Some(format!(
+                    "the call of the group function '{name}' is reached outside a Group; a group function is called only in the body of a Group"
+                ));
             }
             let class = self.class_name(h);
             let thing = if GROUP_ONLY.contains(&class) {

@@ -66,6 +66,8 @@ fn positions(c: &Ctx, roots: &[u32]) -> Result<(Vec<bool>, Vec<u32>), Fault> {
         let n = &c.nodes[h as usize];
         stack.extend(&n.ops);
         n.fields.iter().for_each(|f| refs(f, &mut stack));
+        // a call names its function by name and digest, so the function of the table is reached through that pair
+        stack.extend(c.called_function(h));
     }
     let mut pos = vec![0u32; seen.len()];
     let mut k = 0;

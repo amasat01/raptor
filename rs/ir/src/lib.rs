@@ -10,6 +10,7 @@ pub mod ctor;
 pub mod dialect;
 pub mod door;
 pub mod dump;
+pub mod functions;
 pub mod groups;
 pub mod indexform;
 pub mod looprules;

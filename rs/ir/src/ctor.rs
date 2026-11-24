@@ -139,6 +139,9 @@ const BUILTINS: &[&str] = &[
     "group_fault",
     "reduce_fault",
     "loop_group_fault",
+    "function_fault",
+    "call_fault",
+    "call_result",
     "axis_fault",
     "axes_fault",
     "store_index_fault",
@@ -882,6 +885,12 @@ impl Ev<'_> {
             .map(|n| n.class)
             .ok_or(format!("node handle {h} is not in this context"))
     }
+    /// The handles in a sequence of node values, each of them a node of this context.
+    fn live_nodes(&self, x: &Val) -> R<Vec<u32>> {
+        let hs = node_list(x)?;
+        hs.iter().try_for_each(|&h| self.class_of(h).map(|_| ()))?;
+        Ok(hs)
+    }
     /// The type value of a node, or of a type value.
     fn ttype(&self, v: &Val) -> R<Val> {
         match v {
@@ -1001,9 +1010,8 @@ impl Ev<'_> {
         match n {
             "width_of" | "first_ne_ttype" | "first_mismatch" | "first_not_instance"
             | "carry_fault" | "index_fault" | "sample_fault" | "group_fault" | "reduce_fault"
-            | "loop_group_fault" | "axis_fault" | "store_index_fault" => {
-                self.call_over_nodes(n, &v)
-            }
+            | "loop_group_fault" | "function_fault" | "call_fault" | "call_result"
+            | "axis_fault" | "store_index_fault" => self.call_over_nodes(n, &v),
             _ => self.call_plain(n, &v),
         }
     }
@@ -1183,6 +1191,29 @@ impl Ev<'_> {
                     .loop_group_fault(&body, &values)
                     .map_or(Val::None, Val::Str)
             }
+            "function_fault" => {
+                let (Val::Str(name), Val::Str(scope)) = (&v[0], &v[1]) else {
+                    return Err("function_fault: a name and a scope".into());
+                };
+                let (params, body) = (self.live_nodes(&v[2])?, self.live_nodes(&v[3])?);
+                let (jvp, vjp) = (self.live_nodes(&v[6])?, self.live_nodes(&v[7])?);
+                let facts = crate::functions::FunctionFacts {
+                    name,
+                    scope,
+                    params: &params,
+                    body: body.first().copied(),
+                    natives: &v[4],
+                    returns: &v[5],
+                    jvp: jvp.first().copied(),
+                    vjp: &vjp,
+                };
+                self.c.function_fault(&facts).map_or(Val::None, Val::Str)
+            }
+            "call_fault" => {
+                let args = self.live_nodes(&v[0])?;
+                self.c.call_fault(&args, &v[1]).map_or(Val::None, Val::Str)
+            }
+            "call_result" => self.c.call_result(&v[0])?,
             "store_index_fault" => {
                 let Val::Str(name) = &v[0] else {
                     return Err("store_index_fault: a plane name".into());

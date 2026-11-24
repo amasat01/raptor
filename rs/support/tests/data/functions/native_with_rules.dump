@@ -1,0 +1,16 @@
+raptor.ir.dump/1
+n|Param|f64|()|None|()|(('name', 'x'), ('access', 'read'))
+n|Param|f64|()|None|()|(('name', 'y'), ('access', 'read'))
+n|Param|f64|()|None|()|(('name', 'dx'), ('access', 'read'))
+n|Param|f64|()|None|()|(('name', 'dy'), ('access', 'read'))
+n|Param|f64|()|None|()|(('name', 'bar'), ('access', 'read'))
+n|Op|f64|()|None|(#1, #2)|(('kind', 'mul'), ('literal', None))
+n|Op|f64|()|None|(#0, #3)|(('kind', 'mul'), ('literal', None))
+n|Op|f64|()|None|(#5, #6)|(('kind', 'add'), ('literal', None))
+n|Function|f64|()|None|()|(('name', 'product_jvp'), ('scope', 'lane'), ('params', (#0, #1, #2, #3)), ('body', #7), ('natives', ()), ('jvp', None), ('vjp', ()))
+n|Op|f64|()|None|(#1, #4)|(('kind', 'mul'), ('literal', None))
+n|Op|f64|()|None|(#0, #4)|(('kind', 'mul'), ('literal', None))
+n|Function|f64|()|None|()|(('name', 'product_vjp_x'), ('scope', 'lane'), ('params', (#0, #1, #4)), ('body', #9), ('natives', ()), ('jvp', None), ('vjp', ()))
+n|Function|f64|()|None|()|(('name', 'product_vjp_y'), ('scope', 'lane'), ('params', (#0, #1, #4)), ('body', #10), ('natives', ()), ('jvp', None), ('vjp', ()))
+n|Function|f64|()|None|()|(('name', 'product'), ('scope', 'lane'), ('params', (#0, #1)), ('body', None), ('natives', (('t1', 'return x * y;'), ('t2', 'return x * y'))), ('jvp', #8), ('vjp', (#11, #12)))
+root|#13

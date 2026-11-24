@@ -1,8 +1,21 @@
 //! The one-way pseudo-code text of a node: readable, deterministic, never parsed back.
 use raptor_ir::dump::refs;
-use raptor_ir::record::{Ctx, Fault};
+use raptor_ir::record::{refuse, Ctx, Fault};
 use raptor_ir::value::{text_val, Val};
 use std::collections::HashMap;
+
+/// The (target, text) pairs of a native map.
+fn refs_pairs(v: &Val, out: &mut Vec<(String, String)>) {
+    if let Val::Tuple(items) = v {
+        for item in items {
+            if let Val::Tuple(p) = item {
+                if let [Val::Str(target), Val::Str(text)] = p.as_slice() {
+                    out.push((target.clone(), text.clone()))
+                }
+            }
+        }
+    }
+}
 
 struct R<'a> {
     c: &'a Ctx,
@@ -29,6 +42,7 @@ impl R<'_> {
     }
     fn atom(&self, h: u32) -> bool {
         self.is(h, "Leaf")
+            || self.is(h, "Param")
             || self.is(h, "Const")
             || self.is(h, "LoopIndex")
             || self.is(h, "LoopCarry")
@@ -79,7 +93,11 @@ impl R<'_> {
                 .iter()
                 .map(|&o| self.expr(o))
                 .collect::<Result<Vec<_>, _>>()?;
-            let k = self.kind(h);
+            let k = if self.is(h, "Call") {
+                self.callee_name(h)?
+            } else {
+                self.kind(h)
+            };
             match (
                 ["add", "sub", "mul", "div"].iter().position(|x| *x == k),
                 a.as_slice(),
@@ -111,8 +129,74 @@ impl R<'_> {
         Ok(name)
     }
 
+    /// The name of the function a call names.
+    fn callee_name(&self, h: u32) -> Result<String, Fault> {
+        match self.c.field(h, "function")? {
+            Val::Tuple(pair) => match pair.first() {
+                Some(Val::Str(name)) => Ok(name.clone()),
+                _ => refuse("a call names its function"),
+            },
+            _ => refuse("a call names its function"),
+        }
+    }
+
+    /// The type of a node as the header of a function states it: the element type, then the shape when there is one.
+    fn type_text(&self, h: u32) -> String {
+        let n = &self.c.nodes[h as usize];
+        if n.shape.is_empty() {
+            n.dtype.clone()
+        } else {
+            format!("{}{:?}", n.dtype, n.shape)
+        }
+    }
+
+    /// A function of the table: its header, then its traced body or its native texts, then the names of its rules.
+    fn function(&mut self, h: u32) -> Result<(), Fault> {
+        let c = self.c;
+        let mut params = vec![];
+        let mut held = vec![];
+        refs(&c.field(h, "params")?, &mut held);
+        for p in held {
+            params.push(format!("{}: {}", self.s(p, "name")?, self.type_text(p)))
+        }
+        let scope = match self.s(h, "scope")?.as_str() {
+            "group" => "group ",
+            _ => "",
+        };
+        self.push(format!(
+            "{scope}function {}({}) -> {}",
+            self.s(h, "name")?,
+            params.join(", "),
+            self.type_text(h)
+        ));
+        self.ind += 1;
+        if let Val::Node(body) = c.field(h, "body")? {
+            let e = self.expr(body)?;
+            self.push(format!("return {e}"));
+        }
+        let mut texts = vec![];
+        refs_pairs(&c.field(h, "natives")?, &mut texts);
+        for (target, text) in texts {
+            self.push(format!("native {target}: {}", text_val(&Val::Str(text))));
+        }
+        let mut rules = vec![];
+        for role in ["jvp", "vjp"] {
+            let mut held = vec![];
+            refs(&c.field(h, role)?, &mut held);
+            rules.extend(held.into_iter().map(|r| (role, r)));
+        }
+        for (role, rule) in rules {
+            self.push(format!("{role} {}", self.s(rule, "name")?));
+        }
+        self.ind -= 1;
+        Ok(())
+    }
+
     /// A statement: a sink, a loop with its body, or a bare expression.
     fn stmt(&mut self, h: u32) -> Result<(), Fault> {
+        if self.is(h, "Function") {
+            return self.function(h);
+        }
         if self.is(h, "Loop") {
             return self.lp(h);
         }

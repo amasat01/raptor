@@ -1,0 +1,12 @@
+raptor.ir.dump/1
+n|Param|f64|()|None|()|(('name', 'x'), ('access', 'read'))
+n|Op|f64|()|None|(#0, #0)|(('kind', 'mul'), ('literal', None))
+n|Function|f64|()|None|()|(('name', 'scaled'), ('scope', 'lane'), ('params', (#0,)), ('body', #1), ('natives', ()), ('jvp', None), ('vjp', ()))
+n|Param|f64|()|None|()|(('name', 'v'), ('access', 'read'))
+n|Call|f64|()|None|(#3,)|(('function', ('scaled', 'd9af016b17908d8040492e1232e6e7ce')),)
+n|Op|f64|()|None|(#4, #3)|(('kind', 'add'), ('literal', None))
+n|Function|f64|()|None|()|(('name', 'shifted'), ('scope', 'lane'), ('params', (#3,)), ('body', #5), ('natives', ()), ('jvp', None), ('vjp', ()))
+n|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False), ('axes', ()))
+n|Call|f64|()|None|(#7,)|(('function', ('shifted', '6a1e6c0198675ec35a571a6c5bb2378f')),)
+n|Assign|f64|()|None|(#8,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'out'), ('axes', ()))
+root|#9

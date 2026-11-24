@@ -87,6 +87,8 @@
   "GROUP_REDUCE_OPS": ["sum", "min", "max", "any", "all"],
   "GROUP_REDUCE_ORDERS": ["tree", "lane", "any"],
   "GROUP_SCAN_OPS": ["sum"],
+  "FUNCTION_SCOPES": ["lane", "group"],
+  "FUNCTION_ACCESS": ["read"],
   "CELL_OPS": [
    "sum",
    "max",
@@ -3045,6 +3047,219 @@
     "out": [
      "op",
      "bool(inclusive)"
+    ]
+   }
+  },
+  {
+   "name": "param",
+   "class": "Param",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "name",
+    "access"
+   ],
+   "wire_attr": "param",
+   "params": "name: str, ttype: TensorType, access: str = 'read'",
+   "assigns": [
+    "name",
+    "access"
+   ],
+   "dedup": [
+    "tup",
+    "s:param",
+    "f:name",
+    "f:access"
+   ],
+   "state": [
+    "name",
+    "access"
+   ],
+   "from": [
+    "@name",
+    "ttype",
+    "@access"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "access not in FUNCTION_ACCESS",
+      "Param {name!r}: access {access!r} is not one of {FUNCTION_ACCESS}"
+     ],
+     [
+      "node",
+      "ttype",
+      "()"
+     ]
+    ],
+    "out": [
+     "name",
+     "access"
+    ]
+   }
+  },
+  {
+   "name": "function",
+   "class": "Function",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": 0
+   },
+   "slots": [
+    "name",
+    "scope",
+    "params",
+    "body",
+    "natives",
+    "jvp",
+    "vjp"
+   ],
+   "wire_attr": "function",
+   "params": "name: str, params: Sequence[Param], returns: TensorType, *, scope: str = 'lane', body: Node | None = None, natives: tuple = (), jvp: Node | None = None, vjp: Sequence[Node] = ()",
+   "assigns": [
+    "name",
+    "scope",
+    "params",
+    "body",
+    "natives",
+    "jvp",
+    "vjp"
+   ],
+   "dedup": [
+    "none"
+   ],
+   "state": [
+    "name",
+    "scope",
+    "natives"
+   ],
+   "edges": [
+    "params",
+    "body",
+    "jvp",
+    "vjp"
+   ],
+   "from_edges": true,
+   "from": [
+    "@name",
+    "edge:params",
+    "ttype",
+    "scope=@scope",
+    "body=edge:body",
+    "natives=@natives",
+    "jvp=edge:jvp",
+    "vjp=edge:vjp"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "check",
+      "scope not in FUNCTION_SCOPES",
+      "Function {name!r}: scope {scope!r} is not one of {FUNCTION_SCOPES}"
+     ],
+     [
+      "let",
+      "params",
+      "tuple(params)"
+     ],
+     [
+      "let",
+      "natives",
+      "tuple(natives)"
+     ],
+     [
+      "let",
+      "vjp",
+      "tuple(vjp)"
+     ],
+     [
+      "let",
+      "fault",
+      "function_fault(name, scope, params, opt(body), natives, returns, opt(jvp), vjp)"
+     ],
+     [
+      "check",
+      "fault is not None",
+      "{fault}"
+     ],
+     [
+      "node",
+      "returns",
+      "()"
+     ]
+    ],
+    "out": [
+     "name",
+     "scope",
+     "params",
+     "body",
+     "natives",
+     "jvp",
+     "vjp"
+    ]
+   }
+  },
+  {
+   "name": "call",
+   "class": "Call",
+   "family": "expr",
+   "refines": "node",
+   "operands": {
+    "min": 0,
+    "max": "many"
+   },
+   "slots": [
+    "function"
+   ],
+   "wire_attr": "call",
+   "params": "function: tuple, args: Sequence[Node] = ()",
+   "assigns": [
+    "function"
+   ],
+   "dedup": [
+    "tup",
+    "s:call",
+    "f:function"
+   ],
+   "state": [
+    "function"
+   ],
+   "from": [
+    "@function",
+    "ops:0:"
+   ],
+   "ctor": {
+    "steps": [
+     [
+      "let",
+      "args",
+      "tuple(args)"
+     ],
+     [
+      "let",
+      "fault",
+      "call_fault(args, function)"
+     ],
+     [
+      "check",
+      "fault is not None",
+      "{fault}"
+     ],
+     [
+      "node",
+      "call_result(function)",
+      "args"
+     ]
+    ],
+    "out": [
+     "function"
     ]
    }
   }

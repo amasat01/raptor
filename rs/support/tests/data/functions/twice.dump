@@ -1,0 +1,13 @@
+raptor.ir.dump/1
+n|Param|f64|()|None|()|(('name', 'x'), ('access', 'read'))
+n|Param|f64|()|None|()|(('name', 'y'), ('access', 'read'))
+n|Op|f64|()|None|(#0, #0)|(('kind', 'mul'), ('literal', None))
+n|Op|f64|()|None|(#2, #1)|(('kind', 'add'), ('literal', None))
+n|Function|f64|()|None|()|(('name', 'weighted'), ('scope', 'lane'), ('params', (#0, #1)), ('body', #3), ('natives', ()), ('jvp', None), ('vjp', ()))
+n|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'a'), ('quantity', None), ('wire_index', 0), ('sorted', False), ('axes', ()))
+n|Leaf|f64|()|None|()|(('kind', 'vocab_read'), ('role', 'plane_in'), ('name', 'b'), ('quantity', None), ('wire_index', 0), ('sorted', False), ('axes', ()))
+n|Call|f64|()|None|(#5, #6)|(('function', ('weighted', '9eb2c88009ea22cfb43541a466c8d89c')),)
+n|Call|f64|()|None|(#6, #5)|(('function', ('weighted', '9eb2c88009ea22cfb43541a466c8d89c')),)
+n|Op|f64|()|None|(#7, #8)|(('kind', 'add'), ('literal', None))
+n|Assign|f64|()|None|(#9,)|(('kind', 'assign'), ('role', 'mutable'), ('name', 'out'), ('axes', ()))
+root|#10

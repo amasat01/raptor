@@ -726,6 +726,42 @@ pub(crate) fn axes_of(c: &Ctx, sinks: &[u32]) -> R<Vec<Axis>> {
         .collect())
 }
 
+/// One lane axis of a keyed reduction: its extent (none for the run-time first axis), the flat-lane distance of one step, and whether
+/// the reduction keeps it (its key moves along it) or sums over it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct KeyAxis {
+    /// How many steps the axis has; none for the run-time first axis.
+    pub extent: Option<i64>,
+    /// The flat-lane distance of one step.
+    pub stride: i64,
+    /// Whether the key of the reduction moves along the axis.
+    pub kept: bool,
+}
+
+/// The lane axes of the keyed reduction `block` when the lanes of one key are not one contiguous range: the axes the key moves along
+/// are not the slowest ones, so the lane of a (key, row) follows from the strides. None when the kept axes are the leading ones (a
+/// key's lanes are then `key * rows ..`) or when the lane space is one flat axis.
+pub fn key_axes(c: &Ctx, block: u32) -> R<Option<Vec<KeyAxis>>> {
+    let key = c.nodes[block as usize].ops[1];
+    let axes = axes_of(c, &[block])?;
+    if axes.len() == 1 {
+        return Ok(None);
+    }
+    let mut found = vec![];
+    for (axis, shape) in axes.iter().enumerate() {
+        let to_i64 = |n: i128| -> R<i64> {
+            i64::try_from(n).or_else(|_| refuse("a lane axis does not fit 64 bits"))
+        };
+        found.push(KeyAxis {
+            extent: shape.extent.map(to_i64).transpose()?,
+            stride: to_i64(shape.stride)?,
+            kept: varying_nodes(c, &[block], axis)?.contains(&key),
+        });
+    }
+    let leading = found.iter().take_while(|a| a.kept).count();
+    Ok(found[leading..].iter().any(|a| a.kept).then_some(found))
+}
+
 /// A lane axis along which some plane is read at the same place by lanes that differ only in that axis, so one thread can serve
 /// several of them from one read.
 pub(crate) struct BoxCandidate {

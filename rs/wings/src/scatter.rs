@@ -310,6 +310,7 @@ pub fn stage_specs(target: &str, width: i64, (max_chunks, threads): (i64, i64)) 
             k: 0,
             m: 0,
             max_chunks,
+            key_axes: None,
             planes: roles
                 .into_iter()
                 .map(|(role, name)| (role.to_string(), name.clone()))

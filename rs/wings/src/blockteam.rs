@@ -217,6 +217,8 @@ pub fn block_spec(ctx: &Ctx, block: &Block, limits: &TeamLimits) -> R<Vec<TeamSp
         })
     };
     let reads: Vec<u32> = block.in_place.iter().map(|(_, leaf)| *leaf).collect();
+    // the stages that read the lanes find a key's rows by the strides when its lanes are not one contiguous range
+    let key_axes = crate::lanes::key_axes(ctx, block.node)?;
     if direct && p * q == 1 && rows <= 1 {
         let part = Plane {
             name: plane_name(block, "gp"),
@@ -238,6 +240,7 @@ pub fn block_spec(ctx: &Ctx, block: &Block, limits: &TeamLimits) -> R<Vec<TeamSp
                 k: q,
                 m: rows,
                 max_chunks: 0,
+                key_axes: key_axes.clone(),
                 planes: with(roles.clone()),
             }],
             planes: all.clone(),
@@ -257,6 +260,7 @@ pub fn block_spec(ctx: &Ctx, block: &Block, limits: &TeamLimits) -> R<Vec<TeamSp
                 k: q,
                 m: rows,
                 max_chunks: 0,
+                key_axes: None,
                 planes: with(kept),
             }],
             planes: all,
@@ -274,6 +278,7 @@ pub fn block_spec(ctx: &Ctx, block: &Block, limits: &TeamLimits) -> R<Vec<TeamSp
             k: q,
             m: rows,
             max_chunks: 0,
+            key_axes,
             planes: roles,
         }],
         planes: scratch,

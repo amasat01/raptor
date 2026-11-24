@@ -135,6 +135,8 @@ pub struct Step {
     pub m: i64,
     /// The most chunks an ordered scatter's first stage cuts the lanes into (0 for any other call).
     pub max_chunks: i64,
+    /// The lane axes of a keyed sum whose keys do not own contiguous lane ranges, none when they do.
+    pub key_axes: Option<Vec<crate::lanes::KeyAxis>>,
     /// The scratch planes the call works on, as (role, plane name).
     pub planes: Vec<(String, String)>,
 }
@@ -685,6 +687,7 @@ fn step_list(
             k: 1,
             m: group.m,
             max_chunks: 0,
+            key_axes: None,
             planes: roles,
         });
     }
@@ -703,6 +706,7 @@ fn step_list(
                 k,
                 m: group.m,
                 max_chunks: 0,
+                key_axes: None,
                 planes,
             });
             continue;
@@ -716,6 +720,7 @@ fn step_list(
                     k: 1,
                     m: 0,
                     max_chunks: 0,
+                    key_axes: None,
                     planes,
                 });
                 continue;
@@ -738,6 +743,7 @@ fn step_list(
             k,
             m: 0,
             max_chunks: 0,
+            key_axes: None,
             planes,
         });
     }

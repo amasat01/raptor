@@ -361,6 +361,7 @@ pub fn fold_spec(log: &Log, limits: &TeamLimits) -> TeamSpec {
             k: 0,
             m: 0,
             max_chunks: 0,
+            key_axes: None,
             planes: roles
                 .into_iter()
                 .map(|(role, name)| (role.to_string(), name))

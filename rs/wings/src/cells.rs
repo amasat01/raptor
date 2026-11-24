@@ -277,6 +277,23 @@ fn slot_type(ctx: &Ctx, node: u32) -> R<Tt> {
     })
 }
 
+/// Whether one of `nodes` is the position of a minimum or maximum over samples (a `sample_sum` of op `argmin` or `argmax`).
+fn has_position(ctx: &Ctx, nodes: &[u32]) -> R<bool> {
+    for &node in nodes {
+        if is_a(ctx, node, "SampleSum") && ctx.str_field(node, "op")?.starts_with("arg") {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+/// Whether the `sample_sum` has a companion plane: a sum has its compensation, and where a position is asked for every minimum,
+/// maximum and position (`paired`) has the rows of the lanes that won, which the fold of its rows pairs with the values.
+fn has_companion(ctx: &Ctx, sink: u32, paired: bool) -> R<bool> {
+    let op = ctx.str_field(sink, "op")?;
+    Ok(op == "sum" || (paired && ["min", "max", "argmin", "argmax"].contains(&op.as_str())))
+}
+
 /// The compensation slot of each summing `sample_sum` among the sinks: `<name>_comp`, of the sum's role and type. Refuses when a
 /// sink (or a body sink of a loop) already holds a plane of that role and name.
 pub fn companion_slots(ctx: &Ctx, sinks: &[u32]) -> R<Vec<(Key, Tt)>> {
@@ -288,9 +305,10 @@ pub fn companion_slots(ctx: &Ctx, sinks: &[u32]) -> R<Vec<(Key, Tt)>> {
             held.push((ctx.str_field(node, "role")?, ctx.str_field(node, "name")?));
         }
     }
+    let paired = has_position(ctx, sinks)?;
     let mut out = vec![];
     for &sink in sinks {
-        if is_a(ctx, sink, "SampleSum") && ctx.str_field(sink, "op")? == "sum" {
+        if is_a(ctx, sink, "SampleSum") && has_companion(ctx, sink, paired)? {
             let key = (
                 ctx.str_field(sink, "role")?,
                 format!("{}{}", ctx.str_field(sink, "name")?, sample_sum_comp()?),
@@ -310,9 +328,11 @@ pub fn companion_slots(ctx: &Ctx, sinks: &[u32]) -> R<Vec<(Key, Tt)>> {
 
 /// The summing sample sums of the walk, each as the pair (the sum's plane, its compensation plane `<name>_comp`), in the walk's order.
 pub fn walk_companions(ctx: &Ctx, walk: u32) -> R<Vec<(String, String)>> {
+    let order = crate::walk_order(ctx, walk)?;
+    let paired = has_position(ctx, &order)?;
     let mut pairs = vec![];
-    for node in crate::walk_order(ctx, walk)? {
-        if is_a(ctx, node, "SampleSum") && ctx.str_field(node, "op")? == "sum" {
+    for node in order {
+        if is_a(ctx, node, "SampleSum") && has_companion(ctx, node, paired)? {
             let row = ctx.str_field(node, "name")?;
             pairs.push((row.clone(), format!("{row}{}", sample_sum_comp()?)));
         }

@@ -2,7 +2,7 @@
 //! reductions (structural text, one line per distinct node in post-order).
 use raptor_ir::record::Ctx;
 use raptor_ir::value::{parse, text_val, ttype_val, Val};
-use raptor_wings::cells::stored;
+use raptor_wings::cells::{companion_slots, stored};
 use rcore::json::{self, J};
 use std::collections::HashMap;
 
@@ -260,4 +260,43 @@ fn shape_text(shape: &[J]) -> String {
             .collect::<Vec<_>>()
             .join(",")
     )
+}
+
+/// The sinks of a minimum and of a reduction over the same term, stored to the planes `low` and `at`.
+fn stored_pair(c: &mut Ctx, low_op: &str, at_op: &str) -> Vec<u32> {
+    let mut leaves = HashMap::new();
+    let spec = json::parse(r#"{"leaf":"x","shape":[],"dtype":"f64"}"#).unwrap();
+    let value = build(c, &spec, &mut leaves);
+    let mut sinks = vec![];
+    for (op, name) in [(low_op, "low"), (at_op, "at")] {
+        let reduction = c
+            .new_node(
+                "ReduceSamples",
+                &format!("(('op', '{op}'), ('value', #0))"),
+                &[value],
+            )
+            .unwrap();
+        sinks.extend(stored(c, reduction, name).unwrap());
+    }
+    sinks
+}
+
+/// A kernel that asks for a position gives each minimum and position the rows of the lanes that won; one that does not, none.
+#[test]
+fn a_position_gives_the_minimum_and_itself_a_companion_for_the_winning_lanes() {
+    let mut c = Ctx::new().unwrap();
+    let sinks = stored_pair(&mut c, "min", "argmin");
+    let names: Vec<String> = companion_slots(&c, &sinks)
+        .unwrap()
+        .into_iter()
+        .map(|((_, name), _)| name)
+        .collect();
+    assert_eq!(names.len(), 2, "{names:?}");
+    assert!(
+        names[0].starts_with("low") && names[1].starts_with("at"),
+        "{names:?}"
+    );
+    let mut c = Ctx::new().unwrap();
+    let sinks = stored_pair(&mut c, "min", "min");
+    assert!(companion_slots(&c, &sinks).unwrap().is_empty());
 }

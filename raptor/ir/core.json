@@ -92,7 +92,9 @@
   "CELL_OPS": [
    "sum",
    "max",
-   "min"
+   "min",
+   "argmax",
+   "argmin"
   ],
   "PRIMITIVE_KIND": "primitive",
   "REDUCE_KIND": "reduce",

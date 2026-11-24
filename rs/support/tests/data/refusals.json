@@ -465,9 +465,9 @@
    "check": "op not in CELL_OPS",
    "today": {
     "exc": "RaptorError",
-    "msg": "reduce over samples: op 'bogus' is not one of ('sum', 'max', 'min')"
+    "msg": "reduce over samples: op 'bogus' is not one of ('sum', 'max', 'min', 'argmax', 'argmin')"
    },
-   "raw": "reduce over samples: op 'bogus' is not one of ('sum', 'max', 'min')",
+   "raw": "reduce over samples: op 'bogus' is not one of ('sum', 'max', 'min', 'argmax', 'argmin')",
    "expect": "a",
    "bad": {
     "class": "ReduceSamples",
@@ -557,9 +557,9 @@
    "check": "op not in CELL_OPS",
    "today": {
     "exc": "RaptorError",
-    "msg": "sample_sum 's': op 'bogus' is not one of ('sum', 'max', 'min')"
+    "msg": "sample_sum 's': op 'bogus' is not one of ('sum', 'max', 'min', 'argmax', 'argmin')"
    },
-   "raw": "sample_sum 's': op 'bogus' is not one of ('sum', 'max', 'min')",
+   "raw": "sample_sum 's': op 'bogus' is not one of ('sum', 'max', 'min', 'argmax', 'argmin')",
    "expect": "a",
    "bad": {
     "class": "SampleSum",

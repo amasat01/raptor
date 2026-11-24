@@ -26,7 +26,7 @@ fn node_list(ctx: &Ctx, loop_node: u32, field: &str) -> Outcome<Vec<u32>> {
 }
 
 /// Whether the node makes a trip unsafe to run and discard for a stopped lane: an indexed read,
-/// a rendered switch, a raw block or an integer division.
+/// a rendered switch or an integer division.
 fn blocks_speculation(ctx: &Ctx, node: u32) -> Outcome<bool> {
     if is_a(ctx, node, "At") || is_a(ctx, node, "TapeRead") {
         return Ok(true);
@@ -34,15 +34,9 @@ fn blocks_speculation(ctx: &Ctx, node: u32) -> Outcome<bool> {
     if is_a(ctx, node, "Dispatch") && switch_form(ctx, node)? {
         return Ok(true);
     }
-    let raw_block = kind_is(ctx, node, |kind| {
-        kind == rcore::STR_CONSTS
-            .iter()
-            .find(|c| c.0 == "RAW_KIND")
-            .map_or("", |c| c.1)
-    })?;
     let integer_division = kind_is(ctx, node, |kind| INTEGER_DIVISIONS.contains(&kind))?
         && matches!(ctx.node(node)?.dtype.as_str(), "i32" | "i64");
-    Ok(raw_block || integer_division)
+    Ok(integer_division)
 }
 
 /// Whether the node is an op whose kind passes the test.

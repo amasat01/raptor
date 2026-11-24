@@ -151,16 +151,6 @@ pub fn infer_access(order: Vec<Bound<'_, PyAny>>, exempt: Vec<String>) -> PyResu
             1
         } else if is_a(n, "Update")? && !n.getattr("index")?.is_none() {
             2
-        } else if is_a(n, "Op")? && st(n, "kind")? == "raw_device" {
-            let lit = n.getattr("literal")?;
-            let d = lit
-                .getattr("access")
-                .ok()
-                .and_then(|a| a.extract::<String>().ok());
-            match d.as_deref() { Some(d) if RANK.contains(&d) => rank(d),
-                    _ => return Err(he(format!("a spliced raw block reached the classifier declaring access={}: @raw_device requires an explicit access= annotation \\
-drawn from {:?} — the walk cannot see inside the text, and a mapreduce class is a sink property, not a block's",
-                        lit.getattr("access").map(|a| rep(&a)).unwrap_or("None".into()), RANK))) }
         } else {
             0
         };

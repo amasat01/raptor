@@ -95,7 +95,7 @@ def test_other_kinds_are_refused_by_name():
 def test_hook_only_for_declared_types():
     import json
     from raptor.ir import key_text
-    assert json.loads(_core.manifest())["key_text"] == ["RawBlock"]
+    assert json.loads(_core.manifest())["key_text"] == []
 
     class Stranger:
         def __key_text__(self):
@@ -103,14 +103,3 @@ def test_hook_only_for_declared_types():
 
     with pytest.raises(Exception, match="type Stranger has a __key_text__ method but is not declared"):
         key_text(Stranger())
-
-    class RawBlock:                      # a declared name: the hook is used
-        def __key_text__(self):
-            return "<RawBlock a>"
-
-    assert key_text((RawBlock(),)) == "(<RawBlock a>,)"
-
-    class RawBlock2(RawBlock):           # a subclass is another type: refused by name
-        pass
-    with pytest.raises(Exception, match="RawBlock2 has a __key_text__ method but is not declared"):
-        key_text(RawBlock2())

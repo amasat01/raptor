@@ -1517,14 +1517,8 @@ fn read<'py>(b: &Bound<'py, PyAny>) -> PyResult<(Rec, Vec<Bound<'py, PyAny>>, u8
             if CLASSES[i].binds {
                 special = 1
             }
-            match CLASSES[i].watch {
-                1 => special |= 4,
-                2 => {
-                    if r.kind == "raw_device" {
-                        special |= 4
-                    }
-                }
-                _ => {}
+            if CLASSES[i].watch == 1 {
+                special |= 4
             }
             if let Some(l) = LOOP.lock().unwrap().as_ref() {
                 if b.is_instance(l.bind(py))? {

@@ -89,19 +89,11 @@ impl Ctx {
         Ok(())
     }
 
-    /// Refuses a loop whose body cannot be differentiated at all: a nested loop (`refuse_nesting`), a raw device
-    /// block (opaque to the IR) or a sink committed per iteration (a primal body may not commit one).
+    /// Refuses a loop whose body cannot be differentiated at all: a nested loop (`refuse_nesting`) or a sink committed per
+    /// iteration (a primal body may not commit one).
     fn refuse_undifferentiable(&self, lp: u32) -> Fallible<()> {
         self.refuse_nesting(lp)?;
         let outer = self.index_name(lp)?;
-        let raw = crate::consts::names("RAW_KIND").unwrap_or_default();
-        if self
-            .body_nodes(lp)?
-            .iter()
-            .any(|&n| raw.iter().any(|k| self.has_op_kind(n, k)))
-        {
-            return refuse(format!("loop over {outer} cannot be differentiated: its body splices a @raw_device block, whose text is opaque to the IR, so no rule can exist for it"));
-        }
         if let Some(&sink) = self.refs(lp, "body_sinks")?.first() {
             let role = match self.field(sink, "role") {
                 Ok(Val::Str(r)) => py_str(&r),

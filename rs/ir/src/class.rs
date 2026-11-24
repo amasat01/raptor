@@ -168,7 +168,7 @@ impl Table {
                 spec: Some(sp),
                 rule: rcore::core_rule(i),
                 binds: sp.binds,
-                watch: sp.watch == 1 || sp.watch == 2,
+                watch: sp.watch == 1,
                 decl: None,
                 state_fields: t.state_of(sp.state),
                 defaults: vec![],

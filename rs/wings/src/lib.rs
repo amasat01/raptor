@@ -162,17 +162,7 @@ pub(crate) fn walk_order(c: &Ctx, w: u32) -> R<Vec<u32>> {
 /// Whether the lanes of a tile may run side by side over the walk.
 fn lane_form(c: &Ctx, w: u32) -> R<bool> {
     match c.walk(w)?.access.as_str() {
-        "sample_local" => Ok(true),
-        "cross_sample_read" => {
-            let mut all = vec![];
-            flat(c, &walk_order(c, w)?, &mut all)?;
-            for n in all {
-                if in_kinds(c, n, |k| k == kstr("RAW_KIND"))? {
-                    return Ok(false);
-                }
-            }
-            Ok(true)
-        }
+        "sample_local" | "cross_sample_read" => Ok(true),
         _ => Ok(false),
     }
 }

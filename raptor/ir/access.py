@@ -11,8 +11,7 @@ node classes: an :class:`~hawk.ir.nodes.At` read of a ``lookup`` plane is
 RESTRICTIVE of the three wins — over-restriction costs only a placement,
 under-restriction is a wrong answer under ``RankPartition``. ``mapreduce``
 is DISJOINT (an un-folded partial is a wrong answer, not a placement cost).
-No annotation surface exists except for injected raw text (``@raw_device``):
-a traced body can never carry a hand-written class.
+No annotation surface exists: a traced body can never carry a hand-written class.
 
 The same module answers a finer question: how ONE index expression moves
 with the sample index (:func:`index_form`) — a contraction's reduce-axis
@@ -31,7 +30,6 @@ from .._facts import facts as _facts
 from .nodes import Loop
 from .nodes import (
     peel_clamp,
-    RAW_KIND,
     At,
     Const,
     Leaf,

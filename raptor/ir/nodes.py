@@ -78,10 +78,6 @@ def body_key_widths(loop: "Loop") -> tuple[int, ...]:
     return tuple(_core.body_key_widths(loop))
 
 
-#: The language a raw block is written in unless it says otherwise; a writer
-#: refuses a block in a language it cannot write.
-RAW_LANGUAGE = "aether"
-
 #: The leaf ROLES an ``at(expr)`` read may target: ``lookup`` (table plane)
 #: and ``wide_in`` (pinned to the SAME 32-byte ``ScalarHandle``, same access),
 #: and the per-sample input planes, read at another lane through ``u.at(i)``.

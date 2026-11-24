@@ -50,12 +50,6 @@ fn holds(inp: &J) -> Vec<&'static str> {
     if !inp.get("kinds").map_or(&[][..], |k| k.arr()).is_empty() {
         h.push("dialect")
     }
-    if nodes
-        .iter()
-        .any(|n| n.get("v").and_then(|v| v.get("kind")).and_then(tagged_str) == Some("raw_device"))
-    {
-        h.push("raw blocks")
-    }
     h
 }
 
@@ -501,7 +495,7 @@ fn main() {
              other.iter().map(|(k, n)| format!(", {k} {n}")).collect::<String>());
     println!(
         "walks holding: {}",
-        ["loops", "quantities", "declared", "dialect", "raw blocks"]
+        ["loops", "quantities", "declared", "dialect"]
             .iter()
             .map(|k| format!("{k} {}", holding.get(k).copied().unwrap_or(0)))
             .collect::<Vec<_>>()

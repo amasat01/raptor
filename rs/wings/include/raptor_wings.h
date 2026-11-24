@@ -23,7 +23,7 @@ int rw_dispatch_switch_form(rx_ctx* ctx, rx_node node, int* out);
 int rw_ir_param_plane(rx_ctx* ctx, rx_walk walk, const char* name, int* out);
 /* The accumulates of the walk that keep a companion correction plane, in walk order, once per name (the caller names the plane). */
 int rw_ir_companions(rx_ctx* ctx, rx_walk walk, rx_node* buf, size_t cap, size_t* n);
-/* Whether one trip of the loop is safe to run and discard for a stopped lane (no computed-index read, switch, raw block or integer division) (*out is 0 or 1). */
+/* Whether one trip of the loop is safe to run and discard for a stopped lane (no computed-index read, switch or integer division) (*out is 0 or 1). */
 int rw_loops_speculative_step(rx_ctx* ctx, rx_node loop, int* out);
 
 /* The nodes and everything inside their loop bodies, in order. */

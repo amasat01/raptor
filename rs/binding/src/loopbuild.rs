@@ -372,11 +372,6 @@ fn refuse_nesting(lp: &B<'_>) -> PyResult<()> {
 pub fn loop_classify<'py>(py: Python<'py>, lp: &B<'py>, loop_class: &B<'py>) -> PyResult<B<'py>> {
     refuse_nesting(lp)?;
     let iname = rep(&lp.getattr("index")?.getattr("name")?);
-    for inner in lp.call_method0("body_nodes")?.try_iter()? {
-        if kind_of(&inner?).as_deref() == Some(str_const("RAW_KIND")) {
-            return Err(he(format!("loop over {iname} cannot be differentiated: its body splices a @raw_device block, whose text is opaque to the IR, so no rule can exist for it")));
-        }
-    }
     for sink in list(lp, "body_sinks")? {
         return Err(he(format!("loop over {iname} cannot be differentiated: its body commits the sink {} (role {}) once per iteration. A body sink is what a DERIVED loop carries (the reverse of a gather is a scatter); a PRIMAL body may not commit one, so differentiating this loop would be differentiating a derivative",
             rep(&sink.getattr("name")?), rep(&sink.getattr("role")?))));

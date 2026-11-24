@@ -165,7 +165,7 @@ fn replay_small_walks() {
     let text = String::from_utf8_lossy(&out.stdout);
     assert!(out.status.success(), "{text}");
     assert!(
-        text.contains("digest-equal 26 / 26") && text.contains("roundtrip-equal 26 / 26"),
+        text.contains("digest-equal 24 / 24") && text.contains("roundtrip-equal 24 / 24"),
         "{text}"
     );
 }

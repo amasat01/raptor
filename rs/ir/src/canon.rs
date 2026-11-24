@@ -1,5 +1,5 @@
 //! The canonical walk of a set of sinks: the traversal, the total merge of the bindings, the slot order, the access class, the
-//! dispatch listing and the digest. Walks with loops, quantities, declared slots, dialect classes or raw blocks are refused.
+//! dispatch listing and the digest. Walks with loops, quantities, declared slots, dialect classes are refused.
 use crate::door::{cstr, guard, put, slice};
 use crate::record::{badarg, refuse, Ctx, Fault};
 use crate::value::{parse, text_val, ttype_val, Val};
@@ -445,11 +445,7 @@ impl Ctx {
         }
         let roots: Vec<u32> = sinks.iter().map(|h| ids[h]).collect();
         let w = rcore::walk_full(&recs, &roots).map_err(Fault::Refused)?;
-        Ok(Traversal {
-            objs,
-            recs,
-            walk: w,
-        })
+        Ok(Traversal { objs, walk: w })
     }
 
     /// The nodes the walk reads from `h`: its operands, and for a Group its body sinks after the key, so that the planes the body
@@ -570,16 +566,13 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
     }
 
     /// The nodes of the walk, in order, that the access and dispatch passes watch: a bound slot's class, a declared
-    /// class, a class the manifest watches, or a raw device block.
+    /// class or a class the manifest watches.
     fn watched_nodes(&self, tr: &Traversal) -> Vec<u32> {
-        let (objs, w, recs) = (&tr.objs, &tr.walk, &tr.recs);
+        let (objs, w) = (&tr.objs, &tr.walk);
         let class_of = |i: u32| self.class_of_visit(tr, i);
         let watched_of = |i: u32| {
             let c = class_of(i);
-            c.watch
-                && (c.decl.is_some()
-                    || c.spec.is_some_and(|s| s.watch == 1)
-                    || recs[i as usize].kind == "raw_device")
+            c.watch && (c.decl.is_some() || c.spec.is_some_and(|s| s.watch == 1))
         };
         let watched: Vec<u32> = w
             .order
@@ -592,7 +585,6 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
     }
 
     /// The access class over the watched nodes (the highest rank any of them needs), raised to `force` when that is higher.
-    /// Refuses a raw block that declares no access.
     fn access_class(
         &self,
         watched: &[u32],
@@ -626,17 +618,7 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
             if seam.contains(&h) || param_cell || scratch {
                 continue;
             }
-            let new = if self.is_a(h, "Op") && self.str_field(h, "kind")? == "raw_device" {
-                let lit = self.field(h, "literal")?;
-                let acc = if let Val::Rec(_, f) = &lit {
-                    f.iter().find(|x| x.0 == "access").map(|x| x.1.clone())
-                } else {
-                    None
-                };
-                match &acc { Some(Val::Str(a)) if rcore::facts::ACCESS_RANK.contains(&a.as_str()) => rank_of(a),
-                    _ => return refuse(format!("a spliced raw block reached the classifier declaring access={}: @raw_device requires an explicit access= annotation \\\ndrawn from {:?} — the walk cannot see inside the text, and a mapreduce class is a sink property, not a block's",
-                        acc.map_or("None".into(), |a| text_val(&a)), rcore::facts::ACCESS_RANK)) }
-            } else if self.is_a(h, "At") {
+            let new = if self.is_a(h, "At") {
                 1
             } else if self.is_a(h, "Update") && self.nodes[h as usize].ops.len() > 1 {
                 2
@@ -763,8 +745,6 @@ would share one slot; the merge is TOTAL and the disagreement is refused, never 
 struct Traversal {
     /// The node handle of each traversal index.
     objs: Vec<u32>,
-    /// The record of each traversal index.
-    recs: Vec<Rec>,
     /// The canonical order, positions and visits over the records.
     walk: rcore::WalkOut,
 }

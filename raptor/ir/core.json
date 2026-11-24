@@ -2,9 +2,7 @@
  "name": "raptor",
  "version": "0",
  "contract": "1",
- "key_text": [
-  "RawBlock"
- ],
+ "key_text": [],
  "dialect": "core",
  "consts": {
   "LEAF_KINDS": [
@@ -105,7 +103,6 @@
   "NAMESPACE_SEP": "__",
   "PARAM_CELL": "param_cell",
   "CELL_PLANE": "param_cell",
-  "RAW_LANGUAGE": "aether",
   "GATHER_ROLES": ["lookup", "wide_in"],
   "PER_SAMPLE_ROLES": ["plane_in", "terminated", "mutable", "out"],
   "ACCESS_CLASSES": ["sample_local", "cross_sample_read", "cross_sample_write", "mapreduce"],
@@ -376,7 +373,6 @@
    "nsamples",
    "nsamples"
   ],
-  "RAW_KIND": "raw_device",
   "KIND_FEATHERS": [
    "elementwise_sink: a sink that stores the value of one lane element per lane (the writer may push an elementwise read into its store loop)",
    "reads_by_element: the node reads its operand element by element in its own loop, so the operand needs no value of its own",
@@ -1063,7 +1059,6 @@
     "ttype",
     "@literal:plain"
    ],
-   "watch": "raw",
    "ctor": {
     "steps": [
      [

@@ -381,33 +381,15 @@ impl Ctx {
                 n.shape.iter().map(|&d| Val::Int(d as i128)).collect(),
             )),
             "tag" => Ok(n.tag.clone().map_or(Val::None, Val::Str)),
-            "text" | "language" => self.raw_part(h, name),
             "phases" | "phase_count" | "scratch_decls" if self.table.is_a(n.class, "Group") => {
                 self.group_fact(h, name)
             }
+            "native" if self.table.is_a(n.class, "Call") => self.call_is_native(h).map(Val::Bool),
             "digest" if self.table.is_a(n.class, "Function") => {
                 self.function_digest(h).map(Val::Str)
             }
             _ => self.prop(h, name),
         }
-    }
-
-    /// The `text` or the `language` of a raw block: a node whose `literal` holds a RawBlock record.
-    fn raw_part(&self, h: u32, name: &str) -> Result<Val, Fault> {
-        let n = self.node(h)?;
-        let c = &self.table.classes[n.class];
-        let raw = c
-            .slots
-            .iter()
-            .position(|s| s == "literal")
-            .and_then(|i| match &n.fields[i] {
-                Val::Rec(kind, parts) if kind == "RawBlock" => parts
-                    .iter()
-                    .find(|(k, _)| k == name)
-                    .map(|(_, v)| v.clone()),
-                _ => None,
-            });
-        raw.map_or_else(|| self.prop(h, name), Ok)
     }
 
     /// A property a class declares beyond its slots (core.json `props`): an operand, a slice of operands, an attribute of an operand.
@@ -567,7 +549,7 @@ impl Ctx {
     fn item(&self, h: u32, it: &Item) -> Result<Option<Val>, Fault> {
         Ok(Some(match it {
             Item::Field(f) => self.field(h, f)?,
-            Item::ReprOf(f) => Val::Str(key_text(&self.field(h, f)?)?),
+            Item::ReprOf(f) => Val::Str(text_val(&self.field(h, f)?)),
             Item::Lit(l) => Val::Str(l.to_string()),
             Item::K => Val::Int(self.node(h)?.ops.len() as i128 - 1),
             Item::Names(f) => Val::Tuple(
@@ -646,63 +628,4 @@ fn first_ref(v: &Val, len: usize) -> Option<u32> {
         Val::Rec(_, f) => f.iter().find_map(|(_, x)| first_ref(x, len)),
         _ => None,
     }
-}
-
-/// The key text of a value: the written form, except a raw block, which writes its name, its access and a digest of its text.
-pub(crate) fn key_text(v: &Val) -> Result<String, Fault> {
-    let Val::Rec(n, f) = v else {
-        return Ok(text_val(v));
-    };
-    if n != "RawBlock" {
-        return Ok(text_val(v));
-    }
-    let get = |k: &str| f.iter().find(|x| x.0 == k).map(|x| &x.1);
-    let (
-        Some(Val::Str(name)),
-        Some(access),
-        Some(Val::Str(text)),
-        Some(Val::Str(lang)),
-        Some(reads),
-        Some(writes),
-        Some(Val::Rec(_, rt)),
-    ) = (
-        get("name"),
-        get("access"),
-        get("text"),
-        get("language"),
-        get("reads"),
-        get("writes"),
-        get("returns"),
-    )
-    else {
-        return refuse("RawBlock: name, access, text, language, reads, writes and returns");
-    };
-    let shape = match rt.iter().find(|x| x.0 == "shape") {
-        Some((_, Val::Tuple(t))) => t.clone(),
-        _ => vec![],
-    };
-    let get_s = |k: &str| match rt.iter().find(|x| x.0 == k) {
-        Some((_, Val::Str(x))) => Val::Str(x.clone()),
-        _ => Val::None,
-    };
-    let returns = text_val(&Val::Rec(
-        "TensorType".into(),
-        vec![
-            ("shape".into(), Val::Tuple(shape)),
-            ("dtype".into(), get_s("dtype")),
-            ("tag".into(), get_s("tag")),
-        ],
-    ));
-    let pre = text_val(&Val::Tuple(vec![
-        Val::Str(text.clone()),
-        Val::Str(lang.clone()),
-        reads.clone(),
-        writes.clone(),
-        Val::Str(returns),
-    ]));
-    Ok(format!(
-        "<RawBlock {name} access={} digest={}>",
-        text_val(access),
-        rcore::sha256::hex(pre.as_bytes())
-    ))
 }

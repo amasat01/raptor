@@ -978,36 +978,6 @@ fn constant_names(c: *mut Ctx) {
     assert_eq!(err(c), "raptor owns no list of names under \"NOPE\"");
 }
 
-/// A raw block's text and language are fields of its node, beside the repr its `literal` answers.
-#[test]
-fn a_raw_block_answers_its_text_and_language() {
-    let c = rx_ctx_new();
-    let leaf = ok(c, "Leaf", &[], &LEAF.replace("{}", "psc_x"));
-    let block = "RawBlock(name='raw', access='sample_local', text='mut_y = psc_x;', \
-                 language='aether', reads=(), writes=(), \
-                 returns=TensorType(shape=(), dtype='f64', tag=None))";
-    let raw = ok(
-        c,
-        "Op",
-        &[leaf],
-        &format!("(('kind', 'raw_device'), ('literal', {block}))"),
-    );
-    let field = |name: &str| {
-        let name = CString::new(name).unwrap();
-        text(c, |c, b, cap, l| rx_field(c, raw, name.as_ptr(), b, cap, l))
-    };
-    assert_eq!(field("text"), "'mut_y = psc_x;'");
-    assert_eq!(field("language"), "'aether'");
-    assert!(field("literal").starts_with("RawBlock("));
-    let name = CString::new("text").unwrap();
-    let mut len = 0usize;
-    assert_eq!(
-        rx_field(c, leaf, name.as_ptr(), std::ptr::null_mut(), 0, &mut len),
-        RX_REFUSED
-    );
-    rx_ctx_free(c);
-}
-
 /// The loop constructor computes the boundary: an invariant read of the body becomes an operand
 /// after the initial values.
 #[test]

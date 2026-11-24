@@ -5,7 +5,7 @@
 use crate::construct::refs;
 use crate::lanes::{box_candidate, reachable, varying_nodes};
 use crate::planes::{type_parts, NodeType};
-use crate::{in_kinds, index_operands, is_a, is_update_of, konst, kstr, list_out, op_kind};
+use crate::{in_kinds, index_operands, is_a, is_update_of, konst, list_out, op_kind};
 use raptor_ir::build::LoopParts;
 use raptor_ir::door::guard;
 use raptor_ir::record::{refuse, Ctx, Fault};
@@ -347,7 +347,7 @@ pub struct ChosenBox {
 
 /// Whether the kernel can be written boxed: every commit is a scalar write of the lane's own column, and every node is local to
 /// its lane (no read of a per-lane input but a scalar one, no loop that exits, counts, commits or nests, no carried value but a
-/// scalar real, no dispatch, random draw or raw block).
+/// scalar real, no dispatch or random draw).
 fn boxable(ctx: &Ctx, sinks: &[u32]) -> Outcome<bool> {
     for &sink in sinks {
         let commit = is_a(ctx, sink, "Assign") || is_update_of(ctx, sink, "store")?;
@@ -362,9 +362,7 @@ fn boxable(ctx: &Ctx, sinks: &[u32]) -> Outcome<bool> {
         if ["Dispatch", "TapeRead", "LoopCount"]
             .iter()
             .any(|class| is_a(ctx, node, class))
-            || in_kinds(ctx, node, |kind| {
-                konst("RANDOM_OPS").contains(&kind) || kind == kstr("RAW_KIND")
-            })?
+            || in_kinds(ctx, node, |kind| konst("RANDOM_OPS").contains(&kind))?
             || (is_a(ctx, node, "Leaf") && !lane_local_leaf(ctx, node)?)
             || (is_a(ctx, node, "Loop") && !lane_local_loop(ctx, node)?)
         {

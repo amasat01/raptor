@@ -154,10 +154,7 @@ fn read_classes(kinds: &[json::J]) -> Vec<ClassRow> {
                 _ => panic!("dedup mode"),
             }
         });
-        let watch = k
-            .get("watch")
-            .and_then(|w| w.str())
-            .map(|w| if w == "all" { 1 } else { 2 });
+        let watch = k.get("watch").and_then(|w| w.str()).map(|_| 1);
         let feathers = k.get("feathers").map(|f| f.strs()).unwrap_or_default();
         let state = k.get("state").map(|f| f.strs()).unwrap_or_default();
         cl.push((name, base, slots, binds, dedup, watch, feathers, state));

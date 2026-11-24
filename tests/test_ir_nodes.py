@@ -5,7 +5,7 @@ import pytest
 
 from raptor.errors import RaptorError
 from raptor.ir import cells, ops
-from raptor.ir.nodes import (ADJOINT_PREFIX, COMPANION_SUFFIX, GATHER_ROLES, RAW_LANGUAGE, ROLE_ORDER, Assign, Const, Leaf, SampleSum, Update,
+from raptor.ir.nodes import (ADJOINT_PREFIX, COMPANION_SUFFIX, GATHER_ROLES, ROLE_ORDER, Assign, Const, Leaf, SampleSum, Update,
                              compensates, element_count, is_param_cell, param_cell_names, peel_clamp, plain_in, plain_out,
                              sample_sums, same_index)
 from raptor.ir.types import TensorType
@@ -14,7 +14,7 @@ F64, I32 = TensorType((), "f64"), TensorType((), "i32")
 
 
 def test_the_naming_constants_are_the_documented_literals():
-    assert (ADJOINT_PREFIX, COMPANION_SUFFIX, RAW_LANGUAGE) == ("bar", "_c", "aether")
+    assert (ADJOINT_PREFIX, COMPANION_SUFFIX) == ("bar", "_c")
     assert GATHER_ROLES == ("lookup", "wide_in") and set(GATHER_ROLES) <= set(ROLE_ORDER)
 
 

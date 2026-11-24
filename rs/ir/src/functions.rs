@@ -122,6 +122,14 @@ impl Ctx {
         self.function_named(&name, &digest)
     }
 
+    /// Whether the function the call `h` names has a native body (texts per target) and no traced one.
+    pub(crate) fn call_is_native(&self, h: u32) -> Result<bool, Fault> {
+        let function = self.called_function(h).ok_or_else(|| {
+            Fault::Refused("a call of a function that the table does not hold".into())
+        })?;
+        Ok(matches!(self.field(function, "natives")?, Val::Tuple(texts) if !texts.is_empty()))
+    }
+
     /// The name of the group function a node calls, if it is a call of one.
     pub(crate) fn called_group_function(&self, h: u32) -> Option<String> {
         let (name, _) = self.callee_of(h)?;

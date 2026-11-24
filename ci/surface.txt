@@ -59,7 +59,6 @@ core.json const QUANTITY_PACKS
 core.json const QUANTITY_ROLE_PAIRS
 core.json const QUAT_OPS
 core.json const RANDOM_OPS
-core.json const RAW_KIND
 core.json const RAY_ARITY_PAIRS
 core.json const RAY_OPS
 core.json const RAY_SCALAR_PAIRS
@@ -94,7 +93,6 @@ core.json const schema.SCHEMA_VERSION
 core.json const schema.TOP_LEVEL_KEY_ORDER
 core.json const schema.TOP_LEVEL_KEY_ORDER_V2
 core.json feather reduces_samples
-core.json key_text RawBlock
 core.json kind assign
 core.json kind at
 core.json kind const
@@ -309,7 +307,6 @@ raptor.ir.nodes FEATHERS
 raptor.ir.nodes GATHER_ROLES
 raptor.ir.nodes OP_FEATHERS
 raptor.ir.nodes Plain
-raptor.ir.nodes RAW_LANGUAGE
 raptor.ir.nodes body_key_widths
 raptor.ir.nodes compensates
 raptor.ir.nodes element_count
@@ -437,7 +434,6 @@ core.json const CELL_PLANE # manifest
 core.json const COMPANION_SUFFIX # manifest
 core.json const GATHER_ROLES # manifest
 core.json const PER_SAMPLE_ROLES # manifest
-core.json const RAW_LANGUAGE # manifest
 core.json const EDGE_RULES # shape
 core.json const SAMPLE_SUM_COMP_SUFFIX # sum
 core.json class Scratch # group

@@ -2,7 +2,7 @@
 //! key when their class, kind, type, literal, identity state, name and operands' keys are all equal; a literal enters as the
 //! core's key text, so `nan` equals `nan`, `-0.0` is not `0.0` and `True` is not `1`. Owns the C door `rx_structural_keys`.
 use crate::door::{guard, slice};
-use crate::record::{badarg, key_text, Ctx, Fault};
+use crate::record::{badarg, Ctx, Fault};
 use crate::value::{text_val, Val};
 use std::collections::HashMap;
 use std::ffi::c_int;
@@ -13,7 +13,7 @@ impl Ctx {
         let node = self.node(h)?;
         let literal = match self.field(h, "literal") {
             Ok(Val::None) | Err(_) => "-".to_string(),
-            Ok(v) => key_text(&v)?,
+            Ok(v) => text_val(&v),
         };
         let name = match self.field(h, "name") {
             Ok(v) => text_val(&v),

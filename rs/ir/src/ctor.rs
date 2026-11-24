@@ -759,8 +759,7 @@ fn has_list(v: &Val) -> bool {
 /// Whether a value is plain data: no list inside.
 fn plain(v: &Val) -> bool {
     match v {
-        Val::Node(_) => false,
-        Val::Rec(n, _) => n == "RawBlock",
+        Val::Node(_) | Val::Rec(..) => false,
         Val::Tuple(t) | Val::List(t) => t.iter().all(plain),
         _ => true,
     }
@@ -1663,7 +1662,7 @@ pub struct CtorFault {
     pub text: String,
 }
 
-/// Checks a raw block node.
+/// Checks a node against the program its class declares.
 fn check_raw(ctx: &Ctx, node: &Node) -> Result<(), String> {
     let class = &ctx.table.classes[node.class];
     if class.spec.is_none() {

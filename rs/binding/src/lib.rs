@@ -128,7 +128,6 @@ struct Man {
     named_idx: HashMap<String, usize>,
     node_base: usize,
     const_names: Vec<String>,
-    key_types: Vec<String>,
 }
 static CONST_OBJS: OnceLock<Vec<Py<PyAny>>> = OnceLock::new();
 const BUILTINS: &[&str] = &[
@@ -642,7 +641,6 @@ fn compile(text: &str) -> Result<Man, String> {
         named_idx,
         node_base,
         const_names: consts,
-        key_types: m.get("key_text").map(|k| k.strs()).unwrap_or_default(),
     })
 }
 /// Every problem a manifest text has: parse errors, unknown names, unknown functions, unknown checks, a wrong argument count.
@@ -1135,28 +1133,7 @@ fn conv(o: &Bound<'_, PyAny>) -> PyResult<V> {
         ));
     }
     let t = o.get_type();
-    // an object that states its own key text (the `__key_text__` hook of its class: the text must itself follow the rule, section 10)
-    // only a type the manifest DECLARES (core.json `key_text`) may state its own text; any other object that has the method is refused by name
-    let tn = t.name()?.to_string();
-    let declared = MAN
-        .get()
-        .map_or(false, |m| m.key_types.iter().any(|k| *k == tn));
-    if t.hasattr("__key_text__")? {
-        if !declared {
-            return Err(he(format!("key text: type {tn} has a __key_text__ method but is not declared in the manifest (key_text), so it has no written rule")));
-        }
-        return Ok(V::Text(
-            o.call_method0("__key_text__")?
-                .extract::<String>()
-                .map_err(|_| he("key text: __key_text__ must return a str".into()))?,
-        ));
-    }
-    if declared {
-        return Err(he(format!(
-            "key text: type {tn} is declared in the manifest but has no __key_text__ method"
-        )));
-    }
-    Err(he(format!("key text: a value of type {} has no written rule (None, bool, int, float, str, tuple and list have; any other type states its own text through a __key_text__ method)", t.name()?)))
+    Err(he(format!("key text: a value of type {} has no written rule (only None, bool, int, float, str, tuple and list have)", t.name()?)))
 }
 /// The key text of any value of those kinds (the rule of docs/MANIFEST.md section 10).
 #[pyfunction]

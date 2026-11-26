@@ -90,16 +90,3 @@ def test_other_kinds_are_refused_by_name():
             kt(v)
     with pytest.raises(Exception, match="beyond 128 bits"):
         kt(2**200)
-
-
-def test_hook_only_for_declared_types():
-    import json
-    from raptor.ir import key_text
-    assert json.loads(_core.manifest())["key_text"] == []
-
-    class Stranger:
-        def __key_text__(self):
-            return "<x>"
-
-    with pytest.raises(Exception, match="type Stranger has a __key_text__ method but is not declared"):
-        key_text(Stranger())

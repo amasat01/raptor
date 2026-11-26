@@ -70,7 +70,6 @@ def computed() -> set:
         value = man.get(section, ())
         names = (r["name"] for r in value) if isinstance(value, list) else value
         items.update(f"core.json {label} {n}" for n in names)
-    items.update(f"core.json key_text {n}" for n in man.get("key_text", ()))
     return items
 
 

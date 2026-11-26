@@ -8,7 +8,7 @@
     python tools/kinds_diff.py REV1 REV2        two git revisions (anything that is not a file is read as a revision)
 
 Lines:  ``kind add NAME`` | ``kind del NAME`` | ``kind chg NAME: key, key`` (the keys of the row that differ), and the same for ``const``,
-``check``, ``rule``, ``record``; a change of ``key_text`` or of a top-level scalar is ``top chg KEY``. The exit status is 0 when nothing differs, 1
+``check``, ``rule``, ``record``; a change of a top-level scalar is ``top chg KEY``. The exit status is 0 when nothing differs, 1
 when something does, 2 when an argument cannot be read, so a review script can gate on it."""
 
 from __future__ import annotations

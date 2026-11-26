@@ -16,7 +16,6 @@ IR_VERSION = 1
 from .types import TensorType as TensorType
 from .types import Wire as Wire
 from .access import Access as Access
-from .._core import keytext as key_text  # the key-text rule (docs/MANIFEST.md section 10), for a class that states its own text
 from .access import infer
 from .compound import Quantity as Quantity
 from .compound import QuantitySpan as QuantitySpan

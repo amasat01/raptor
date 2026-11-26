@@ -2,7 +2,6 @@
  "name": "raptor",
  "version": "0",
  "contract": "1",
- "key_text": [],
  "dialect": "core",
  "consts": {
   "LEAF_KINDS": [

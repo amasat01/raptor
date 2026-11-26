@@ -31,13 +31,12 @@ fn compensates(contract: &str) -> bool {
 }
 
 /// The recorded functions this tool answers itself.
-const MINE: [(&str, &str); 35] = [
+const MINE: [(&str, &str); 34] = [
     (
         "raptor.wings.base.lanes:warp_uniform()",
         "rw_lanes_warp_uniform",
     ),
     ("raptor.wings.base.wide:place", "rw_wide_place"),
-    ("raptor.ir.nodes:through", "rx_through"),
     ("raptor.ir.nodes:same_index", "rx_same_index"),
     ("raptor.ir.nodes:compensates", "rx_compensates"),
     ("raptor.ir.nodes:is_param_cell", "Ctx::is_param_cell"),
@@ -1110,15 +1109,6 @@ fn core_callee(
     };
     let mut out = 0i32;
     let got = match fname.rsplit(':').next().unwrap_or("") {
-        "through" => {
-            let (n, want, mut made) = (node(0)?, node_ref(Some(answer), h)?, 0u32);
-            let status = rx_through(c, n, &mut made);
-            return if status == 0 && made == want {
-                Ok(())
-            } else {
-                differs(format!("through {n} gave {made} (status {status})"))
-            };
-        }
         "same_index" if args.iter().any(|a| matches!(a, J::Null)) => {
             // None is no node: it equals only None
             args.iter().all(|a| matches!(a, J::Null))

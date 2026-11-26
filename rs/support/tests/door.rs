@@ -256,11 +256,6 @@ fn every_core_class() {
         ("SamplePosition", vec![], "()".into()),
         ("Op", vec![i], "(('kind', 'neg'), ('literal', None))".into()),
         ("At", vec![l, si], "()".into()),
-        (
-            "Primitive",
-            vec![i],
-            "(('name', 'f'), ('input_count', 0))".into(),
-        ),
         ("Select", vec![i, i, i], "()".into()),
         ("Dispatch", vec![si, i, i], "()".into()),
         (
@@ -298,7 +293,7 @@ fn every_core_class() {
         ),
         ("Loop", vec![i], loop_f.into()),
     ];
-    assert_eq!(rows.len(), 21);
+    assert_eq!(rows.len(), 20);
     let mut made = vec![];
     for (cls, ops, f) in &rows {
         made.push((cls.to_string(), ok(c, cls, ops, f)))

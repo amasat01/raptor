@@ -1,6 +1,6 @@
-//! Small questions and rewrites the writers ask the core: what a node stands for, whether two index
+//! Small questions and rewrites the writers ask the core: whether two index
 //! expressions are one value, a node's feathers and kinds, a sink over a new value. Owns the C
-//! doors//! `rx_through`, `rx_same_index`, `rx_is_param_cell`, `rx_has_feather`,
+//! doors `rx_same_index`, `rx_is_param_cell`, `rx_has_feather`,
 //! `rx_sample_sums`, `rx_is_a`, `rx_with_value` and `rx_dispatch_nodes`.
 use crate::door::{cstr, guard, Node};
 use crate::loops::give;
@@ -13,18 +13,6 @@ use std::ffi::{c_char, c_int};
 type Fallible<T> = Result<T, Fault>;
 
 impl Ctx {
-    /// The node a reference to `node` is a reference to: a primitive stands for its forward.
-    pub fn through(&self, mut node: Node) -> Fallible<Node> {
-        self.node(node)?;
-        while self.is_a(node, "Primitive") {
-            node = match self.field(node, "forward")? {
-                Val::Node(forward) => forward,
-                _ => return refuse("a primitive has no forward node"),
-            };
-        }
-        Ok(node)
-    }
-
     /// Whether two index expressions are the same value: one node, or equal class, type, kind,
     /// literal and operands. `seen` keeps a shared subexpression from being compared once per path.
     pub fn same_index(
@@ -50,7 +38,7 @@ impl Ctx {
                 && self.field(a, "kind")? == self.field(b, "kind")?
                 && self.field(a, "literal")? == self.field(b, "literal")?;
             for (&x, &y) in na.ops.iter().zip(&nb.ops) {
-                same = same && self.same_index(self.through(x)?, self.through(y)?, seen)?;
+                same = same && self.same_index(x, y, seen)?;
             }
         }
         seen.insert((a, b), same);
@@ -142,22 +130,6 @@ fn flag(out: *mut c_int, value: bool) -> Fallible<()> {
     }
     unsafe { *out = value as c_int };
     Ok(())
-}
-
-/// The node a reference to `node` stands for.
-///
-/// # Safety
-/// Every pointer must be valid for the length given beside it, as the header states.
-#[no_mangle]
-pub unsafe extern "C" fn rx_through(ctx: *mut Ctx, node: Node, out: *mut Node) -> c_int {
-    guard(ctx, |c| {
-        let through = c.through(node)?;
-        if out.is_null() {
-            return Err(Fault::BadArg("out is NULL".into()));
-        }
-        unsafe { *out = through };
-        Ok(())
-    })
 }
 
 /// Whether two index expressions are the same value.

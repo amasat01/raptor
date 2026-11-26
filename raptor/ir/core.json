@@ -93,7 +93,6 @@
    "argmax",
    "argmin"
   ],
-  "PRIMITIVE_KIND": "primitive",
   "REDUCE_KIND": "reduce",
   "SAMPLE_INDEX_KIND": "sample_index",
   "SAMPLE_POSITION_KIND": "sample_position",
@@ -1248,78 +1247,6 @@
     ]
    ],
    "wire": "sample"
-  },
-  {
-   "name": "primitive",
-   "class": "Primitive",
-   "family": "expr",
-   "refines": "op",
-   "operands": {
-    "min": 1,
-    "max": "many"
-   },
-   "slots": [
-    "name",
-    "input_count"
-   ],
-   "params": "name: str, value: Node, inputs: Sequence[Node] = (), ttype: TensorType | None = None",
-   "assigns": [
-    "kind",
-    "literal",
-    "name",
-    "input_count"
-   ],
-   "dedup": [
-    "tup",
-    "s:primitive",
-    "f:name"
-   ],
-   "state": [
-    "name"
-   ],
-   "from": [
-    "@name",
-    "op:0",
-    "ops:1:",
-    "ttype"
-   ],
-   "ctor": {
-    "steps": [
-     [
-      "let",
-      "inputs",
-      "tuple(inputs)"
-     ],
-     [
-      "let",
-      "tt",
-      "coalesce(ttype, value.ttype)"
-     ],
-     [
-      "node",
-      "tt",
-      "cat((value,), inputs)"
-     ]
-    ],
-    "out": [
-     "'primitive'",
-     "None",
-     "name",
-     "len(inputs)"
-    ]
-   },
-   "props": [
-    [
-     "forward",
-     "op",
-     "0"
-    ],
-    [
-     "inputs",
-     "ops",
-     "1:"
-    ]
-   ]
   },
   {
    "name": "select",

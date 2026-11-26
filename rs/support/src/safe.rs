@@ -397,11 +397,6 @@ pub fn rx_body_roots(ctx: *mut Ctx, lp: u32, buf: *mut u32, cap: usize, n: *mut 
     unsafe { raptor_ir::loops::rx_body_roots(ctx, lp, buf, cap, n) }
 }
 
-/// `raptor_ir::query::rx_through` as a safe function.
-pub fn rx_through(ctx: *mut Ctx, node: Node, out: *mut Node) -> c_int {
-    unsafe { raptor_ir::query::rx_through(ctx, node, out) }
-}
-
 /// `raptor_ir::query::rx_same_index` as a safe function.
 pub fn rx_same_index(ctx: *mut Ctx, a: Node, b: Node, out: *mut c_int) -> c_int {
     unsafe { raptor_ir::query::rx_same_index(ctx, a, b, out) }

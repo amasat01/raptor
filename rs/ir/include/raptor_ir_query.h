@@ -37,9 +37,6 @@ int rx_body_nodes(rx_ctx* ctx, rx_node loop, rx_node* buf, size_t cap, size_t* n
 /* What a loop's body evaluates, in emission order: carried results, sink operands, then the break condition and values. */
 int rx_body_roots(rx_ctx* ctx, rx_node loop, rx_node* buf, size_t cap, size_t* n);
 
-/* The node a reference to node stands for (a primitive stands for its forward). */
-int rx_through(rx_ctx* ctx, rx_node node, rx_node* out);
-
 /* Whether two index expressions are the same value (out is 0 or 1). */
 int rx_same_index(rx_ctx* ctx, rx_node a, rx_node b, int* out);
 
@@ -154,17 +151,6 @@ int rx_entrywise(rx_ctx* ctx, const char* kind, const rx_node* nodes, size_t nno
 
 /* A structural zero of the dtype and shape: a rank-0 constant, else a splat of it. */
 int rx_zero_of(rx_ctx* ctx, const char* dtype, const int64_t* shape, size_t rank, rx_node* out);
-
-/* Checks that the graph under roots is a CLOSED rule template of the primitive name: its free leaves are the names in allowed
-   (separated by white space; inside a loop body too), a loop's index and carries are read only inside that loop, and nothing
-   in it holds edges outside a loop, writes a plane (body sinks) or reads a tape. Answers RX_OK, or refuses with the first
-   violation by name (rx_last_error). */
-int rx_rule_template_check(rx_ctx* ctx, const char* name, const rx_node* roots, size_t nroots, const char* allowed,
-                           size_t allowed_len);
-
-/* Whether name is taken as a kind name, so a primitive may not be registered under it: the primitive kind, a core kind a
-   declaration may refine, or a kind declared in the context (*out is 0 or 1). */
-int rx_kind_reserved(rx_ctx* ctx, const char* name, int* out);
 
 /* The type of the slot (role, name) the walk binds; refuses a slot it does not bind. */
 int rx_walk_slot_type(rx_ctx* ctx, rx_walk walk, const char* role, const char* name, rx_type* out);

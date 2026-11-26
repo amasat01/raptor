@@ -13,7 +13,6 @@ mod index;
 mod kindcheck;
 mod loopbuild;
 mod loops;
-mod primitive;
 mod rules;
 mod typing;
 use std::collections::HashMap;
@@ -1625,8 +1624,6 @@ fn _core(m: &Bound<'_, PyModule>) -> PyResult<()> {
         typing::promote_dtype,
         kindcheck::kind_check,
         kindcheck::kind_declare,
-        primitive::rule_substitute,
-        primitive::rule_prepare,
         rules::rule_modes,
         rules::rule_reduce,
         rules::rule_factor,

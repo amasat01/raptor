@@ -330,15 +330,15 @@ fn corpus_positive() {
 fn derived_slot_must_match() {
     let c = rx_ctx_new();
     let x = leaf(c, "x");
-    let f = |n: i32| {
-        format!("(('kind', 'primitive'), ('literal', None), ('name', 'f'), ('input_count', {n}))")
+    let f = |kind: &str| {
+        format!("(('kind', '{kind}'), ('role', 'mutable'), ('name', 'a'), ('axes', ()))")
     };
-    mk(c, "Primitive", None, &[x], &f(0));
+    mk(c, "Assign", None, &[x], &f("assign"));
     let (cls, dt, op, fl) = (
-        CString::new("Primitive").unwrap(),
+        CString::new("Assign").unwrap(),
         CString::new("f64").unwrap(),
         [x],
-        f(3),
+        f("update"),
     );
     let mut out = 0;
     assert_eq!(
@@ -359,7 +359,7 @@ fn derived_slot_must_match() {
     );
     assert_eq!(
         err(c),
-        "Primitive: input_count does not match its constructor (got 3, constructor gives 0)"
+        "Assign: kind does not match its constructor (got 'update', constructor gives 'assign')"
     );
     rx_ctx_free(c);
 }

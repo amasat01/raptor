@@ -20,7 +20,6 @@ pub mod query;
 pub mod record;
 pub mod rules;
 pub mod structkeys;
-pub mod template;
 pub mod typed;
 pub mod typing;
 pub mod value;

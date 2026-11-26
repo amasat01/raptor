@@ -5,7 +5,7 @@ mod common;
 use common::*;
 use raptor_ir::record::Ctx;
 use raptor_ir::typed::rx_field_ints;
-use raptor_ir::value::Val;
+use raptor_ir::value::{text_val, Val};
 use raptor_support::groups::{self as g, Fixture, Membership};
 use raptor_support::safe::*;
 use std::ffi::{c_char, CString};
@@ -182,6 +182,144 @@ fn two_sinks_using_one_reduce_share_its_phase() {
     );
     let plan = c.phase_plan(&[first, second]);
     assert_eq!(plan.sinks, vec![1, 1]);
+}
+
+// the evaluation phase of each reduce and scan
+
+/// The reduces and scans of the group `root` with the phase each is evaluated in, as the door states the two positional lists.
+fn combines_at_door(c: &mut Ctx, root: u32) -> Vec<(u32, i64)> {
+    let p = c as *mut Ctx;
+    let (mut nodes, mut phases, mut n, mut m) = ([0u32; 8], [0i64; 8], 0usize, 0usize);
+    let status = unsafe {
+        raptor_ir::typed::rx_field_node_list(
+            p,
+            root,
+            c"combines".as_ptr(),
+            nodes.as_mut_ptr(),
+            8,
+            &mut n,
+        )
+    };
+    assert_eq!(status, RX_OK, "{}", err(p));
+    let status = unsafe {
+        rx_field_ints(
+            p,
+            root,
+            c"combine_phases".as_ptr(),
+            phases.as_mut_ptr(),
+            8,
+            &mut m,
+        )
+    };
+    assert_eq!(status, RX_OK, "{}", err(p));
+    assert_eq!(n, m, "the two lists are read together");
+    nodes[..n]
+        .iter()
+        .copied()
+        .zip(phases[..m].iter().copied())
+        .collect()
+}
+
+#[test]
+fn the_door_states_the_phase_each_reduce_of_the_reference_kernels_is_evaluated_in() {
+    // (fixture, evaluation phases in the order of the reduces' handles): `tile` reduces one scratch read, `rows` two sums
+    // whose readers sit in phase 1, `ring` reduces nothing
+    for (make, want) in [
+        (g::tile as Make, vec![0]),
+        (g::rows, vec![0, 0]),
+        (g::ring, vec![]),
+    ] {
+        let mut c = ctx();
+        let group = make(&mut c).unwrap().group;
+        let found = combines_at_door(&mut c, group);
+        assert_eq!(found.iter().map(|f| f.1).collect::<Vec<_>>(), want);
+        let ops = |h: u32| c.field(h, "op").map(|v| text_val(&v));
+        assert!(
+            found.iter().all(|&(h, _)| ops(h).is_ok()),
+            "each is a reduce or scan"
+        );
+    }
+}
+
+#[test]
+fn a_reduce_over_inputs_is_evaluated_in_the_phase_before_its_reader() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let total = g::reduce(&mut c, "sum", "tree", x).unwrap();
+    let out = g::commit(&mut c, "y", total).unwrap();
+    let group = g::group(&mut c, &Membership::count(8), &[], &[out]).unwrap();
+    assert_eq!(combines_at_door(&mut c, group), vec![(total, 0)]);
+}
+
+#[test]
+fn a_reduce_whose_operand_holds_another_is_evaluated_one_phase_after_it() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let inner = g::reduce(&mut c, "sum", "tree", x).unwrap();
+    let centred = g::apply(&mut c, "sub", &[x, inner]).unwrap();
+    let outer = g::reduce(&mut c, "max", "tree", centred).unwrap();
+    let out = g::commit(&mut c, "y", outer).unwrap();
+    let group = g::group(&mut c, &Membership::count(8), &[], &[out]).unwrap();
+    assert_eq!(
+        combines_at_door(&mut c, group),
+        vec![(inner, 0), (outer, 1)]
+    );
+    assert_eq!(c.phase_plan(&[out]).sinks, vec![2]);
+}
+
+#[test]
+fn a_reduce_first_read_after_a_barrier_is_not_evaluated_before_it() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let early = g::commit(&mut c, "a", x).unwrap();
+    let stop = g::barrier(&mut c).unwrap();
+    let total = g::reduce(&mut c, "sum", "tree", x).unwrap();
+    let late = g::commit(&mut c, "b", total).unwrap();
+    let group = g::group(&mut c, &Membership::count(8), &[], &[early, stop, late]).unwrap();
+    assert_eq!(combines_at_door(&mut c, group), vec![(total, 1)]);
+}
+
+#[test]
+fn a_reduce_over_a_scratch_waits_for_the_store_and_one_read_by_two_sinks_has_one_entry() {
+    let mut c = ctx();
+    let found = tile_with(&mut c, |c, x, t| {
+        let place = g::rank(c).unwrap();
+        let fill = g::store(c, "t", 8, x, place).unwrap();
+        let stop = g::barrier(c).unwrap();
+        let cell = g::read(c, t, place, "wrap").unwrap();
+        let total = g::reduce(c, "sum", "tree", cell).unwrap();
+        let (first, second) = (
+            g::commit(c, "a", total).unwrap(),
+            g::commit(c, "b", total).unwrap(),
+        );
+        vec![fill, stop, first, second]
+    })
+    .unwrap();
+    let found = combines_at_door(&mut c, found);
+    assert_eq!(found.iter().map(|f| f.1).collect::<Vec<_>>(), vec![1]);
+}
+
+#[test]
+fn a_reduce_the_body_does_not_read_has_no_phase_and_a_node_that_is_no_group_has_no_list() {
+    let mut c = ctx();
+    let x = g::plane_in(&mut c, "x", "f64").unwrap();
+    let _unread = g::reduce(&mut c, "sum", "tree", x).unwrap();
+    let out = g::commit(&mut c, "y", x).unwrap();
+    let group = g::group(&mut c, &Membership::count(8), &[], &[out]).unwrap();
+    assert_eq!(combines_at_door(&mut c, group), vec![]);
+    let p = &mut c as *mut Ctx;
+    let status = unsafe {
+        rx_field_ints(
+            p,
+            x,
+            c"combine_phases".as_ptr(),
+            std::ptr::null_mut(),
+            0,
+            &mut 0usize,
+        )
+    };
+    assert_eq!(status, RX_REFUSED);
+    assert!(err(p).contains("has no field"), "{}", err(p));
 }
 
 // rule (a): the phase rule

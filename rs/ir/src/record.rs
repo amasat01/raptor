@@ -381,7 +381,9 @@ impl Ctx {
                 n.shape.iter().map(|&d| Val::Int(d as i128)).collect(),
             )),
             "tag" => Ok(n.tag.clone().map_or(Val::None, Val::Str)),
-            "phases" | "phase_count" | "scratch_decls" if self.table.is_a(n.class, "Group") => {
+            "phases" | "phase_count" | "scratch_decls" | "combines" | "combine_phases"
+                if self.table.is_a(n.class, "Group") =>
+            {
                 self.group_fact(h, name)
             }
             "native" if self.table.is_a(n.class, "Call") => self.call_is_native(h).map(Val::Bool),

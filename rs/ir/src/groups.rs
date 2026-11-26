@@ -58,11 +58,22 @@ pub struct GroupFacts<'a> {
 pub struct PhasePlan {
     /// The phase of each body sink, in body order; a barrier belongs to the phase it ends.
     pub sinks: Vec<u32>,
-    /// The phase in which the operand of each reduce or scan is evaluated (the reduce ends that phase).
+    /// The phase in which the operand of each reduce or scan the body reads is evaluated: the phase the reduce or scan ends, and
+    /// so one before the first phase that reads its value. The rule: the evaluation is placed where the first sink that reads it
+    /// is reached in body order, at the latest of (a) the floor the last barrier before that sink sets, (b) the phase of the
+    /// latest store into each scratch the operand reads, and (c) one past the evaluation of every reduce or scan the operand
+    /// holds. A reduce or scan evaluated once is not placed again for a later reader. A node the body does not read has no entry.
     pub evaluated: HashMap<u32, u32>,
 }
 
 impl PhasePlan {
+    /// The reduces and scans the body reads, in the order of their handles: the order of the lists the door states.
+    pub fn combines(&self) -> Vec<u32> {
+        let mut nodes: Vec<u32> = self.evaluated.keys().copied().collect();
+        nodes.sort_unstable();
+        nodes
+    }
+
     /// The number of phases: one past the last phase a sink belongs to.
     pub fn count(&self) -> u32 {
         self.sinks.iter().copied().max().map_or(0, |m| m + 1)
@@ -249,8 +260,10 @@ impl Ctx {
     }
 
     /// The facts of a group that are computed from its body and scratch: `phases` (the phase of each body sink), `phase_count`,
-    /// and `scratch_decls` (name, element type, value shape and axes of each scratch, the part of the identity the walk's leaf
-    /// key does not carry).
+    /// `scratch_decls` (name, element type, value shape and axes of each scratch, the part of the identity the walk's leaf
+    /// key does not carry), and the two positional lists `combines` and `combine_phases`: every group-wide reduce or scan the body
+    /// reads, in the order of its handle, and the phase each one is evaluated in (see `PhasePlan::evaluated`). The lists are
+    /// the same length and are read together.
     pub fn group_fact(&self, group: u32, name: &str) -> Result<Val, crate::record::Fault> {
         if name == "scratch_decls" {
             let declare = |&s: &u32| -> Result<Val, crate::record::Fault> {
@@ -269,15 +282,19 @@ impl Ctx {
             ));
         }
         let plan = self.phase_plan(&self.refs(group, "body_sinks")?);
-        Ok(if name == "phases" {
+        let ints = |values: Vec<u32>| {
             Val::Tuple(
-                plan.sinks
-                    .iter()
-                    .map(|&p| Val::Int(i128::from(p)))
+                values
+                    .into_iter()
+                    .map(|v| Val::Int(i128::from(v)))
                     .collect(),
             )
-        } else {
-            Val::Int(i128::from(plan.count()))
+        };
+        Ok(match name {
+            "phases" => ints(plan.sinks.clone()),
+            "phase_count" => Val::Int(i128::from(plan.count())),
+            "combines" => Val::Tuple(plan.combines().into_iter().map(Val::Node).collect()),
+            _ => ints(plan.combines().iter().map(|h| plan.evaluated[h]).collect()),
         })
     }
 

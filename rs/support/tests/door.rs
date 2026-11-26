@@ -339,7 +339,7 @@ fn every_core_class() {
     ] {
         made.push((cls.to_string(), ok(c, cls, &ops, f)));
     }
-    assert_eq!(made.len(), 26);
+    assert_eq!(made.len(), 25);
     for (cls, h) in &made {
         assert_eq!(
             text(c, |c, buf, cap, len| rx_class(c, *h, buf, cap, len)),

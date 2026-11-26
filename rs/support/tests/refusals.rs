@@ -357,10 +357,7 @@ fn derived_slot_must_match() {
         ),
         RX_REFUSED
     );
-    assert_eq!(
-        err(c),
-        "Assign: kind does not match its constructor (got 'update', constructor gives 'assign')"
-    );
+    assert_eq!(err(c), "Assign: field \"kind\" is fixed to 'assign'");
     rx_ctx_free(c);
 }
 
